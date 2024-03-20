@@ -1191,7 +1191,7 @@ void powerSaveDeepSleep()
         screenTiming = TIMER;
     }
     
-    if ((_joy.posY0 >= 150) && (_joy.posX0 <= 100)) BUFFER_STRING = "Light powersave mode";
+    if ((_joy.posY0 >= 150) && (_joy.posX0 <= 100)) BUFFER_STRING = "Deep powersave mode";
     
     if ((TIMER - screenTiming > 60000) && (_joy.posY0 >= 150))
     {
@@ -1199,9 +1199,8 @@ void powerSaveDeepSleep()
 
         while (isTouched() == false)
         {
-            sleepModeScreen();
             _gfx.controlBacklight(false);
-            esp_light_sleep_start(); 
+            esp_deep_sleep_start(); 
         }
     }
     
@@ -1211,8 +1210,9 @@ void powerSaveDeepSleep()
 
         while (isTouched() == false)
         {
+            sleepModeScreen();
             _gfx.controlBacklight(false);
-            esp_deep_sleep_start();
+            esp_light_sleep_start();
 
         }
     }
@@ -1695,7 +1695,35 @@ void Application::window(String name, int indexTask, void (*f1)(void), void (*f2
 }
 
 /* App */
-/* desctop */
+/* my tray */
+void myTray()
+{
+    uint8_t border{4};
+    uint8_t xx{border};
+    uint8_t yy{15}; 
+
+    uint8_t countTask{1};
+    
+    for (App &command : commands)
+    {
+        if (command.state == 2)
+        {
+            _myConsole.shortcut(command.name, command.bitMap, xx, yy, command.f, _joy.posX0, _joy.posY0);
+            countTask++;
+
+            xx += (32 + border);
+
+            if (countTask > 7) 
+            {
+                xx = 4; yy += (32 + border); countTask = 0;
+            }
+        }
+    }
+    
+    _gfx.print("My Desctop", 5, 8, 8, 5);
+    u8g2.drawHLine(0, 10, 256); 
+}
+/* my desctop */
 void myDesctop()
 {
     uint8_t border{4};
@@ -1727,12 +1755,12 @@ void myDesctop()
 
     /*test led*/ //_gfx.controlBacklight(true);
 }
-/* test */
+/* my test */
 void testApp()
 {
     _app.window("Test Application", 103, null, null);
 }
-/* wi-fi */
+/* my wi-fi */
 void myWifiDisconnect()
 {
     WiFi.disconnect(true);
@@ -1743,7 +1771,7 @@ void myWifiDisconnect()
     _task.taskKill(104);
     stateWifiSetup = false; stateWifi = false;
 }
-/* wi-fi */
+/* my wi-fi */
 void myWifiConnect()
 {
     _task.taskRun(104);
