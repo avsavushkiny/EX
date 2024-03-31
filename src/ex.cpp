@@ -1552,7 +1552,7 @@ struct App
     void (*f)(void);        //task-function
 
     bool active;            //activ status task-function
-    int indexTask;          //
+    int indexTask;          //index
     const uint8_t *bitMap;  //icon task-function
     uint8_t state;          //0-task-function any 1-desctop any 2-app
 };
