@@ -1615,12 +1615,12 @@ struct App
     bool active;            //activ status task-function
     int indexTask;          //index
     const uint8_t *bitMap;  //icon task-function
-    uint8_t state;          //0-task-function any 1-desctop any 2-app
+    uint8_t state;          //0-task, 1-desktop, 2-app, 3-tray task
 };
 /* enumeration of objects - commands */
 App commands[]
 {
-    //system task
+    /* system task */
     {"clearcomm",   "Clear command",       clearCommandTerminal, false,     0, NULL, 0},
     {"deepsleep",   "Deep sleep PWS-mode", powerSaveDeepSleep,   true,      1, NULL, 0},
     {"rawadc",      "Raw data ADC",        systemRawADC,         false,     2, NULL, 0},
@@ -1628,17 +1628,25 @@ App commands[]
     {"fps",         "FPS",                 fpsCalculation,       false,     4, NULL, 0},
     {"reboot",      "Reboot board",        rebootBoard,          false,     5, NULL, 0},
 
-    //app-desctop
+    /* desktop task. workspace */
     {"mydesctop",   "My Desctop",          myDesktop,            true,    100, NULL,                  1},
-    //app
+    //userDesktop
+
+    /* app */
     {"myconsole",   "My Console",          myConsole,            false,   101, iconMyConsole_bits,    2},
     {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits, 2},
     {"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    2},
     {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 2},
     
+    /* tray */
+    //clock task
+    //battery task
+    //fps task
+    //ip info task
+    //buffer task
     
-
-    //system graphics-task
+    /* system graphics-task */
+    //keyboard task
     {"sysledcontrol", "LED control",       sustemLedControl,     true,    299, NULL, 0},
     {"systray",       "Tray",              systemTray,           true,    300, NULL, 0},
     {"syscursor",     "Cursor",            systemCursor,         true,    301, NULL, 0},
