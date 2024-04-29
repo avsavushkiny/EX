@@ -8,6 +8,15 @@
       ntp client                  https://github.com/arduino-libraries/NTPClient
 */
 
+/*
+  [v 1.0] -> First release.
+           - The first implementation. The terminal is used, the organization of tasks.
+           - Create classes Graphics, Timer, Interface, Powersave, Melody, Button, Shortcut, Application, Label, Task.
+           - Add Battery control, LED control tasks.
+  [v 2.0] -> Organization, definition of events.
+           - Add tasks: Reboot board, FPS.
+*/
+
 #include <iostream>
 #include <Arduino.h>
 #include <U8g2lib.h> 
@@ -20,10 +29,10 @@
 
 
 //version library
-const int8_t VERSION_LIB[] = {1, 0};
+const int8_t VERSION_LIB[] = {2, 0};
 
 Graphics _gfx; 
-Timer _delayCursor, _trm0, _trm1, _stop, _timerUpdateClock; 
+Timer _delayCursor, _trm0, _trm1, _stop, _timerUpdateClock, _fps; 
 Application _app; 
 Joystick _joy; 
 Shortcut _myConsole, _wifi;
@@ -47,7 +56,7 @@ NTPClient timeClient(ntpUDP, "1.asia.pool.ntp.org", 10800, 60000);
 
 /* Prototype function */
 void null();
-void clearCommandTerminal(); void testApp(); void myDesctop();
+void clearCommandTerminal(); void testApp(); void myDesktop();
 void myWifiConnect(); void myWifiDisconnect(); void sustemLedControl(); void flagLedControl();
 
 
@@ -833,15 +842,17 @@ bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*
     return false;
 }
 
-/* Joystic */
+/* Joystic and Key */
 /* button control */
 bool Joystick::pressKeyENTER()
 {
     if (digitalRead(PIN_BUTTON_ENTER) == true)
     {
+        EVENT_KEY = KEY_PRESSED_ENTER;
         return true;
     }
     else
+        EVENT_KEY = KEY_NOT_PRESSED;
         return false;
 }
 /* button control */
@@ -849,9 +860,11 @@ bool Joystick::pressKeyEX()
 {
     if (digitalRead(PIN_BUTTON_EX) == true)
     {
+        EVENT_KEY = KEY_PRESSED_EX;
         return true;
     }
     else
+        EVENT_KEY = KEY_NOT_PRESSED;
         return false;
 }
 /* button control */
@@ -859,9 +872,11 @@ bool Joystick::pressKeyA()
 {
     if (digitalRead(PIN_BUTTON_A) == true)
     {
+        EVENT_KEY = KEY_PRESSED_A;
         return true;
     }
     else
+        EVENT_KEY = KEY_NOT_PRESSED;
         return false;
 }
 /* button control */
@@ -869,9 +884,11 @@ bool Joystick::pressKeyB()
 {
     if (digitalRead(PIN_BUTTON_B) == true)
     {
+        EVENT_KEY = KEY_PRESSED_B;
         return true;
     }
     else
+        EVENT_KEY = KEY_NOT_PRESSED;
         return false;
 }
 /* calculate Stick position */
@@ -883,6 +900,7 @@ int Joystick::calculatePositionY0() // 0y
     {
         COOR_Y0 += 2;
         if (COOR_Y0 >= 160) COOR_Y0 = 160;
+        EVENT_JOYSTICK = JOY_ACTIVE_Y;
         return COOR_Y0;
     }
     /*else if (RAW_DATA_Y0 < (DEF_RES_Y0 - 1100))
@@ -895,6 +913,7 @@ int Joystick::calculatePositionY0() // 0y
     {
         COOR_Y0 -= 2;
         if (COOR_Y0 <= 0) COOR_Y0 = 0;
+        EVENT_JOYSTICK = JOY_ACTIVE_Y;
         return COOR_Y0;
     }
    /*else if (RAW_DATA_Y0 > (DEF_RES_Y0 + 1100))
@@ -904,6 +923,7 @@ int Joystick::calculatePositionY0() // 0y
         return COOR_Y0;
     }*/
     else
+        EVENT_JOYSTICK = JOY_NOT_ACTIVE_Y;
         return COOR_Y0;
 }
 /* calculate Stick position */
@@ -947,8 +967,8 @@ int Joystick::calculatePositionX0() // 0x
     {
         COOR_X0 -= 2;
         if (COOR_X0 <= 0) COOR_X0 = 0;
+        EVENT_JOYSTICK = JOY_ACTIVE_X;
         return COOR_X0; 
-
     }
     /*else if (RAW_DATA_X0 < (DEF_RES_X0 - 1100))
     {
@@ -961,6 +981,7 @@ int Joystick::calculatePositionX0() // 0x
     {
         COOR_X0 += 2;
         if (COOR_X0 >= 256) COOR_X0 = 256;
+        EVENT_JOYSTICK = JOY_ACTIVE_X;
         return COOR_X0; 
     }
     /*else if (RAW_DATA_X0 > (DEF_RES_X0 + 1100))
@@ -970,6 +991,7 @@ int Joystick::calculatePositionX0() // 0x
         return COOR_X0;
     }*/
     else
+        EVENT_JOYSTICK = JOY_NOT_ACTIVE_X;
         return COOR_X0;
 }
 /* calculate Stick position */
@@ -1048,21 +1070,26 @@ int8_t Joystick::calculateIndexY0() // obj 0y
 
     if ((RAW_DATA_Y0 < (DEF_RES_Y0 - 500)) && (RAW_DATA_Y0 > (DEF_RES_Y0 - 1100)))
     {
+        EVENT_JOYSTICK = JOY_ACTIVE_Y;
         return OBJ_Y0 = OBJ_Y0 - 1;
     }
     else if (RAW_DATA_Y0 < (DEF_RES_Y0 - 1100))
     {
+        EVENT_JOYSTICK = JOY_ACTIVE_Y;
         return OBJ_Y0 = OBJ_Y0 - 1; // 2
     }
     else if ((RAW_DATA_Y0 > (DEF_RES_Y0 + 500)) && (RAW_DATA_Y0 < (DEF_RES_Y0 + 1100)))
     {
+        EVENT_JOYSTICK = JOY_ACTIVE_Y;
         return OBJ_Y0 = OBJ_Y0 + 1;
     }
     else if (RAW_DATA_Y0 > (DEF_RES_Y0 + 1100))
     {
+        EVENT_JOYSTICK = JOY_ACTIVE_Y;
         return OBJ_Y0 = OBJ_Y0 + 1; // 2
     }
     else
+        EVENT_JOYSTICK = JOY_NOT_ACTIVE_Y;
         return OBJ_Y0 = 0;
 }
 /* calculate position index */
@@ -1096,21 +1123,26 @@ int8_t Joystick::calculateIndexX0() // obj 0x
 
     if ((RAW_DATA_X0 < (DEF_RES_X0 - 500)) && (RAW_DATA_X0 > (DEF_RES_X0 - 1100)))
     {
+        EVENT_JOYSTICK = JOY_ACTIVE_X;
         return OBJ_X0 = OBJ_X0 - 1;
     }
     else if (RAW_DATA_X0 < (DEF_RES_X0 - 1100))
     {
+        EVENT_JOYSTICK = JOY_ACTIVE_X;
         return OBJ_X0 = OBJ_X0 - 1; // 2
     }
     else if ((RAW_DATA_X0 > (DEF_RES_X0 + 500)) && (RAW_DATA_X0 < (DEF_RES_X0 + 1100)))
     {
+        EVENT_JOYSTICK = JOY_ACTIVE_X;
         return OBJ_X0 = OBJ_X0 + 1;
     }
     else if (RAW_DATA_X0 > (DEF_RES_X0 + 1100))
     {
+        EVENT_JOYSTICK = JOY_ACTIVE_X;
         return OBJ_X0 = OBJ_X0 + 1; // 2
     }
     else
+        EVENT_JOYSTICK = JOY_NOT_ACTIVE_X;
         return OBJ_X0 = 0;
 }
 /* calculate position index */
@@ -1439,17 +1471,17 @@ void Melody::song(listMelody num)
 }
 
 /* System task-function */
-/* task-function. clear buffer */
+/* Task. clear buffer */
 void clearBufferString()
 {
     BUFFER_STRING = "";
 }
-/* task-function. calculation of battery capacity */
+/* Task. calculation of battery capacity */
 int dataRawBattery{};
 int systemUpdateBattery()
 {
     dataRawBattery = analogRead(PIN_BATTERY);
-    dataRawBattery = map(dataRawBattery, 1861, 2481, 0, 100);
+    dataRawBattery = map(dataRawBattery, 1890, 2470, 0, 100);
 
     return dataRawBattery;
 }
@@ -1462,7 +1494,8 @@ void systemNTPTimeUpdate()
     }
     else _mess.popUpMessage("!", "The Wi-Fi (internet) connection\nis not active.", 2500);
 }
-/* task-function. */
+
+/* Task. */
 int _t{};
 int systemBattery()
 {
@@ -1471,7 +1504,7 @@ int systemBattery()
 
     return dataRawBattery;
 }
-/* task-function. system tray output */
+/* Task. System tray output */
 void systemTray()
 {
     u8g2.setDrawColor(1);
@@ -1485,38 +1518,37 @@ void systemTray()
 
     _trm0.timer(clearBufferString, 100); //clear text-buffer
 }
-/* task-function. system cursor output */
+/* Task. System cursor output */
 void systemCursor()
 {
     _joy.updatePositionXY(20);
     _crs.cursor(true, _joy.posX0, _joy.posY0);
 }
-/* task-function. system RawADC */
+/* Task. System RawADC */
 void systemRawADC()
 {
     String text = "Coord X: " + (String)_joy.RAW_DATA_X0 + "Coord Y: " + (String)_joy.RAW_DATA_Y0;
     BUFFER_STRING = text; 
 }
-/* task-function. displaying a list of tasks */
+/* Task. Sisplaying a list of tasks */
 void systemViewList()
 {
 
 }
-/* task-function. stack, task, command */
+/* Task. Stack, task, command */
 void myConsole()
 {
     _mess.popUpMessage("!", "Ohhh no :(\nTask-function not defined!\0", 5000);
     _joy.resetPositionXY();
 }
-/* task-function. serial port operation control */
+/* Task. Serial port operation control */
 void mySerialPort()
 {
     _mess.popUpMessage("COM port", "A - Ok, B - Cancel" , "Are you sure you want\nto close the task?\0", 5000);
     //_mess.dialogueMessage("COM port", "Are you sure you want\nto close the task?\0");
     _joy.resetPositionXY();
 }
-/* task-function. system LED control */
-
+/* Task. System LED control */
 void flagLedControl()
 {
     for (int i = 0; i < 1; i++)
@@ -1529,7 +1561,6 @@ void flagLedControl()
             flagStateLedControl = true; delay(250);
     }
 }
-
 void sustemLedControl()
 {
 
@@ -1539,8 +1570,38 @@ void sustemLedControl()
     else _gfx.controlBacklight(false);
 }
 
-/* NULL function */
+/* Null function */
 void null(){}
+
+/* FPS calculation */
+int8_t _FPS = 0;
+int8_t _fpsCounter = 0;
+long int _fpsTime = millis();
+
+void fpsCalculation()
+{
+    //u8g2.setCursor(239, 148);
+    //u8g2.print(_FPS);
+    _gfx.print((String)_FPS, 240, 148, 10, 6);
+    // get FPS
+    if ((millis() - _fpsTime) <= 1000)
+    {
+        _fpsCounter++;
+    }
+    else
+    {
+        _fpsTime = millis();
+        _FPS = _fpsCounter;
+        _fpsCounter = 0;
+    }
+}
+
+/* Reboot ESP32 */
+void rebootBoard()
+{
+    ESP.restart();
+}
+
 
 /* Terminal */
 /* command type */
@@ -1564,9 +1625,11 @@ App commands[]
     {"deepsleep",   "Deep sleep PWS-mode", powerSaveDeepSleep,   true,      1, NULL, 0},
     {"rawadc",      "Raw data ADC",        systemRawADC,         false,     2, NULL, 0},
     {"clearbuffer", "Clear Buffer",        clearBufferString,    false,     3, NULL, 0},
+    {"fps",         "FPS",                 fpsCalculation,       false,     4, NULL, 0},
+    {"reboot",      "Reboot board",        rebootBoard,          false,     5, NULL, 0},
 
     //app-desctop
-    {"mydesctop",   "My Desctop",          myDesctop,            true,    100, NULL,                  1},
+    {"mydesctop",   "My Desctop",          myDesktop,            true,    100, NULL,                  1},
     //app
     {"myconsole",   "My Console",          myConsole,            false,   101, iconMyConsole_bits,    2},
     {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits, 2},
@@ -1576,9 +1639,9 @@ App commands[]
     
 
     //system graphics-task
-    {"sysledcontrol", "LED control",         sustemLedControl,     true,    299, NULL, 0},
-    {"systray",       "Tray",                systemTray,           true,    300, NULL, 0},
-    {"syscursor",     "Cursor",              systemCursor,         true,    301, NULL, 0},
+    {"sysledcontrol", "LED control",       sustemLedControl,     true,    299, NULL, 0},
+    {"systray",       "Tray",              systemTray,           true,    300, NULL, 0},
+    {"syscursor",     "Cursor",            systemCursor,         true,    301, NULL, 0},
 };
 /* delete all commands */
 void clearCommandTerminal()
@@ -1615,7 +1678,8 @@ void Terminal::terminal()
     {
       if (not strncmp(command.text, text, 20))
       {
-        command.active = true;
+        if (command.active == true) command.active = false;
+        else command.active = true;
       }
     }
   }
@@ -1720,11 +1784,11 @@ void myTray()
         }
     }
     
-    _gfx.print("My Desctop", 5, 8, 8, 5);
+    _gfx.print("My Desktop", 5, 8, 8, 5);
     u8g2.drawHLine(0, 10, 256); 
 }
 /* my desctop */
-void myDesctop()
+void myDesktop()
 {
     uint8_t border{4};
     uint8_t xx{border};
@@ -1748,7 +1812,7 @@ void myDesctop()
         }
     }
     
-    _gfx.print("My Desctop", 5, 8, 8, 5);
+    _gfx.print("My Desktop", 5, 8, 8, 5);
     u8g2.drawHLine(0, 10, 256);
 
     
