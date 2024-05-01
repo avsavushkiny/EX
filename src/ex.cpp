@@ -58,6 +58,7 @@ NTPClient timeClient(ntpUDP, "1.asia.pool.ntp.org", 10800, 60000);
 void null();
 void clearCommandTerminal(); void testApp(); void myDesktop();
 void myWifiConnect(); void myWifiDisconnect(); void sustemLedControl(); void flagLedControl();
+void myTray();
 
 
 enum StateOs
@@ -804,8 +805,8 @@ bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*
 
     if ((xCursor >= x && xCursor <= (x + (sizeText * chi))) && (yCursor >= y - (lii + 2) && yCursor <= y + 2))
     {
-        u8g2.setDrawColor(1);
-        u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1);
+        //u8g2.setDrawColor(1);//1
+        //u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1);
 
         BUFFER_STRING = description;
 
@@ -822,8 +823,9 @@ bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*
 
     u8g2.setCursor(x + 3, y);
     u8g2.setFont(u8g2_font_6x10_tr);
+    
     u8g2.setFontMode(1);
-    u8g2.setDrawColor(2);
+    u8g2.setDrawColor(1);//2
     
     for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
     {
@@ -837,7 +839,7 @@ bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*
         }
     }
 
-    u8g2.setFontMode(0);
+    u8g2.setFontMode(0); //0-activate not-transparent font mode
 
     return false;
 }
@@ -1223,7 +1225,7 @@ void powerSaveDeepSleep()
         screenTiming = TIMER;
     }
     
-    if ((_joy.posY0 >= 150) && (_joy.posX0 <= 100)) BUFFER_STRING = "Deep powersave mode";
+    //if ((_joy.posY0 >= 150) && (_joy.posX0 <= 100)) BUFFER_STRING = "Deep powersave mode";
     
     if ((TIMER - screenTiming > 60000) && (_joy.posY0 >= 150))
     {
@@ -1574,8 +1576,8 @@ void sustemLedControl()
 void null(){}
 
 /* FPS calculation */
-int8_t _FPS = 0;
-int8_t _fpsCounter = 0;
+uint8_t _FPS = 0;
+uint8_t _fpsCounter = 0;
 long int _fpsTime = millis();
 
 void fpsCalculation()
@@ -1602,55 +1604,107 @@ void rebootBoard()
     ESP.restart();
 }
 
+/* Taskbar-area */
+int xTray{0}, yTray{159}, borderTray{5};
+void trayClock()
+{
+    //width 8-char * 6px = 48px
+    _labelClock.label((String)timeClient.getFormattedTime(), "Click to update time", xTray, yTray, systemNTPTimeUpdate, 8, 5, _joy.posX0, _joy.posY0);
+}
+
+void trayBattery()
+{
+    //width 2-char * 6px = 12px
+    _labelBattery.label((String)systemBattery(), "Click to LED on/off", xTray, yTray, flagLedControl, 8, 5, _joy.posX0, _joy.posY0);
+}
+
+void trayFps()
+{
+    //width 2-char * 6px = 12px
+    _gfx.print((String)_FPS, xTray, yTray, 10, 6);
+    // get FPS
+    if ((millis() - _fpsTime) <= 1000)
+    {
+        _fpsCounter++;
+    }
+    else
+    {
+        _fpsTime = millis();
+        _FPS = _fpsCounter;
+        _fpsCounter = 0;
+    }
+}
+
+void trayBuffer()
+{
+    //width 10-char * 6px = 60px
+    u8g2.setDrawColor(1);
+    _gfx.print(BUFFER_STRING, xTray, yTray, 8, 5);
+    _trm0.timer(clearBufferString, 100); //clear text-buffer
+}
 
 /* Terminal */
 /* command type */
 struct App
 {
-    char const *text;       //command
-    char const *name;       //name task-function
+    char const *text;           //command
+    char const *name;           //name task-function
 
-    void (*f)(void);        //task-function
+    void (*f)(void);            //task-function
 
-    bool active;            //activ status task-function
-    int indexTask;          //index
-    const uint8_t *bitMap;  //icon task-function
-    uint8_t state;          //0-task, 1-desktop, 2-app, 3-tray task
+    bool active;                //activ status task-function
+    int indexTask;              //index
+    const uint8_t *bitMap;      //icon task-function
+
+    const uint8_t widthApp;     //width
+    const uint8_t heightApp;    //height
+
+    uint8_t state;              //0-task, 1-desktop, 2-app, 3-tray task
 };
 /* enumeration of objects - commands */
 App commands[]
 {
     /* system task */
-    {"clearcomm",   "Clear command",       clearCommandTerminal, false,     0, NULL, 0},
-    {"deepsleep",   "Deep sleep PWS-mode", powerSaveDeepSleep,   true,      1, NULL, 0},
-    {"rawadc",      "Raw data ADC",        systemRawADC,         false,     2, NULL, 0},
-    {"clearbuffer", "Clear Buffer",        clearBufferString,    false,     3, NULL, 0},
-    {"fps",         "FPS",                 fpsCalculation,       false,     4, NULL, 0},
-    {"reboot",      "Reboot board",        rebootBoard,          false,     5, NULL, 0},
+    {"clearcomm",   "Clear command",       clearCommandTerminal, false,     0, NULL, 0, 0, 0},
+    {"deepsleep",   "Deep sleep PWS-mode", powerSaveDeepSleep,   true,      1, NULL, 0, 0, 0},
+    {"rawadc",      "Raw data ADC",        systemRawADC,         false,     2, NULL, 0, 0, 0},
+    {"clearbuffer", "Clear Buffer",        clearBufferString,    false,     3, NULL, 0, 0, 0},
+    {"fps",         "FPS",                 fpsCalculation,       false,     4, NULL, 0, 0, 0},
+    {"reboot",      "Reboot board",        rebootBoard,          false,     5, NULL, 0, 0, 0},
 
     /* desktop task. workspace */
-    {"mydesctop",   "My Desctop",          myDesktop,            true,    100, NULL,                  1},
+    {"mydesctop",   "My Desctop",          myDesktop,            true,    100, NULL,                  0, 0, 1},
     //userDesktop
 
     /* app */
-    {"myconsole",   "My Console",          myConsole,            false,   101, iconMyConsole_bits,    2},
-    {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits, 2},
-    {"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    2},
-    {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 2},
+    {"myconsole",   "My Console",          myConsole,            false,   101, iconMyConsole_bits,    0, 0, 2},
+    {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits, 0, 0, 2},
+    {"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    0, 0, 2},
+    {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 0, 0, 2},
     
-    /* tray */
+    /* task-bar-area */
+    //clear tray
+    //{"cleartray", "Clear Tray",    null,         false, 200, NULL, 0,  0, 3},
     //clock task
+    {"clock", "Clock",             trayClock,    true,  201, NULL, 40, 0, 3},
     //battery task
+    {"battery", "Battery control", trayBattery,  true,  202, NULL, 10, 0, 3},
     //fps task
+    {"fps", "FPS",                 trayFps,      true,  203, NULL, 15, 0, 3},
     //ip info task
+    //{"ip", "IP",                   null,         false, 204, NULL, 0,  0, 3},
     //buffer task
+    {"buffer", "Buffer",           trayBuffer,   true,  205, NULL, 110,0, 3},
+
     
     /* system graphics-task */
     //keyboard task
-    {"sysledcontrol", "LED control",       sustemLedControl,     true,    299, NULL, 0},
-    {"systray",       "Tray",              systemTray,           true,    300, NULL, 0},
-    {"syscursor",     "Cursor",            systemCursor,         true,    301, NULL, 0},
+    {"", "", NULL, false, 298, NULL, 0, 0, 0},
+    {"sysledcontrol", "LED control",       sustemLedControl,     true,    299, NULL, 0, 0, 0},
+    {"systray",       "Tray",              myTray,               true,    300, NULL, 0, 0, 0},
+    {"syscursor",     "Cursor",            systemCursor,         true,    301, NULL, 0, 0, 0},
 };
+
 /* delete all commands */
 void clearCommandTerminal()
 {
@@ -1664,7 +1718,7 @@ void calcTerminal()
 {
   for (App &command : commands)
   {
-    if (command.active)
+    if ((command.active) && (command.state != 3))
     {
       command.f();
     }
@@ -1770,30 +1824,22 @@ void Application::window(String name, int indexTask, void (*f1)(void), void (*f2
 /* my tray */
 void myTray()
 {
-    uint8_t border{4};
-    uint8_t xx{border};
-    uint8_t yy{15}; 
-
-    uint8_t countTask{1};
+    u8g2.setDrawColor(1);
+    u8g2.drawHLine(0, 150, 256); 
+    xTray = 0;
     
     for (App &command : commands)
     {
-        if (command.state == 2)
+        if (command.state == 3)
         {
-            _myConsole.shortcut(command.name, command.bitMap, xx, yy, command.f, _joy.posX0, _joy.posY0);
-            countTask++;
-
-            xx += (32 + border);
-
-            if (countTask > 7) 
+            if (command.active == true)
             {
-                xx = 4; yy += (32 + border); countTask = 0;
+                xTray += borderTray;
+                command.f();
+                xTray += command.widthApp;
             }
         }
     }
-    
-    _gfx.print("My Desktop", 5, 8, 8, 5);
-    u8g2.drawHLine(0, 10, 256); 
 }
 /* my desctop */
 void myDesktop()
