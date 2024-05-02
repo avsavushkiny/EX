@@ -1854,7 +1854,7 @@ void myWifiDisconnect()
 
     //_mess.popUpMessage("!", "Wi-Fi is disabled!\0", 2000);
     
-    _task.taskKill(104);
+    _task.taskKill(104); _task.taskKill(205);
     stateWifiSetup = false; stateWifi = false;
 }
 /* my wi-fi */
