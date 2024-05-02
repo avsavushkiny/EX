@@ -805,8 +805,8 @@ bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*
 
     if ((xCursor >= x && xCursor <= (x + (sizeText * chi))) && (yCursor >= y - (lii + 2) && yCursor <= y + 2))
     {
-        //u8g2.setDrawColor(1);//1
-        //u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1);
+        u8g2.setDrawColor(1);//1
+        u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1);
 
         BUFFER_STRING = description;
 
@@ -825,7 +825,7 @@ bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*
     u8g2.setFont(u8g2_font_6x10_tr);
     
     u8g2.setFontMode(1);
-    u8g2.setDrawColor(1);//2
+    u8g2.setDrawColor(2);//2
     
     for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
     {
@@ -1506,20 +1506,7 @@ int systemBattery()
 
     return dataRawBattery;
 }
-/* Task. System tray output */
-void systemTray()
-{
-    u8g2.setDrawColor(1);
-    u8g2.drawHLine(0, 150, 256);
-    
-    _gfx.print(BUFFER_STRING, 5, 159, 8, 5);
-    _labelBattery.label((String)systemBattery(), "Click to LED on/off", 196, 159, flagLedControl, 8, 5, _joy.posX0, _joy.posY0);
-    _labelClock.label((String)timeClient.getFormattedTime(), "Click to update time", 211, 159, systemNTPTimeUpdate, 8, 5, _joy.posX0, _joy.posY0);
-    //_gfx.print((String)systemBattery(), 196, 159, 8, 5);
 
-
-    _trm0.timer(clearBufferString, 100); //clear text-buffer
-}
 /* Task. System cursor output */
 void systemCursor()
 {
@@ -1575,29 +1562,6 @@ void sustemLedControl()
 /* Null function */
 void null(){}
 
-/* FPS calculation */
-uint8_t _FPS = 0;
-uint8_t _fpsCounter = 0;
-long int _fpsTime = millis();
-
-void fpsCalculation()
-{
-    //u8g2.setCursor(239, 148);
-    //u8g2.print(_FPS);
-    _gfx.print((String)_FPS, 240, 148, 10, 6);
-    // get FPS
-    if ((millis() - _fpsTime) <= 1000)
-    {
-        _fpsCounter++;
-    }
-    else
-    {
-        _fpsTime = millis();
-        _FPS = _fpsCounter;
-        _fpsCounter = 0;
-    }
-}
-
 /* Reboot ESP32 */
 void rebootBoard()
 {
@@ -1605,22 +1569,24 @@ void rebootBoard()
 }
 
 /* Taskbar-area */
-int xTray{0}, yTray{159}, borderTray{5};
+int xTray{256}, yTray{159}, borderTray{5};
 void trayClock()
 {
-    //width 8-char * 6px = 48px
+    //width 40px
     _labelClock.label((String)timeClient.getFormattedTime(), "Click to update time", xTray, yTray, systemNTPTimeUpdate, 8, 5, _joy.posX0, _joy.posY0);
 }
 
 void trayBattery()
 {
-    //width 2-char * 6px = 12px
+    //width 10px
     _labelBattery.label((String)systemBattery(), "Click to LED on/off", xTray, yTray, flagLedControl, 8, 5, _joy.posX0, _joy.posY0);
 }
 
+/* FPS calculation */
+uint8_t _FPS = 0; uint8_t _fpsCounter = 0; long int _fpsTime = millis();
 void trayFps()
 {
-    //width 2-char * 6px = 12px
+    //width 10px
     _gfx.print((String)_FPS, xTray, yTray, 10, 6);
     // get FPS
     if ((millis() - _fpsTime) <= 1000)
@@ -1635,11 +1601,18 @@ void trayFps()
     }
 }
 
+/* Draw IP connect */
+void trayDrawIpConnect()
+{
+    //width 75px
+    _labelWifi.label(WiFi.localIP().toString(), "Click to disconnect", xTray, yTray, myWifiDisconnect, 8, 5, _joy.posX0, _joy.posY0);
+}
+
 void trayBuffer()
 {
-    //width 10-char * 6px = 60px
+    //width 110px (22 chars)
     u8g2.setDrawColor(1);
-    _gfx.print(BUFFER_STRING, xTray, yTray, 8, 5);
+    _gfx.print(BUFFER_STRING, 5, yTray, 8, 5);
     _trm0.timer(clearBufferString, 100); //clear text-buffer
 }
 
@@ -1669,8 +1642,7 @@ App commands[]
     {"deepsleep",   "Deep sleep PWS-mode", powerSaveDeepSleep,   true,      1, NULL, 0, 0, 0},
     {"rawadc",      "Raw data ADC",        systemRawADC,         false,     2, NULL, 0, 0, 0},
     {"clearbuffer", "Clear Buffer",        clearBufferString,    false,     3, NULL, 0, 0, 0},
-    {"fps",         "FPS",                 fpsCalculation,       false,     4, NULL, 0, 0, 0},
-    {"reboot",      "Reboot board",        rebootBoard,          false,     5, NULL, 0, 0, 0},
+    {"reboot",      "Reboot board",        rebootBoard,          false,     4, NULL, 0, 0, 0},
 
     /* desktop task. workspace */
     {"mydesctop",   "My Desctop",          myDesktop,            true,    100, NULL,                  0, 0, 1},
@@ -1682,19 +1654,14 @@ App commands[]
     {"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    0, 0, 2},
     {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 0, 0, 2},
     
-    /* task-bar-area */
+    /* taskbar-area */
     //clear tray
     //{"cleartray", "Clear Tray",    null,         false, 200, NULL, 0,  0, 3},
-    //clock task
-    {"clock", "Clock",             trayClock,    true,  201, NULL, 40, 0, 3},
-    //battery task
-    {"battery", "Battery control", trayBattery,  true,  202, NULL, 10, 0, 3},
-    //fps task
-    {"fps", "FPS",                 trayFps,      true,  203, NULL, 15, 0, 3},
-    //ip info task
-    //{"ip", "IP",                   null,         false, 204, NULL, 0,  0, 3},
-    //buffer task
-    {"buffer", "Buffer",           trayBuffer,   true,  205, NULL, 110,0, 3},
+    {"clock",      "Clock",                trayClock,    true,  201, NULL, 40, 0, 3},
+    {"battery",    "Battery control",      trayBattery,  true,  202, NULL, 15, 0, 3},
+    {"fps",        "FPS",                  trayFps,      false, 203, NULL, 10, 0, 3},
+    {"ip",         "Ip adress",            trayDrawIpConnect, false, 205, NULL, 75, 0, 3},
+    {"buffer",     "Buffer",               trayBuffer,   true,  204, NULL, 0,  0, 3},
 
     
     /* system graphics-task */
@@ -1826,7 +1793,7 @@ void myTray()
 {
     u8g2.setDrawColor(1);
     u8g2.drawHLine(0, 150, 256); 
-    xTray = 0;
+    xTray = 256;
     
     for (App &command : commands)
     {
@@ -1834,9 +1801,10 @@ void myTray()
         {
             if (command.active == true)
             {
-                xTray += borderTray;
+                //xTray += borderTray;
+                xTray -= borderTray + command.widthApp;
                 command.f();
-                xTray += command.widthApp;
+                //xTray -= command.widthApp;
             }
         }
     }
@@ -1900,7 +1868,8 @@ void myWifiConnect()
 
     if (stateWifiSetup == false)
     {
-        WiFi.begin("Allowed", "Serjant1985"); stateWifiSetup = true;
+        //WiFi.begin("Allowed", "Serjant1985"); stateWifiSetup = true;
+        WiFi.begin("RT-GPON-6089", "u7PxRkFQ"); stateWifiSetup = true;
     }
 
     if (WiFi.status() != WL_CONNECTED)
@@ -1912,7 +1881,7 @@ void myWifiConnect()
     else
     {
         stateWifi = true;
-        _labelWifi.label(WiFi.localIP().toString(), "Click to disconnect", 130, 159, myWifiDisconnect, 8, 5, _joy.posX0, _joy.posY0);
+        _task.taskRun(205);
         //_gfx.print(WiFi.localIP().toString(), 130, 159, 8, 5);
         //_disconnect.button("X", 115, 158, myWifiDisconnect, _joy.posX0, _joy.posY0);
     }
