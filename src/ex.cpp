@@ -41,7 +41,7 @@ PowerSave _pwsDeep;
 Interface _mess; 
 Button _ok, _no, _collapse, _expand, _close, _ledControl;
 TimeNTP _timentp; Task _task;
-Label _labelClock, _labelBattery, _labelWifi;
+Label _labelClock, _labelBattery, _labelWifi, _taskList;
 
 /* WIFI */
 bool stateWifiSetup = false;
@@ -59,6 +59,7 @@ void null();
 void clearCommandTerminal(); void testApp(); void myDesktop();
 void myWifiConnect(); void myWifiDisconnect(); void sustemLedControl(); void flagLedControl();
 void myTray();
+void myEx(); void myExViewTaskList();
 
 
 enum StateOs
@@ -1653,6 +1654,7 @@ App commands[]
     {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits, 0, 0, 2},
     {"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    0, 0, 2},
     {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 0, 0, 2},
+    {"myex",        "My EX",               myEx,                 false,   105, iconMyNullApp_bits,    0, 0, 2},
     
     /* taskbar-area */
     //clear tray
@@ -1767,8 +1769,8 @@ void Application::window(String name, int indexTask, void (*f1)(void), void (*f2
     _task.taskKill(100); //kill Desctop
     _task.taskRun(indexTask);
     
-    f1; //calc
-    f2; //graphics
+    f1(); //calc
+    f2(); //graphics
     
     //draw window
     {
@@ -1786,6 +1788,7 @@ void Application::window(String name, int indexTask, void (*f1)(void), void (*f2
         }
     }
 }
+ 
 
 /* App */
 /* my tray */
@@ -1841,6 +1844,65 @@ void myDesktop()
 
     /*test led*/ //_gfx.controlBacklight(true);
 }
+/* my EX. View the task list */
+
+void myExViewTaskList()
+{
+    int xx{5}, yy{30}, xxx{5}, yyy{74};
+
+    u8g2.setFontMode(1);
+    u8g2.setDrawColor(2);
+
+    _gfx.print("Active tasks:", 5, 20, 8, 5);
+    //u8g2.drawStr(5, 20, "Active tasks:");
+    _gfx.print("Inactive tasks:", 5, 64, 8, 5);
+    //u8g2.drawStr(5, 64, "Inactive tasks:");
+
+    for (App &command : commands)
+    { 
+        if (command.active == true)
+        {
+            String _Text = command.text;
+            uint8_t sizeText = _Text.length();
+            
+            _taskList.label(_Text, command.name, xx, yy, null, 8, 5, _joy.posX0, _joy.posY0);
+            
+            if ((xx + (sizeText * 5) + 5) <= 240) //256 - 5 - 5
+            {
+                xx += (sizeText * 5) + 5;
+            }
+            
+            if ((xx + (sizeText * 5) + 5) >= 240)
+            {
+                xx = 5; yy += 10;
+            }
+        }
+
+        if (command.active == false)
+        {
+            String _Text = command.text;
+            uint8_t sizeText = _Text.length();
+            
+            _taskList.label(_Text, command.name, xxx, yyy, null, 8, 5, _joy.posX0, _joy.posY0);
+            
+            if ((xxx + (sizeText * 5) + 5) <= 240) //256 - 5 - 5
+            {
+                xxx += (sizeText * 5) + 5;
+            }
+            
+            if ((xxx + (sizeText * 5) + 5) >= 240)
+            {
+                xxx = 5; yyy += 10;
+            }
+        }
+    }
+}
+
+void myEx()
+{
+    _app.window("View the task list", 105, myExViewTaskList, null);
+}
+
 /* my test */
 void testApp()
 {
