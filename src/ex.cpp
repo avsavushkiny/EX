@@ -1879,7 +1879,8 @@ void myExChangingStatusTask()
 
 void myExDialogueChangingStatusTask()
 {
-    bool state = _mess.dialogueMessage("Question", "Hey User!\nClick OK to start or stop\nthe process.\0");
+    String textDialogue = "Click OK to start or stop\nthe process: " + (String)_numberIndexTask;
+    bool state = _mess.dialogueMessage("?", textDialogue);
 
     if (state == true) {myExChangingStatusTask();}
     if (state == false) {}
