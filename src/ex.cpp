@@ -206,6 +206,7 @@ void Graphics::clear()
     u8g2.sendBuffer();
 }
 
+
 /* Print */
 /* text output with parameters, add size font, add line interval (def: 10) and character interval (def: 6) */
 void Graphics::print(int8_t sizeFont, String text, int x, int y, int8_t lii, int8_t chi) // text, x-position, y-position, line interval (8-10), character interval (4-6)
@@ -292,6 +293,7 @@ bool Graphics::winkPrint(void (*f)(String, int, int), String text, int x, int y,
     }
 }
 
+
 /* Cursor */
 /* displaying the cursor on the screen */
 bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
@@ -308,6 +310,7 @@ bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
     else
         return false;
 }
+
 
 /* Interface */
 /* displaying a message to the user */
@@ -585,6 +588,7 @@ bool Interface::dialogueMessage(String label, String text)
     }
 }
 
+
 /* Button */
 /* Button return boolean state */
 bool Button::button(String text, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
@@ -647,6 +651,7 @@ bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t 
   
   return false;
 }
+
 
 /* Shortcut */
 /* displaying a shortcut to a task-function */
@@ -724,6 +729,7 @@ bool Shortcut::shortcutFrame(String name, uint8_t w, uint8_t h, uint8_t x, uint8
 
     return false;
 }
+
 
 /* Label */
 /*  */
@@ -844,6 +850,7 @@ bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*
 
     return false;
 }
+
 
 /* Joystic and Key */
 /* button control */
@@ -1173,6 +1180,7 @@ int8_t Joystick::calculateIndexX1() // obj 1x
         return OBJ_X1 = 0;
 }
 
+
 /* Timer */
 /* starting a task-function with an interval */
 void Timer::timer(void (*f)(void), int interval)
@@ -1204,6 +1212,7 @@ void Timer::stopwatch(void (*f)(void), int interval)
         f();
     }
 }
+
 
 /* Powersave mode */
 /* the function checks whether the joystick or button is pressed at a certain moment */
@@ -1310,6 +1319,7 @@ void PowerSave::sleepDeep(bool state, uint timeUntil)
     }
   }
 }
+
 
 /* Song engine */
 /* playing a melody */
@@ -1473,6 +1483,11 @@ void Melody::song(listMelody num)
     }
 }
 
+
+/* Null function */
+void null(){}
+
+
 /* System task-function */
 /* Task. clear buffer */
 void clearBufferString()
@@ -1497,8 +1512,7 @@ void systemNTPTimeUpdate()
     }
     else _mess.popUpMessage("!", "The Wi-Fi (internet) connection\nis not active.", 2500);
 }
-
-/* Task. */
+/* Task. Battery */
 int _t{};
 int systemBattery()
 {
@@ -1507,7 +1521,6 @@ int systemBattery()
 
     return dataRawBattery;
 }
-
 /* Task. System cursor output */
 void systemCursor()
 {
@@ -1559,31 +1572,24 @@ void sustemLedControl()
     if (flagStateLedControl == true) _gfx.controlBacklight(true);
     else _gfx.controlBacklight(false);
 }
-
-/* Null function */
-void null(){}
-
-/* Reboot ESP32 */
+/* Task. Reboot ESP32 */
 void rebootBoard()
 {
     ESP.restart();
 }
-
-/* Taskbar-area */
+/* Task. Taskbar-area */
 int xTray{256}, yTray{159}, borderTray{5};
 void trayClock()
 {
     //width 40px
     _labelClock.label((String)timeClient.getFormattedTime(), "Click to update time", xTray, yTray, systemNTPTimeUpdate, 8, 5, _joy.posX0, _joy.posY0);
 }
-
 void trayBattery()
 {
     //width 10px
     _labelBattery.label((String)systemBattery(), "Click to LED on/off", xTray, yTray, flagLedControl, 8, 5, _joy.posX0, _joy.posY0);
 }
-
-/* FPS calculation */
+/* Task. FPS calculation */
 uint8_t _FPS = 0; uint8_t _fpsCounter = 0; long int _fpsTime = millis();
 void trayFps()
 {
@@ -1601,14 +1607,13 @@ void trayFps()
         _fpsCounter = 0;
     }
 }
-
-/* Draw IP connect */
+/* Task. Draw IP connect */
 void trayDrawIpConnect()
 {
     //width 75px
     _labelWifi.label(WiFi.localIP().toString(), "Click to disconnect", xTray, yTray, myWifiDisconnect, 8, 5, _joy.posX0, _joy.posY0);
 }
-
+/* Task. Buffer */
 void trayBuffer()
 {
     //width 110px (22 chars)
@@ -1616,6 +1621,7 @@ void trayBuffer()
     _gfx.print(BUFFER_STRING, 5, yTray, 8, 5);
     _trm0.timer(clearBufferString, 100); //clear text-buffer
 }
+
 
 /* Terminal */
 /* command type */
@@ -1738,6 +1744,7 @@ void Terminal::terminal(void(*f)())
   }
 }
 
+
 /* Task management */
 /* disable a task */
 void Task::taskKill(int indexTask)
@@ -1761,12 +1768,29 @@ void Task::taskRun(int indexTask)
         }
     }
 }
+/* task */
+void Task::task(int indexTask)
+{
+    for (App &command : commands)
+    {
+        if ((command.active == true) && (command.indexTask == indexTask))
+        {
+            command.active = false; delay(150); break;
+        }
+
+        if ((command.active == false) && (command.indexTask == indexTask))
+        {
+            command.active = true; delay(150); break;
+        }  
+    }
+}
+
 
 /* Application */
 /* window designer for the task-function */
 void Application::window(String name, int indexTask, void (*f1)(void), void (*f2)(void))
 {
-    _task.taskKill(100); //kill Desctop
+    _task.taskKill(100); //kill Desktop
     _task.taskRun(indexTask);
     
     f1(); //calc
@@ -1844,19 +1868,31 @@ void myDesktop()
 
     /*test led*/ //_gfx.controlBacklight(true);
 }
+
+
 /* my EX. View the task list */
+int _numberIndexTask{};
+void myExChangingStatusTask()
+{
+    _task.task(_numberIndexTask);
+}
+
+void myExDialogueChangingStatusTask()
+{
+    bool state = _mess.dialogueMessage("Question", "Hey User!\nClick OK to start or stop\nthe process.\0");
+
+    if (state == true) {myExChangingStatusTask();}
+    if (state == false) {}
+}
 
 void myExViewTaskList()
 {
-    int xx{5}, yy{30}, xxx{5}, yyy{74};
+    int xx{5}, yy{30};
 
     u8g2.setFontMode(1);
     u8g2.setDrawColor(2);
 
     _gfx.print("Active tasks:", 5, 20, 8, 5);
-    //u8g2.drawStr(5, 20, "Active tasks:");
-    _gfx.print("Inactive tasks:", 5, 64, 8, 5);
-    //u8g2.drawStr(5, 64, "Inactive tasks:");
 
     for (App &command : commands)
     { 
@@ -1864,8 +1900,10 @@ void myExViewTaskList()
         {
             String _Text = command.text;
             uint8_t sizeText = _Text.length();
-            
-            _taskList.label(_Text, command.name, xx, yy, null, 8, 5, _joy.posX0, _joy.posY0);
+
+            _numberIndexTask = command.indexTask;
+
+            _taskList.label(_Text, command.name, xx, yy, myExDialogueChangingStatusTask, 8, 5, _joy.posX0, _joy.posY0);
             
             if ((xx + (sizeText * 5) + 5) <= 240) //256 - 5 - 5
             {
@@ -1877,22 +1915,33 @@ void myExViewTaskList()
                 xx = 5; yy += 10;
             }
         }
+    }
 
+    xx = 5;
+    
+    _gfx.print("Inactive tasks:", 5, (yy+20), 8, 5);
+
+    yy += 30;
+    
+    for (App &command : commands)
+    { 
         if (command.active == false)
         {
             String _Text = command.text;
             uint8_t sizeText = _Text.length();
+
+            _numberIndexTask = command.indexTask;
             
-            _taskList.label(_Text, command.name, xxx, yyy, null, 8, 5, _joy.posX0, _joy.posY0);
+            _taskList.label(_Text, command.name, xx, yy, myExDialogueChangingStatusTask, 8, 5, _joy.posX0, _joy.posY0);
             
-            if ((xxx + (sizeText * 5) + 5) <= 240) //256 - 5 - 5
+            if ((xx + (sizeText * 5) + 5) <= 240) //256 - 5 - 5
             {
-                xxx += (sizeText * 5) + 5;
+                xx += (sizeText * 5) + 5;
             }
             
-            if ((xxx + (sizeText * 5) + 5) >= 240)
+            if ((xx + (sizeText * 5) + 5) >= 240)
             {
-                xxx = 5; yyy += 10;
+                xx = 5; yy += 10;
             }
         }
     }
@@ -1902,6 +1951,7 @@ void myEx()
 {
     _app.window("View the task list", 105, myExViewTaskList, null);
 }
+
 
 /* my test */
 void testApp()

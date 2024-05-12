@@ -409,6 +409,7 @@ private:
 public:
     void taskKill(int indexTask);
     void taskRun(int indexTask);
+    void task(int indexTask);
 };
 
 #endif
