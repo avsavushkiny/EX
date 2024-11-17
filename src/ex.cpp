@@ -9,12 +9,14 @@
 */
 
 /*
-  [v 1.0] -> First release.
+ [v 0.0.1] -> First release.
            - The first implementation. The terminal is used, the organization of tasks.
            - Create classes Graphics, Timer, Interface, Powersave, Melody, Button, Shortcut, Application, Label, Task.
            - Add Battery control, LED control tasks.
-  [v 2.0] -> Organization, definition of events.
+ [v 0.0.2] -> Organization, definition of events.
            - Add tasks: Reboot board, FPS.
+           - Add powersave mode display
+           - Fix bug-code
 */
 
 #include <iostream>
@@ -28,9 +30,10 @@
 #include <WiFiUdp.h>
 
 
-//version library
-const int8_t VERSION_LIB[] = {0, 2};
-String VERSION_ADD_INFORMATION = "";
+//version Library and Text
+const int8_t VERSION_LIB[] = {0, 0, 2};
+String VERSION_ADD_INFORMATION = "B";
+String TEXT_UI_BEGIN = "The experience system. 2023-2024\nDev: Ksenofontov S, Syatkina E\nSamoilov M, Savushkin A";
 
 Graphics _gfx; 
 Timer _delayCursor, _trm0, _trm1, _stop, _timerUpdateClock, _fps; 
@@ -53,7 +56,7 @@ bool systemStateLedControl = true; bool flagStateLedControl = true;
 
 /* Time NTP*/
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "1.asia.pool.ntp.org", 10800, 60000);
+NTPClient timeClient(ntpUDP, "ntp.apple.com", 10800, 60000);
 
 /* Prototype function */
 void null();
@@ -62,22 +65,6 @@ void myWifiConnect(); void myWifiDisconnect(); void sustemLedControl(); void fla
 void myTray();
 void myEx(); void myExViewTaskList();
 
-
-enum StateOs
-{
-    /* State OS */
-    _ON,
-    _OFF,
-    _PAUSED,
-    _SLEEP,
-    /* State game */
-    _IN_GAME,
-    _OFF_GAME,
-    _CLOSE_GAME,
-    _RESTART_GAME,
-    _PAUSED_GAME
-
-};
 
 //for screensaver
 unsigned long screenTiming{}, screenTiming2{}, TIMER{};
@@ -100,20 +87,20 @@ int H_LCD{160}, W_LCD{256};
 /* Analog-to-digital converter resolution (Chip PICO 2040). */
 const int8_t RESOLUTION_ADC{12};
 /* Port data. */
-const int8_t PIN_STICK_0X = 33; // adc 
-const int8_t PIN_STICK_0Y = 32; // adc 
+const int8_t PIN_STICK_0X = 33;  // adc 
+const int8_t PIN_STICK_0Y = 32;  // adc 
 
-const int8_t PIN_STICK_1Y = 34; // adc 
-const int8_t PIN_STICK_1X = 35; // adc 
+const int8_t PIN_STICK_1Y = 34;  // adc 
+const int8_t PIN_STICK_1X = 35;  // adc 
 
 const int8_t PIN_BUTTON_ENTER = 27;  // gp 
 const int8_t PIN_BUTTON_EX    = 14;  // gp 
 const int8_t PIN_BUTTON_A     = 12;  // gp
 const int8_t PIN_BUTTON_B     = 13;  // gp
 
-const int8_t PIN_BACKLIGHT_LCD = 0;    // gp 
-const int8_t PIN_BUZZER  = 26;         // gp 
-const int8_t PIN_BATTERY = 39;         // gp
+const int8_t PIN_BACKLIGHT_LCD = 0;  // gp 
+const int8_t PIN_BUZZER  = 26;       // gp 
+const int8_t PIN_BATTERY = 39;       // gp
 
 /* Backlight */
 bool Graphics::controlBacklight(bool state) //p-n-p transistor
@@ -164,9 +151,9 @@ void Graphics::initializationSystem()
     image_height = ex_height;
     //--
     u8g2.clearBuffer();
-    u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, ex_bits); //88 88
-    _gfx.print(10, "The experience system. 2023-2024\nDev: Ksenofontov S, Syatkina E\nSamoilov M, Savushkin A", 32, ((H_LCD/2) + (image_height/2) + 7), 10, 6);
-    _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + " " + VERSION_ADD_INFORMATION, 0, H_LCD, 10, 4);
+    u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, ex_bits);
+    _gfx.print(10, TEXT_UI_BEGIN, 32, ((H_LCD/2) + (image_height/2) + 7), 10, 6);
+    _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2] + " " + VERSION_ADD_INFORMATION, 0, H_LCD, 10, 4);
     u8g2.sendBuffer();
     //--
     delay(2500);
@@ -1226,7 +1213,7 @@ bool isTouched()
 /* shows a notification about the start of sleep mode */
 void sleepModeScreen()
 {
-    _mess.popUpMessage("PwSM", "Light sleep.\nBye, bye my User!\nUse the Joystick to wake up!\0\0", 1000);
+    _mess.popUpMessage("Power save", "Light sleep.\nBye, bye my User!\nUse the Joystick to wake up!\0\0", 1000);
 }
 /* a system-task for working in an energy-efficient mode */
 void powerSaveDeepSleep()
@@ -1244,6 +1231,7 @@ void powerSaveDeepSleep()
 
         while (isTouched() == false)
         {
+            sleepModeScreen();
             _gfx.controlBacklight(false); u8g2.setPowerSave(1);
             esp_deep_sleep_start(); 
         }
@@ -1666,7 +1654,7 @@ App commands[]
     /* taskbar-area */
     //clear tray
     //{"cleartray", "Clear Tray",    null,         false, 200, NULL, 0,  0, 3},
-    {"clock",      "Clock",                trayClock,    true,  201, NULL, 40, 0, 3},
+    {"clock",      "Clock",                trayClock,    false,  201, NULL, 40, 0, 3},
     {"battery",    "Battery control",      trayBattery,  true,  202, NULL, 15, 0, 3},
     {"fps",        "FPS",                  trayFps,      false, 203, NULL, 10, 0, 3},
     {"ip",         "Ip adress",            trayDrawIpConnect, false, 205, NULL, 75, 0, 3},
