@@ -24,6 +24,23 @@ extern void clearCommandTerminal();
 class Joystick
 {
 protected:
+    /* Event Key */
+    enum EventKey
+    {
+        KEY_PRESSED_ENTER,
+        KEY_PRESSED_EX,
+        KEY_PRESSED_A,
+        KEY_PRESSED_B,
+        KEY_NOT_PRESSED,
+    } EVENT_KEY;
+    /* Event Joystick */
+    enum EventJoystick
+    {
+        JOY_ACTIVE_X,
+        JOY_NOT_ACTIVE_X,
+        JOY_ACTIVE_Y,
+        JOY_NOT_ACTIVE_Y,
+    } EVENT_JOYSTICK;
 private:
     /* The sticks are in the middle position. */
     int DEF_RES_Y0{1840}, DEF_RES_Y1{1840}, DEF_RES_X0{1840}, DEF_RES_X1{1840};
@@ -392,6 +409,7 @@ private:
 public:
     void taskKill(int indexTask);
     void taskRun(int indexTask);
+    void task(int indexTask);
 };
 
 #endif

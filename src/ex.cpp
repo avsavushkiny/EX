@@ -8,6 +8,15 @@
       ntp client                  https://github.com/arduino-libraries/NTPClient
 */
 
+/*
+  [v 1.0] -> First release.
+           - The first implementation. The terminal is used, the organization of tasks.
+           - Create classes Graphics, Timer, Interface, Powersave, Melody, Button, Shortcut, Application, Label, Task.
+           - Add Battery control, LED control tasks.
+  [v 2.0] -> Organization, definition of events.
+           - Add tasks: Reboot board, FPS.
+*/
+
 #include <iostream>
 #include <Arduino.h>
 #include <U8g2lib.h> 
@@ -20,10 +29,11 @@
 
 
 //version library
-const int8_t VERSION_LIB[] = {1, 0};
+const int8_t VERSION_LIB[] = {0, 2};
+String VERSION_ADD_INFORMATION = "";
 
 Graphics _gfx; 
-Timer _delayCursor, _trm0, _trm1, _stop, _timerUpdateClock; 
+Timer _delayCursor, _trm0, _trm1, _stop, _timerUpdateClock, _fps; 
 Application _app; 
 Joystick _joy; 
 Shortcut _myConsole, _wifi;
@@ -32,7 +42,7 @@ PowerSave _pwsDeep;
 Interface _mess; 
 Button _ok, _no, _collapse, _expand, _close, _ledControl;
 TimeNTP _timentp; Task _task;
-Label _labelClock, _labelBattery, _labelWifi;
+Label _labelClock, _labelBattery, _labelWifi, _taskList;
 
 /* WIFI */
 bool stateWifiSetup = false;
@@ -47,8 +57,10 @@ NTPClient timeClient(ntpUDP, "1.asia.pool.ntp.org", 10800, 60000);
 
 /* Prototype function */
 void null();
-void clearCommandTerminal(); void testApp(); void myDesctop();
+void clearCommandTerminal(); void testApp(); void myDesktop();
 void myWifiConnect(); void myWifiDisconnect(); void sustemLedControl(); void flagLedControl();
+void myTray();
+void myEx(); void myExViewTaskList();
 
 
 enum StateOs
@@ -148,13 +160,13 @@ void Graphics::initializationSystem()
     pinMode(PIN_BATTERY,      INPUT);
 
     //platform logo output
-    image_width = windows_width;
-    image_height = windows_height;
+    image_width = ex_width;
+    image_height = ex_height;
     //--
     u8g2.clearBuffer();
-    u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, windows_bits); //88 88
-    _gfx.print(10, "the experience system", 65, ((H_LCD/2) + (image_height/2) + 7), 10, 6);
-    _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + BUFFER_STRING, 0, H_LCD, 10, 4);
+    u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, ex_bits); //88 88
+    _gfx.print(10, "The experience system. 2023-2024\nDev: Ksenofontov S, Syatkina E\nSamoilov M, Savushkin A", 32, ((H_LCD/2) + (image_height/2) + 7), 10, 6);
+    _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + " " + VERSION_ADD_INFORMATION, 0, H_LCD, 10, 4);
     u8g2.sendBuffer();
     //--
     delay(2500);
@@ -194,6 +206,7 @@ void Graphics::clear()
     u8g2.clearBuffer();
     u8g2.sendBuffer();
 }
+
 
 /* Print */
 /* text output with parameters, add size font, add line interval (def: 10) and character interval (def: 6) */
@@ -281,6 +294,7 @@ bool Graphics::winkPrint(void (*f)(String, int, int), String text, int x, int y,
     }
 }
 
+
 /* Cursor */
 /* displaying the cursor on the screen */
 bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
@@ -297,6 +311,7 @@ bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
     else
         return false;
 }
+
 
 /* Interface */
 /* displaying a message to the user */
@@ -574,6 +589,7 @@ bool Interface::dialogueMessage(String label, String text)
     }
 }
 
+
 /* Button */
 /* Button return boolean state */
 bool Button::button(String text, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
@@ -636,6 +652,7 @@ bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t 
   
   return false;
 }
+
 
 /* Shortcut */
 /* displaying a shortcut to a task-function */
@@ -713,6 +730,7 @@ bool Shortcut::shortcutFrame(String name, uint8_t w, uint8_t h, uint8_t x, uint8
 
     return false;
 }
+
 
 /* Label */
 /*  */
@@ -795,7 +813,7 @@ bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*
 
     if ((xCursor >= x && xCursor <= (x + (sizeText * chi))) && (yCursor >= y - (lii + 2) && yCursor <= y + 2))
     {
-        u8g2.setDrawColor(1);
+        u8g2.setDrawColor(1);//1
         u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1);
 
         BUFFER_STRING = description;
@@ -813,8 +831,9 @@ bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*
 
     u8g2.setCursor(x + 3, y);
     u8g2.setFont(u8g2_font_6x10_tr);
+    
     u8g2.setFontMode(1);
-    u8g2.setDrawColor(2);
+    u8g2.setDrawColor(2);//2
     
     for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
     {
@@ -828,20 +847,23 @@ bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*
         }
     }
 
-    u8g2.setFontMode(0);
+    u8g2.setFontMode(0); //0-activate not-transparent font mode
 
     return false;
 }
 
-/* Joystic */
+
+/* Joystic and Key */
 /* button control */
 bool Joystick::pressKeyENTER()
 {
     if (digitalRead(PIN_BUTTON_ENTER) == true)
     {
+        EVENT_KEY = KEY_PRESSED_ENTER;
         return true;
     }
     else
+        EVENT_KEY = KEY_NOT_PRESSED;
         return false;
 }
 /* button control */
@@ -849,9 +871,11 @@ bool Joystick::pressKeyEX()
 {
     if (digitalRead(PIN_BUTTON_EX) == true)
     {
+        EVENT_KEY = KEY_PRESSED_EX;
         return true;
     }
     else
+        EVENT_KEY = KEY_NOT_PRESSED;
         return false;
 }
 /* button control */
@@ -859,9 +883,11 @@ bool Joystick::pressKeyA()
 {
     if (digitalRead(PIN_BUTTON_A) == true)
     {
+        EVENT_KEY = KEY_PRESSED_A;
         return true;
     }
     else
+        EVENT_KEY = KEY_NOT_PRESSED;
         return false;
 }
 /* button control */
@@ -869,9 +895,11 @@ bool Joystick::pressKeyB()
 {
     if (digitalRead(PIN_BUTTON_B) == true)
     {
+        EVENT_KEY = KEY_PRESSED_B;
         return true;
     }
     else
+        EVENT_KEY = KEY_NOT_PRESSED;
         return false;
 }
 /* calculate Stick position */
@@ -883,6 +911,7 @@ int Joystick::calculatePositionY0() // 0y
     {
         COOR_Y0 += 2;
         if (COOR_Y0 >= 160) COOR_Y0 = 160;
+        EVENT_JOYSTICK = JOY_ACTIVE_Y;
         return COOR_Y0;
     }
     /*else if (RAW_DATA_Y0 < (DEF_RES_Y0 - 1100))
@@ -895,6 +924,7 @@ int Joystick::calculatePositionY0() // 0y
     {
         COOR_Y0 -= 2;
         if (COOR_Y0 <= 0) COOR_Y0 = 0;
+        EVENT_JOYSTICK = JOY_ACTIVE_Y;
         return COOR_Y0;
     }
    /*else if (RAW_DATA_Y0 > (DEF_RES_Y0 + 1100))
@@ -904,6 +934,7 @@ int Joystick::calculatePositionY0() // 0y
         return COOR_Y0;
     }*/
     else
+        EVENT_JOYSTICK = JOY_NOT_ACTIVE_Y;
         return COOR_Y0;
 }
 /* calculate Stick position */
@@ -947,8 +978,8 @@ int Joystick::calculatePositionX0() // 0x
     {
         COOR_X0 -= 2;
         if (COOR_X0 <= 0) COOR_X0 = 0;
+        EVENT_JOYSTICK = JOY_ACTIVE_X;
         return COOR_X0; 
-
     }
     /*else if (RAW_DATA_X0 < (DEF_RES_X0 - 1100))
     {
@@ -961,6 +992,7 @@ int Joystick::calculatePositionX0() // 0x
     {
         COOR_X0 += 2;
         if (COOR_X0 >= 256) COOR_X0 = 256;
+        EVENT_JOYSTICK = JOY_ACTIVE_X;
         return COOR_X0; 
     }
     /*else if (RAW_DATA_X0 > (DEF_RES_X0 + 1100))
@@ -970,6 +1002,7 @@ int Joystick::calculatePositionX0() // 0x
         return COOR_X0;
     }*/
     else
+        EVENT_JOYSTICK = JOY_NOT_ACTIVE_X;
         return COOR_X0;
 }
 /* calculate Stick position */
@@ -1048,21 +1081,26 @@ int8_t Joystick::calculateIndexY0() // obj 0y
 
     if ((RAW_DATA_Y0 < (DEF_RES_Y0 - 500)) && (RAW_DATA_Y0 > (DEF_RES_Y0 - 1100)))
     {
+        EVENT_JOYSTICK = JOY_ACTIVE_Y;
         return OBJ_Y0 = OBJ_Y0 - 1;
     }
     else if (RAW_DATA_Y0 < (DEF_RES_Y0 - 1100))
     {
+        EVENT_JOYSTICK = JOY_ACTIVE_Y;
         return OBJ_Y0 = OBJ_Y0 - 1; // 2
     }
     else if ((RAW_DATA_Y0 > (DEF_RES_Y0 + 500)) && (RAW_DATA_Y0 < (DEF_RES_Y0 + 1100)))
     {
+        EVENT_JOYSTICK = JOY_ACTIVE_Y;
         return OBJ_Y0 = OBJ_Y0 + 1;
     }
     else if (RAW_DATA_Y0 > (DEF_RES_Y0 + 1100))
     {
+        EVENT_JOYSTICK = JOY_ACTIVE_Y;
         return OBJ_Y0 = OBJ_Y0 + 1; // 2
     }
     else
+        EVENT_JOYSTICK = JOY_NOT_ACTIVE_Y;
         return OBJ_Y0 = 0;
 }
 /* calculate position index */
@@ -1096,21 +1134,26 @@ int8_t Joystick::calculateIndexX0() // obj 0x
 
     if ((RAW_DATA_X0 < (DEF_RES_X0 - 500)) && (RAW_DATA_X0 > (DEF_RES_X0 - 1100)))
     {
+        EVENT_JOYSTICK = JOY_ACTIVE_X;
         return OBJ_X0 = OBJ_X0 - 1;
     }
     else if (RAW_DATA_X0 < (DEF_RES_X0 - 1100))
     {
+        EVENT_JOYSTICK = JOY_ACTIVE_X;
         return OBJ_X0 = OBJ_X0 - 1; // 2
     }
     else if ((RAW_DATA_X0 > (DEF_RES_X0 + 500)) && (RAW_DATA_X0 < (DEF_RES_X0 + 1100)))
     {
+        EVENT_JOYSTICK = JOY_ACTIVE_X;
         return OBJ_X0 = OBJ_X0 + 1;
     }
     else if (RAW_DATA_X0 > (DEF_RES_X0 + 1100))
     {
+        EVENT_JOYSTICK = JOY_ACTIVE_X;
         return OBJ_X0 = OBJ_X0 + 1; // 2
     }
     else
+        EVENT_JOYSTICK = JOY_NOT_ACTIVE_X;
         return OBJ_X0 = 0;
 }
 /* calculate position index */
@@ -1137,6 +1180,7 @@ int8_t Joystick::calculateIndexX1() // obj 1x
     else
         return OBJ_X1 = 0;
 }
+
 
 /* Timer */
 /* starting a task-function with an interval */
@@ -1170,6 +1214,7 @@ void Timer::stopwatch(void (*f)(void), int interval)
     }
 }
 
+
 /* Powersave mode */
 /* the function checks whether the joystick or button is pressed at a certain moment */
 bool isTouched()
@@ -1188,10 +1233,10 @@ void powerSaveDeepSleep()
 {
     if (isTouched() == true)
     {
-        screenTiming = TIMER;
+        screenTiming = TIMER; u8g2.setPowerSave(0);
     }
     
-    if ((_joy.posY0 >= 150) && (_joy.posX0 <= 100)) BUFFER_STRING = "Deep powersave mode";
+    //if ((_joy.posY0 >= 150) && (_joy.posX0 <= 100)) BUFFER_STRING = "Deep powersave mode";
     
     if ((TIMER - screenTiming > 60000) && (_joy.posY0 >= 150))
     {
@@ -1199,7 +1244,7 @@ void powerSaveDeepSleep()
 
         while (isTouched() == false)
         {
-            _gfx.controlBacklight(false);
+            _gfx.controlBacklight(false); u8g2.setPowerSave(1);
             esp_deep_sleep_start(); 
         }
     }
@@ -1211,7 +1256,7 @@ void powerSaveDeepSleep()
         while (isTouched() == false)
         {
             sleepModeScreen();
-            _gfx.controlBacklight(false);
+            _gfx.controlBacklight(false); u8g2.setPowerSave(0);
             esp_light_sleep_start();
 
         }
@@ -1275,6 +1320,7 @@ void PowerSave::sleepDeep(bool state, uint timeUntil)
     }
   }
 }
+
 
 /* Song engine */
 /* playing a melody */
@@ -1438,18 +1484,23 @@ void Melody::song(listMelody num)
     }
 }
 
+
+/* Null function */
+void null(){}
+
+
 /* System task-function */
-/* task-function. clear buffer */
+/* Task. clear buffer */
 void clearBufferString()
 {
     BUFFER_STRING = "";
 }
-/* task-function. calculation of battery capacity */
+/* Task. calculation of battery capacity */
 int dataRawBattery{};
 int systemUpdateBattery()
 {
     dataRawBattery = analogRead(PIN_BATTERY);
-    dataRawBattery = map(dataRawBattery, 1861, 2481, 0, 100);
+    dataRawBattery = map(dataRawBattery, 1890, 2470, 0, 100);
 
     return dataRawBattery;
 }
@@ -1462,7 +1513,7 @@ void systemNTPTimeUpdate()
     }
     else _mess.popUpMessage("!", "The Wi-Fi (internet) connection\nis not active.", 2500);
 }
-/* task-function. */
+/* Task. Battery */
 int _t{};
 int systemBattery()
 {
@@ -1471,52 +1522,37 @@ int systemBattery()
 
     return dataRawBattery;
 }
-/* task-function. system tray output */
-void systemTray()
-{
-    u8g2.setDrawColor(1);
-    u8g2.drawHLine(0, 150, 256);
-    
-    _gfx.print(BUFFER_STRING, 5, 159, 8, 5);
-    _labelBattery.label((String)systemBattery(), "Click to LED on/off", 196, 159, flagLedControl, 8, 5, _joy.posX0, _joy.posY0);
-    _labelClock.label((String)timeClient.getFormattedTime(), "Click to update time", 211, 159, systemNTPTimeUpdate, 8, 5, _joy.posX0, _joy.posY0);
-    //_gfx.print((String)systemBattery(), 196, 159, 8, 5);
-
-
-    _trm0.timer(clearBufferString, 100); //clear text-buffer
-}
-/* task-function. system cursor output */
+/* Task. System cursor output */
 void systemCursor()
 {
     _joy.updatePositionXY(20);
     _crs.cursor(true, _joy.posX0, _joy.posY0);
 }
-/* task-function. system RawADC */
+/* Task. System RawADC */
 void systemRawADC()
 {
     String text = "Coord X: " + (String)_joy.RAW_DATA_X0 + "Coord Y: " + (String)_joy.RAW_DATA_Y0;
     BUFFER_STRING = text; 
 }
-/* task-function. displaying a list of tasks */
+/* Task. Sisplaying a list of tasks */
 void systemViewList()
 {
 
 }
-/* task-function. stack, task, command */
+/* Task. Stack, task, command */
 void myConsole()
 {
     _mess.popUpMessage("!", "Ohhh no :(\nTask-function not defined!\0", 5000);
     _joy.resetPositionXY();
 }
-/* task-function. serial port operation control */
+/* Task. Serial port operation control */
 void mySerialPort()
 {
     _mess.popUpMessage("COM port", "A - Ok, B - Cancel" , "Are you sure you want\nto close the task?\0", 5000);
     //_mess.dialogueMessage("COM port", "Are you sure you want\nto close the task?\0");
     _joy.resetPositionXY();
 }
-/* task-function. system LED control */
-
+/* Task. System LED control */
 void flagLedControl()
 {
     for (int i = 0; i < 1; i++)
@@ -1529,7 +1565,6 @@ void flagLedControl()
             flagStateLedControl = true; delay(250);
     }
 }
-
 void sustemLedControl()
 {
 
@@ -1538,48 +1573,114 @@ void sustemLedControl()
     if (flagStateLedControl == true) _gfx.controlBacklight(true);
     else _gfx.controlBacklight(false);
 }
+/* Task. Reboot ESP32 */
+void rebootBoard()
+{
+    ESP.restart();
+}
+/* Task. Taskbar-area */
+int xTray{256}, yTray{159}, borderTray{5};
+void trayClock()
+{
+    //width 40px
+    _labelClock.label((String)timeClient.getFormattedTime(), "Click to update time", xTray, yTray, systemNTPTimeUpdate, 8, 5, _joy.posX0, _joy.posY0);
+}
+void trayBattery()
+{
+    //width 10px
+    _labelBattery.label((String)systemBattery(), "Click to LED on/off", xTray, yTray, flagLedControl, 8, 5, _joy.posX0, _joy.posY0);
+}
+/* Task. FPS calculation */
+uint8_t _FPS = 0; uint8_t _fpsCounter = 0; long int _fpsTime = millis();
+void trayFps()
+{
+    //width 10px
+    _gfx.print((String)_FPS, xTray, yTray, 10, 6);
+    // get FPS
+    if ((millis() - _fpsTime) <= 1000)
+    {
+        _fpsCounter++;
+    }
+    else
+    {
+        _fpsTime = millis();
+        _FPS = _fpsCounter;
+        _fpsCounter = 0;
+    }
+}
+/* Task. Draw IP connect */
+void trayDrawIpConnect()
+{
+    //width 75px
+    _labelWifi.label(WiFi.localIP().toString(), "Click to disconnect", xTray, yTray, myWifiDisconnect, 8, 5, _joy.posX0, _joy.posY0);
+}
+/* Task. Buffer */
+void trayBuffer()
+{
+    //width 110px (22 chars)
+    u8g2.setDrawColor(1);
+    _gfx.print(BUFFER_STRING, 5, yTray, 8, 5);
+    _trm0.timer(clearBufferString, 100); //clear text-buffer
+}
 
-/* NULL function */
-void null(){}
 
 /* Terminal */
 /* command type */
 struct App
 {
-    char const *text;       //command
-    char const *name;       //name task-function
+    char const *text;           //command
+    char const *name;           //name task-function
 
-    void (*f)(void);        //task-function
+    void (*f)(void);            //task-function
 
-    bool active;            //activ status task-function
-    int indexTask;          //index
-    const uint8_t *bitMap;  //icon task-function
-    uint8_t state;          //0-task-function any 1-desctop any 2-app
+    bool active;                //activ status task-function
+    int indexTask;              //index
+    const uint8_t *bitMap;      //icon task-function
+
+    const uint8_t widthApp;     //width
+    const uint8_t heightApp;    //height
+
+    uint8_t state;              //0-task, 1-desktop, 2-app, 3-tray task
 };
 /* enumeration of objects - commands */
 App commands[]
 {
-    //system task
-    {"clearcomm",   "Clear command",       clearCommandTerminal, false,     0, NULL, 0},
-    {"deepsleep",   "Deep sleep PWS-mode", powerSaveDeepSleep,   true,      1, NULL, 0},
-    {"rawadc",      "Raw data ADC",        systemRawADC,         false,     2, NULL, 0},
-    {"clearbuffer", "Clear Buffer",        clearBufferString,    false,     3, NULL, 0},
+    /* system task */
+    {"clearcomm",   "Clear command",       clearCommandTerminal, false,     0, NULL, 0, 0, 0},
+    {"deepsleep",   "Deep sleep PWS-mode", powerSaveDeepSleep,   true,      1, NULL, 0, 0, 0},
+    {"rawadc",      "Raw data ADC",        systemRawADC,         false,     2, NULL, 0, 0, 0},
+    {"clearbuffer", "Clear Buffer",        clearBufferString,    false,     3, NULL, 0, 0, 0},
+    {"reboot",      "Reboot board",        rebootBoard,          false,     4, NULL, 0, 0, 0},
 
-    //app-desctop
-    {"mydesctop",   "My Desctop",          myDesctop,            true,    100, NULL,                  1},
-    //app
-    {"myconsole",   "My Console",          myConsole,            false,   101, iconMyConsole_bits,    2},
-    {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits, 2},
-    {"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    2},
-    {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 2},
-    
-    
+    /* desktop task. workspace */
+    {"mydesctop",   "My Desctop",          myDesktop,            true,    100, NULL,                  0, 0, 1},
+    //userDesktop
 
-    //system graphics-task
-    {"sysledcontrol", "LED control",         sustemLedControl,     true,    299, NULL, 0},
-    {"systray",       "Tray",                systemTray,           true,    300, NULL, 0},
-    {"syscursor",     "Cursor",              systemCursor,         true,    301, NULL, 0},
+    /* app */
+    {"myconsole",   "My Console",          myConsole,            false,   101, iconMyConsole_bits,    0, 0, 2},
+    {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits, 0, 0, 2},
+    {"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    0, 0, 2},
+    {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 0, 0, 2},
+    {"myex",        "My EX",               myEx,                 false,   105, iconMyNullApp_bits,    0, 0, 2},
+    
+    /* taskbar-area */
+    //clear tray
+    //{"cleartray", "Clear Tray",    null,         false, 200, NULL, 0,  0, 3},
+    {"clock",      "Clock",                trayClock,    true,  201, NULL, 40, 0, 3},
+    {"battery",    "Battery control",      trayBattery,  true,  202, NULL, 15, 0, 3},
+    {"fps",        "FPS",                  trayFps,      false, 203, NULL, 10, 0, 3},
+    {"ip",         "Ip adress",            trayDrawIpConnect, false, 205, NULL, 75, 0, 3},
+    {"buffer",     "Buffer",               trayBuffer,   true,  204, NULL, 0,  0, 3},
+
+    
+    /* system graphics-task */
+    //keyboard task
+    {"", "", NULL, false, 298, NULL, 0, 0, 0},
+    {"sysledcontrol", "LED control",       sustemLedControl,     true,    299, NULL, 0, 0, 0},
+    {"systray",       "Tray",              myTray,               true,    300, NULL, 0, 0, 0},
+    {"syscursor",     "Cursor",            systemCursor,         true,    301, NULL, 0, 0, 0},
 };
+
 /* delete all commands */
 void clearCommandTerminal()
 {
@@ -1593,7 +1694,7 @@ void calcTerminal()
 {
   for (App &command : commands)
   {
-    if (command.active)
+    if ((command.active) && (command.state != 3))
     {
       command.f();
     }
@@ -1615,7 +1716,8 @@ void Terminal::terminal()
     {
       if (not strncmp(command.text, text, 20))
       {
-        command.active = true;
+        if (command.active == true) command.active = false;
+        else command.active = true;
       }
     }
   }
@@ -1643,6 +1745,7 @@ void Terminal::terminal(void(*f)())
   }
 }
 
+
 /* Task management */
 /* disable a task */
 void Task::taskKill(int indexTask)
@@ -1666,16 +1769,33 @@ void Task::taskRun(int indexTask)
         }
     }
 }
+/* task */
+void Task::task(int indexTask)
+{
+    for (App &command : commands)
+    {
+        if ((command.active == true) && (command.indexTask == indexTask))
+        {
+            command.active = false; delay(150); break;
+        }
+
+        if ((command.active == false) && (command.indexTask == indexTask))
+        {
+            command.active = true; delay(150); break;
+        }  
+    }
+}
+
 
 /* Application */
 /* window designer for the task-function */
 void Application::window(String name, int indexTask, void (*f1)(void), void (*f2)(void))
 {
-    _task.taskKill(100); //kill Desctop
+    _task.taskKill(100); //kill Desktop
     _task.taskRun(indexTask);
     
-    f1; //calc
-    f2; //graphics
+    f1(); //calc
+    f2(); //graphics
     
     //draw window
     {
@@ -1693,38 +1813,32 @@ void Application::window(String name, int indexTask, void (*f1)(void), void (*f2
         }
     }
 }
+ 
 
 /* App */
 /* my tray */
 void myTray()
 {
-    uint8_t border{4};
-    uint8_t xx{border};
-    uint8_t yy{15}; 
-
-    uint8_t countTask{1};
+    u8g2.setDrawColor(1);
+    u8g2.drawHLine(0, 150, 256); 
+    xTray = 256;
     
     for (App &command : commands)
     {
-        if (command.state == 2)
+        if (command.state == 3)
         {
-            _myConsole.shortcut(command.name, command.bitMap, xx, yy, command.f, _joy.posX0, _joy.posY0);
-            countTask++;
-
-            xx += (32 + border);
-
-            if (countTask > 7) 
+            if (command.active == true)
             {
-                xx = 4; yy += (32 + border); countTask = 0;
+                //xTray += borderTray;
+                xTray -= borderTray + command.widthApp;
+                command.f();
+                //xTray -= command.widthApp;
             }
         }
     }
-    
-    _gfx.print("My Desctop", 5, 8, 8, 5);
-    u8g2.drawHLine(0, 10, 256); 
 }
 /* my desctop */
-void myDesctop()
+void myDesktop()
 {
     uint8_t border{4};
     uint8_t xx{border};
@@ -1748,13 +1862,99 @@ void myDesctop()
         }
     }
     
-    _gfx.print("My Desctop", 5, 8, 8, 5);
+    _gfx.print("My Desktop", 5, 8, 8, 5);
     u8g2.drawHLine(0, 10, 256);
 
     
 
     /*test led*/ //_gfx.controlBacklight(true);
 }
+
+
+/* my EX. View the task list */
+int _numberIndexTask{};
+void myExChangingStatusTask()
+{
+    _task.task(_numberIndexTask);
+}
+
+void myExDialogueChangingStatusTask()
+{
+    String textDialogue = "Click OK to start or stop\nthe process: " + (String)_numberIndexTask;
+    bool state = _mess.dialogueMessage("?", textDialogue);
+
+    if (state == true) {myExChangingStatusTask();}
+    if (state == false) {}
+}
+
+void myExViewTaskList()
+{
+    int xx{5}, yy{30};
+
+    u8g2.setFontMode(1);
+    u8g2.setDrawColor(2);
+
+    _gfx.print("Active tasks:", 5, 20, 8, 5);
+
+    for (App &command : commands)
+    { 
+        if (command.active == true)
+        {
+            String _Text = command.text;
+            uint8_t sizeText = _Text.length();
+
+            _numberIndexTask = command.indexTask;
+
+            _taskList.label(_Text, command.name, xx, yy, myExDialogueChangingStatusTask, 8, 5, _joy.posX0, _joy.posY0);
+            
+            if ((xx + (sizeText * 5) + 5) <= 240) //256 - 5 - 5
+            {
+                xx += (sizeText * 5) + 5;
+            }
+            
+            if ((xx + (sizeText * 5) + 5) >= 240)
+            {
+                xx = 5; yy += 10;
+            }
+        }
+    }
+
+    xx = 5;
+    
+    _gfx.print("Inactive tasks:", 5, (yy+20), 8, 5);
+
+    yy += 30;
+    
+    for (App &command : commands)
+    { 
+        if (command.active == false)
+        {
+            String _Text = command.text;
+            uint8_t sizeText = _Text.length();
+
+            _numberIndexTask = command.indexTask;
+            
+            _taskList.label(_Text, command.name, xx, yy, myExDialogueChangingStatusTask, 8, 5, _joy.posX0, _joy.posY0);
+            
+            if ((xx + (sizeText * 5) + 5) <= 240) //256 - 5 - 5
+            {
+                xx += (sizeText * 5) + 5;
+            }
+            
+            if ((xx + (sizeText * 5) + 5) >= 240)
+            {
+                xx = 5; yy += 10;
+            }
+        }
+    }
+}
+
+void myEx()
+{
+    _app.window("View the task list", 105, myExViewTaskList, null);
+}
+
+
 /* my test */
 void testApp()
 {
@@ -1768,7 +1968,7 @@ void myWifiDisconnect()
 
     //_mess.popUpMessage("!", "Wi-Fi is disabled!\0", 2000);
     
-    _task.taskKill(104);
+    _task.taskKill(104); _task.taskKill(205);
     stateWifiSetup = false; stateWifi = false;
 }
 /* my wi-fi */
@@ -1782,7 +1982,8 @@ void myWifiConnect()
 
     if (stateWifiSetup == false)
     {
-        WiFi.begin("Allowed", "Serjant1985"); stateWifiSetup = true;
+        //WiFi.begin("Allowed", "Serjant1985"); stateWifiSetup = true;
+        WiFi.begin("RT-GPON-6089", "u7PxRkFQ"); stateWifiSetup = true;
     }
 
     if (WiFi.status() != WL_CONNECTED)
@@ -1794,7 +1995,7 @@ void myWifiConnect()
     else
     {
         stateWifi = true;
-        _labelWifi.label(WiFi.localIP().toString(), "Click to disconnect", 130, 159, myWifiDisconnect, 8, 5, _joy.posX0, _joy.posY0);
+        _task.taskRun(205);
         //_gfx.print(WiFi.localIP().toString(), 130, 159, 8, 5);
         //_disconnect.button("X", 115, 158, myWifiDisconnect, _joy.posX0, _joy.posY0);
     }
