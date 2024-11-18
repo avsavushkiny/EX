@@ -1660,6 +1660,11 @@ App commands[]
     {"ip",         "Ip adress",            trayDrawIpConnect, false, 205, NULL, 75, 0, 3},
     {"buffer",     "Buffer",               trayBuffer,   true,  204, NULL, 0,  0, 3},
 
+    /* USER define task */
+    #ifdef USER
+    {"userTask",   "User task",            NULL,         true,  400, NULL, 0, 0, 2};
+    #endif
+
     
     /* system graphics-task */
     //keyboard task
@@ -1792,7 +1797,7 @@ void Application::window(String name, int indexTask, void (*f1)(void), void (*f2
     }
     //draw button-state-window
     {
-        if (_collapse.button(" COLLAPSE ", 162, 9, _joy.posX0, _joy.posY0)) {}
+        //if (_collapse.button(" COLLAPSE ", 162, 9, _joy.posX0, _joy.posY0)) {}
         
         if (_close.button(" CLOSE ", 216, 9, _joy.posX0, _joy.posY0))
         {
@@ -1944,10 +1949,19 @@ void myEx()
 
 
 /* my test */
+void draw2Frame()
+{
+    u8g2.drawFrame(-15, 15, 50, 50);
+    u8g2.drawFrame(15, -15, 50, 50);
+    u8g2.drawFrame(241, 30, 50, 50);
+}
+
+/* [!] Don’t forget to assign a task number and enter it into the task array. */
 void testApp()
 {
-    _app.window("Test Application", 103, null, null);
+    _app.window("Test Application", 103, draw2Frame, null);
 }
+
 /* my wi-fi */
 void myWifiDisconnect()
 {
