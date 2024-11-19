@@ -32,7 +32,7 @@
 
 //version Library and Text
 const int8_t VERSION_LIB[] = {0, 0, 2};
-String VERSION_ADD_INFORMATION = "B";
+String VERSION_ADD_INFORMATION = "BRANCH - USER TASK MANAGER";
 String TEXT_UI_BEGIN = "The experience system. 2023-2024\nDev: Ksenofontov S, Syatkina E\nSamoilov M, Savushkin A";
 
 Graphics _gfx; 
@@ -60,7 +60,7 @@ NTPClient timeClient(ntpUDP, "ntp.apple.com", 10800, 60000);
 
 /* Prototype function */
 void null();
-void clearCommandTerminal(); void testApp(); void myDesktop();
+void clearCommandTerminal(); void myUserTask(); void myDesktop();
 void myWifiConnect(); void myWifiDisconnect(); void sustemLedControl(); void flagLedControl();
 void myTray();
 void myEx(); void myExViewTaskList();
@@ -1647,28 +1647,28 @@ App commands[]
     /* app */
     {"myconsole",   "My Console",          myConsole,            false,   101, iconMyConsole_bits,    0, 0, 2},
     {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits, 0, 0, 2},
-    {"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    0, 0, 2},
+    //{"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    0, 0, 2},
     {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 0, 0, 2},
     {"myex",        "My EX",               myEx,                 false,   105, iconMyNullApp_bits,    0, 0, 2},
     
     /* taskbar-area */
     //clear tray
     //{"cleartray", "Clear Tray",    null,         false, 200, NULL, 0,  0, 3},
-    {"clock",      "Clock",                trayClock,    false,  201, NULL, 40, 0, 3},
-    {"battery",    "Battery control",      trayBattery,  true,  202, NULL, 15, 0, 3},
-    {"fps",        "FPS",                  trayFps,      false, 203, NULL, 10, 0, 3},
-    {"ip",         "Ip adress",            trayDrawIpConnect, false, 205, NULL, 75, 0, 3},
-    {"buffer",     "Buffer",               trayBuffer,   true,  204, NULL, 0,  0, 3},
+    {"clock",      "Clock",                trayClock,            false,  201, NULL, 40, 0, 3},
+    {"battery",    "Battery control",      trayBattery,          true,   202, NULL, 15, 0, 3},
+    {"fps",        "FPS",                  trayFps,              false,  203, NULL, 10, 0, 3},
+    {"ip",         "Ip adress",            trayDrawIpConnect,    false,  205, NULL, 75, 0, 3},
+    {"buffer",     "Buffer",               trayBuffer,           true,   204, NULL, 0,  0, 3},
 
     /* USER define task */
     #ifdef USER
-    {"userTask",   "User task",            NULL,         true,  400, NULL, 0, 0, 2};
+        {"myUserTask",   "My user task",   myUserTask,           true,  400, iconMyNullApp_bits, 0, 0, 2};
     #endif
 
     
     /* system graphics-task */
     //keyboard task
-    {"", "", NULL, false, 298, NULL, 0, 0, 0},
+    //{"", "", NULL, false, 298, NULL, 0, 0, 0},
     {"sysledcontrol", "LED control",       sustemLedControl,     true,    299, NULL, 0, 0, 0},
     {"systray",       "Tray",              myTray,               true,    300, NULL, 0, 0, 0},
     {"syscursor",     "Cursor",            systemCursor,         true,    301, NULL, 0, 0, 0},
@@ -1948,19 +1948,19 @@ void myEx()
 }
 
 
-/* my test */
-void draw2Frame()
-{
-    u8g2.drawFrame(-15, 15, 50, 50);
-    u8g2.drawFrame(15, -15, 50, 50);
-    u8g2.drawFrame(241, 30, 50, 50);
-}
+/* My User Task */
+#ifdef USER
+    void userTask(void(*f)(void))
+    {
+        f();
+    }
 
-/* [!] Don’t forget to assign a task number and enter it into the task array. */
-void testApp()
-{
-    _app.window("Test Application", 103, draw2Frame, null);
-}
+    /* [!] Don’t forget to assign a task number and enter it into the task array. */
+    void myUserTask()
+    {
+        _app.window("My user task", 400, userTask, null);
+    }
+#endif
 
 /* my wi-fi */
 void myWifiDisconnect()
