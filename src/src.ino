@@ -2,13 +2,12 @@
 
 Graphics gfx;
 Terminal trm;
+UserTerminal ut;
 
-#define USER
 
-void text()
-{
-    gfx.print("test", 30, 30);
-}
+void appSystemFunc(){ gfx.print("test1", 30, 30); }
+void appUserFunc()  { gfx.print("test2", 30, 40); }
+
 
 void setup()
 {  
@@ -17,6 +16,9 @@ void setup()
 
 void loop()
 {  
-    userTask(text);
+    ut.addTask({1,"sys",appSystemFunc});
+    ut.addTask({2,"usr",appUserFunc});
+    ut.runTask();
+    
     trm.terminal(); 
 }

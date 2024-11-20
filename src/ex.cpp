@@ -1661,10 +1661,6 @@ App commands[]
     {"buffer",     "Buffer",               trayBuffer,           true,   204, NULL, 0,  0, 3},
 
     /* USER define task */
-    #ifdef USER
-        {"myUserTask",   "My user task",   myUserTask,           true,  400, iconMyNullApp_bits, 0, 0, 2};
-    #endif
-
     
     /* system graphics-task */
     //keyboard task
@@ -1949,18 +1945,6 @@ void myEx()
 
 
 /* My User Task */
-#ifdef USER
-    void userTask(void(*f)(void))
-    {
-        f();
-    }
-
-    /* [!] Don’t forget to assign a task number and enter it into the task array. */
-    void myUserTask()
-    {
-        _app.window("My user task", 400, userTask, null);
-    }
-#endif
 
 /* my wi-fi */
 void myWifiDisconnect()
@@ -2004,4 +1988,24 @@ void myWifiConnect()
 
     /* IPAddress ip = WiFi.localIP();
     sprintf(lcdBuffer, "%d.%d.%d.%d:%d", ip[0], ip[1], ip[2], ip[3], udpPort);*/
+}
+
+/* User App Terminal */
+#include <vector>
+
+namespace{
+    std::vector<UserTerminal::userTaskArguments> userCommands;
+};
+
+void UserTerminal::addTask(const UserTerminal::userTaskArguments& a)
+{
+    userCommands.push_back(a);
+}
+
+void UserTerminal::runTask()
+{
+    for(UserTerminal::userTaskArguments uta : userCommands)
+    {
+        uta.f();
+    }
 }

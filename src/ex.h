@@ -18,9 +18,25 @@
 extern U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2;
 extern const uint8_t gears_bits[];
 extern int H_LCD, W_LCD;
-extern userTask();
 
 extern void clearCommandTerminal();
+
+class UserTerminal
+{
+public:
+    
+    struct userTaskArguments
+    {
+        int num;
+        String text;
+        void (*f)(void);
+    };
+
+    void addTask(const userTaskArguments &);
+    void runTask();
+
+private:
+};
 
 class Joystick
 {
