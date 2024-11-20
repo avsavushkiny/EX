@@ -21,22 +21,17 @@ extern int H_LCD, W_LCD;
 
 extern void clearCommandTerminal();
 
-class UserTerminal
+
+struct userTaskArguments
 {
-public:
-    
-    struct userTaskArguments
-    {
-        int num;
-        String text;
-        void (*f)(void);
-    };
-
-    void addTask(const userTaskArguments &);
-    void runTask();
-
-private:
+    int num;
+    String text;
+    void (*f)(void);
 };
+
+void addTask(const userTaskArguments &);
+void runTask();
+
 
 class Joystick
 {

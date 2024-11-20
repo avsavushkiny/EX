@@ -1611,6 +1611,27 @@ void trayBuffer()
     _trm0.timer(clearBufferString, 100); //clear text-buffer
 }
 
+/* User Task Terminal */
+#include <vector>
+
+namespace
+{
+    std::vector<userTaskArguments> userCommands;
+};
+
+void addTask(const userTaskArguments& a)
+{
+    userCommands.push_back(a);
+}
+
+void runTask()
+{
+    for(userTaskArguments uta : userCommands)
+    {
+        uta.f();
+    }
+}
+
 
 /* Terminal */
 /* command type */
@@ -1661,6 +1682,7 @@ App commands[]
     {"buffer",     "Buffer",               trayBuffer,           true,   204, NULL, 0,  0, 3},
 
     /* USER define task */
+    {"usertask",   "User task App",        runTask,              false,  400, iconMyNullApp_bits, 0, 0, 2},
     
     /* system graphics-task */
     //keyboard task
@@ -1944,8 +1966,6 @@ void myEx()
 }
 
 
-/* My User Task */
-
 /* my wi-fi */
 void myWifiDisconnect()
 {
@@ -1988,24 +2008,4 @@ void myWifiConnect()
 
     /* IPAddress ip = WiFi.localIP();
     sprintf(lcdBuffer, "%d.%d.%d.%d:%d", ip[0], ip[1], ip[2], ip[3], udpPort);*/
-}
-
-/* User App Terminal */
-#include <vector>
-
-namespace{
-    std::vector<UserTerminal::userTaskArguments> userCommands;
-};
-
-void UserTerminal::addTask(const UserTerminal::userTaskArguments& a)
-{
-    userCommands.push_back(a);
-}
-
-void UserTerminal::runTask()
-{
-    for(UserTerminal::userTaskArguments uta : userCommands)
-    {
-        uta.f();
-    }
 }
