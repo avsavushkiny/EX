@@ -1536,7 +1536,7 @@ void myConsole()
 /* Task. Serial port operation control */
 void mySerialPort()
 {
-    _mess.popUpMessage("COM port", "A - Ok, B - Cancel" , "Are you sure you want\nto close the task?\0", 5000);
+    _mess.popUpMessage("Data port", "A - Ok, B - Cancel" , "Are you sure you want\nto close the task?\0", 5000);
     //_mess.dialogueMessage("COM port", "Are you sure you want\nto close the task?\0");
     _joy.resetPositionXY();
 }
