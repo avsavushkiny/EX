@@ -2,16 +2,20 @@
 
 Graphics gfx;
 Terminal trm;
+Application app1;
 
 
 void appSystemFunc(){ gfx.print("test1", 30, 30); }
-void appUserFunc()  { gfx.print("test2", 30, 40); }
+void appUserFunc()
+{
+    app1.window("User Application", 400, appSystemFunc);
+}
 
 
 void setup()
 {  
     gfx.initializationSystem();
-    addTask({1,"sys",appSystemFunc});
+    addTask({1,"sys",appUserFunc});
 }
 
 void loop()

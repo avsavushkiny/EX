@@ -60,7 +60,7 @@ NTPClient timeClient(ntpUDP, "ntp.apple.com", 10800, 60000);
 
 /* Prototype function */
 void null();
-void clearCommandTerminal(); void myUserTask(); void myDesktop();
+void clearCommandTerminal(); void testApp(); void myDesktop();
 void myWifiConnect(); void myWifiDisconnect(); void sustemLedControl(); void flagLedControl();
 void myTray();
 void myEx(); void myExViewTaskList();
@@ -1668,7 +1668,7 @@ App commands[]
     /* app */
     {"myconsole",   "My Console",          myConsole,            false,   101, iconMyConsole_bits,    0, 0, 2},
     {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits, 0, 0, 2},
-    //{"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    0, 0, 2},
+    {"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    0, 0, 2},
     {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 0, 0, 2},
     {"myex",        "My EX",               myEx,                 false,   105, iconMyNullApp_bits,    0, 0, 2},
     
@@ -1824,7 +1824,30 @@ void Application::window(String name, int indexTask, void (*f1)(void), void (*f2
         }
     }
 }
- 
+/* window designer for the task-function */
+void Application::window(String name, int indexTask, void (*f1)(void))
+{
+    _task.taskKill(100); //kill Desktop
+    _task.taskRun(indexTask);
+    
+    f1(); //calc
+    
+    //draw window
+    {
+        _gfx.print(name, 5, 9, 8, 5); u8g2.setDrawColor(1);
+        u8g2.drawFrame(0, 10, 256, 141);
+    }
+    //draw button-state-window
+    {
+        //if (_collapse.button(" COLLAPSE ", 162, 9, _joy.posX0, _joy.posY0)) {}
+        
+        if (_close.button(" CLOSE ", 216, 9, _joy.posX0, _joy.posY0))
+        {
+            _task.taskKill(indexTask);
+            _task.taskRun(100); //run Desctop
+        }
+    }
+}
 
 /* App */
 /* my tray */
@@ -1965,6 +1988,17 @@ void myEx()
     _app.window("View the task list", 105, myExViewTaskList, null);
 }
 
+/* Test Application */
+void f1()
+{
+    String text = "Application class test.\n\n_app.window(Test Application, 103, f1);\n_app - object\nwindow - class function\nTest Application - name window\n103 - number task\nf1 - function";
+    _gfx.print(text, 10, 25, 10, 5);
+}
+
+void testApp()
+{
+    _app.window("Test Application", 103, f1);
+}
 
 /* my wi-fi */
 void myWifiDisconnect()
