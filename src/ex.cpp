@@ -63,7 +63,7 @@ void null();
 void clearCommandTerminal(); void testApp(); void myDesktop();
 void myWifiConnect(); void myWifiDisconnect(); void sustemLedControl(); void flagLedControl();
 void myTray();
-void myEx(); void myExViewTaskList();
+void myTaskManager(); void myTaskManagerViewTaskList();
 
 
 //for screensaver
@@ -1670,7 +1670,7 @@ App commands[]
     {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits, 0, 0, 2},
     {"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    0, 0, 2},
     {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 0, 0, 2},
-    {"myex",        "My EX",               myEx,                 false,   105, iconMyNullApp_bits,    0, 0, 2},
+    {"taskmanager", "Task manager",        myTaskManager,                 false,   105, iconMyNullApp_bits,    0, 0, 2},
     
     /* taskbar-area */
     //clear tray
@@ -1921,7 +1921,7 @@ void myExDialogueChangingStatusTask()
     if (state == false) {}
 }
 
-void myExViewTaskList()
+void myTaskManagerViewTaskList()
 {
     int xx{5}, yy{30};
 
@@ -1983,9 +1983,9 @@ void myExViewTaskList()
     }
 }
 
-void myEx()
+void myTaskManager()
 {
-    _app.window("View the task list", 105, myExViewTaskList, null);
+    _app.window("Task manager", 105, myTaskManagerViewTaskList, null);
 }
 
 /* Test Application */
