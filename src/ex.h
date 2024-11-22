@@ -29,8 +29,8 @@ struct userTaskArguments
     void (*f)(void);
 };
 
-void addTask(const userTaskArguments &);
-void runTask();
+void addUserTask(const userTaskArguments &);
+void runUserTask();
 
 
 class Joystick

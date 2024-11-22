@@ -1619,12 +1619,12 @@ namespace
     std::vector<userTaskArguments> userCommands;
 };
 
-void addTask(const userTaskArguments& a)
+void addUserTask(const userTaskArguments& a)
 {
     userCommands.push_back(a);
 }
 
-void runTask()
+void runUserTask()
 {
     for(userTaskArguments uta : userCommands)
     {
@@ -1666,11 +1666,11 @@ App commands[]
     //userDesktop
 
     /* app */
-    {"myconsole",   "My Console",          myConsole,            false,   101, iconMyConsole_bits,    0, 0, 2},
-    {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits, 0, 0, 2},
-    {"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    0, 0, 2},
-    {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 0, 0, 2},
-    {"taskmanager", "Task manager",        myTaskManager,                 false,   105, iconMyNullApp_bits,    0, 0, 2},
+    {"myconsole",   "My Console",          myConsole,            false,   101, iconMyConsole_bits,     0, 0, 2},
+    {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits,  0, 0, 2},
+    {"testapp",     "My Test Application", testApp,              false,   103, iconMyNullApp_bits,     0, 0, 2},
+    {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits,  0, 0, 2},
+    {"taskmanager", "My Task manager",        myTaskManager,     false,   105, icon_MyTaskManager_bits,0, 0, 2},
     
     /* taskbar-area */
     //clear tray
@@ -1682,8 +1682,10 @@ App commands[]
     {"buffer",     "Buffer",               trayBuffer,           true,   204, NULL, 0,  0, 3},
 
     /* USER define task */
-    {"usertask",   "User task App",        runTask,              false,  400, iconMyNullApp_bits, 0, 0, 2},
-    
+    #ifndef USER
+    {"usertask",   "My User task App",        runUserTask,          false,  400, icon_UserTask_bits, 0, 0, 2},
+    #endif
+
     /* system graphics-task */
     //keyboard task
     //{"", "", NULL, false, 298, NULL, 0, 0, 0},
