@@ -4,8 +4,6 @@ Graphics gfx;
 Terminal trm;
 Application app1;
 
-#define USER
-
 void appSystemFunc(){ gfx.print("test1", 30, 30); }
 void appUserFunc()
 {

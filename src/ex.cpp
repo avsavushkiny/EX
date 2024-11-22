@@ -1670,7 +1670,7 @@ App commands[]
     {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits,  0, 0, 2},
     {"testapp",     "My Test Application", testApp,              false,   103, iconMyNullApp_bits,     0, 0, 2},
     {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits,  0, 0, 2},
-    {"taskmanager", "My Task manager",        myTaskManager,     false,   105, icon_MyTaskManager_bits,0, 0, 2},
+    {"taskmanager", "My Task manager",     myTaskManager,        false,   105, icon_MyTaskManager_bits,0, 0, 2},
     
     /* taskbar-area */
     //clear tray
@@ -1682,9 +1682,7 @@ App commands[]
     {"buffer",     "Buffer",               trayBuffer,           true,   204, NULL, 0,  0, 3},
 
     /* USER define task */
-    #ifndef USER
-    {"usertask",   "My User task App",        runUserTask,          false,  400, icon_UserTask_bits, 0, 0, 2},
-    #endif
+    {"usertask",   "My User task App",     runUserTask,          false,  400, icon_UserTask_bits, 0, 0, 2},
 
     /* system graphics-task */
     //keyboard task
