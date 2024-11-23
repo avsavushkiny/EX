@@ -63,7 +63,7 @@ void null();
 void clearCommandTerminal(); void testApp(); void myDesktop();
 void myWifiConnect(); void myWifiDisconnect(); void sustemLedControl(); void flagLedControl();
 void myTray();
-void myTaskManager(); void myTaskManagerViewTaskList();
+void myTaskManager(); void myTaskManagerViewTaskList(); void f1();
 
 
 //for screensaver
@@ -1536,8 +1536,13 @@ void myConsole()
 /* Task. Serial port operation control */
 void mySerialPort()
 {
-    _mess.popUpMessage("Data port", "A - Ok, B - Cancel" , "Are you sure you want\nto close the task?\0", 5000);
-    //_mess.dialogueMessage("COM port", "Are you sure you want\nto close the task?\0");
+    bool stateTaskMyDataPort = _mess.dialogueMessage("Data port", "Pinout\n[1] GND [2] 3,3V\n[3] GPIO 35 [4] GPIO 34 [5] GPIO 19\n[6] TX [7] RX\n[8] GPIO 21 [9] GPIO 22\n\nMake a connection?");
+    if (stateTaskMyDataPort == true)
+    {
+        _app.window("Data port", 103, f1);
+    }
+    if (stateTaskMyDataPort == false) _task.taskKill(102);
+
     _joy.resetPositionXY();
 }
 /* Task. System LED control */
@@ -1844,9 +1849,30 @@ void Application::window(String name, int indexTask, void (*f1)(void))
         if (_close.button(" CLOSE ", 216, 9, _joy.posX0, _joy.posY0))
         {
             _task.taskKill(indexTask);
-            _task.taskRun(100); //run Desctop
+            _task.taskRun(100); //run Desktop
         }
     }
+}
+/**/
+void Application::rwindow(String name, int indexTask, void (*f1)(void))
+{
+    _task.taskKill(100); //kill Desktop
+    //_task.taskRun(indexTask);
+    
+    f1(); //calc
+    
+    //draw window
+    _gfx.print(name, 5, 9, 8, 5); u8g2.setDrawColor(1);
+    u8g2.drawFrame(0, 10, 256, 141);
+    //draw button-state-window
+    //if (_collapse.button(" COLLAPSE ", 162, 9, _joy.posX0, _joy.posY0)) {}
+    if (_close.button(" CLOSE ", 216, 9, _joy.posX0, _joy.posY0))
+    {
+    _task.taskKill(indexTask);
+    _task.taskRun(100); //run Desktop
+    }
+
+    u8g2.sendBuffer();
 }
 
 /* App */
