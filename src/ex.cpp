@@ -1667,7 +1667,7 @@ App commands[]
     {"reboot",      "Reboot board",        rebootBoard,          false,     4, NULL, 0, 0, 0},
 
     /* desktop task. workspace */
-    {"mydesctop",   "My Desctop",          myDesktop,            true,    100, NULL,                  0, 0, 1},
+    {"mydesctop",   "My Desctop",          myDesktop,            true,    100, NULL, 0, 0, 1},
     //userDesktop
 
     /* app */
