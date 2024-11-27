@@ -1616,7 +1616,8 @@ void trayBuffer()
     _trm0.timer(clearBufferString, 100); //clear text-buffer
 }
 
-/* User Task Terminal */
+
+/* User WorkSpace */
 #include <vector>
 
 namespace
@@ -1629,13 +1630,19 @@ void addUserTask(const userTaskArguments& a)
     userCommands.push_back(a);
 }
 
-void runUserTask()
+void userWorkSpace()
 {
     for(userTaskArguments uta : userCommands)
     {
         uta.f();
     }
 }
+
+
+/* User Terminal */
+/* command type */
+
+
 
 
 /* Terminal */
@@ -1671,11 +1678,11 @@ App commands[]
     //userDesktop
 
     /* app */
-    {"myconsole",   "My Console",          myConsole,            false,   101, iconMyConsole_bits,     0, 0, 2},
-    {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits,  0, 0, 2},
-    {"testapp",     "My Test Application", testApp,              false,   103, iconMyNullApp_bits,     0, 0, 2},
-    {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits,  0, 0, 2},
-    {"taskmanager", "My Task manager",     myTaskManager,        false,   105, icon_MyTaskManager_bits,0, 0, 2},
+    {"myconsole",   "My Console",          myConsole,            false,   101, icon_MyConsole_bits,     0, 0, 2},
+    {"myserialport","My Serial port",      mySerialPort,         false,   102, icon_MySerialPort_bits,  0, 0, 2},
+    {"testapp",     "My Test Application", testApp,              false,   103, icon_MyNullApp_bits,     0, 0, 2},
+    {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, icon_MyWiFiClient_bits,  0, 0, 2},
+    {"taskmanager", "My Task manager",     myTaskManager,        false,   105, icon_MyTaskManager_bits, 0, 0, 2},
     
     /* taskbar-area */
     //clear tray
@@ -1687,7 +1694,7 @@ App commands[]
     {"buffer",     "Buffer",               trayBuffer,           true,   204, NULL, 0,  0, 3},
 
     /* USER define task */
-    {"usertask",   "My User task App",     runUserTask,          false,  400, icon_UserTask_bits, 0, 0, 2},
+    {"userworkspace","User workspace",     userWorkSpace,        false,  400, icon_UserWorkSpace_bits, 0, 0, 2},
 
     /* system graphics-task */
     //keyboard task

@@ -21,6 +21,7 @@ extern int H_LCD, W_LCD;
 
 extern void clearCommandTerminal();
 
+/* User WorkSpace */
 struct userTaskArguments
 {
     int num;
@@ -29,8 +30,12 @@ struct userTaskArguments
 };
 
 void addUserTask(const userTaskArguments &);
-void runUserTask();
+void userWorkSpace();
 
+/* User Terminal */
+
+
+/* Classes */
 class Joystick
 {
 protected:
