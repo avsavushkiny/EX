@@ -28,11 +28,11 @@
 #include <WiFi.h>
 #include "NTPClient.h"
 #include <WiFiUdp.h>
-
+#include <vector>
 
 //version Library and Text
-const int8_t VERSION_LIB[] = {0, 0, 2};
-String VERSION_ADD_INFORMATION = "B";
+const int8_t VERSION_LIB[] = {0, 0, 3};
+String VERSION_ADD_INFORMATION = "V";
 String TEXT_UI_BEGIN = "The experience system. 2023-2024\nDev: Ksenofontov S, Syatkina E\nSamoilov M, Savushkin A";
 
 Graphics _gfx; 
@@ -64,6 +64,7 @@ void clearCommandTerminal(); void testApp(); void myDesktop();
 void myWifiConnect(); void myWifiDisconnect(); void sustemLedControl(); void flagLedControl();
 void myTray();
 void myEx(); void myExViewTaskList();
+void _pushSystemsTask(); int _sizeTasks(); //vector only
 
 
 //for screensaver
@@ -148,15 +149,20 @@ void Graphics::initializationSystem()
 
     //platform logo output
     image_width = ex_width;
-    image_height = ex_height;
+    image_height = ex_height; _pushSystemsTask(); int _ssize = _sizeTasks();
     //--
     u8g2.clearBuffer();
     u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, ex_bits);
     _gfx.print(10, TEXT_UI_BEGIN, 32, ((H_LCD/2) + (image_height/2) + 7), 10, 6);
     _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2] + " " + VERSION_ADD_INFORMATION, 0, H_LCD, 10, 4);
+    
+    _gfx.print(6, (String)_ssize, 0, 6, 10, 6);
     u8g2.sendBuffer();
     //--
+
     delay(2500);
+
+
 }
 /* data render (full frame) */
 void Graphics::render(void (*f)(), int timeDelay)
@@ -1612,8 +1618,12 @@ void trayBuffer()
 }
 
 
-/* Development 2 */
-/* vector */
+
+
+
+
+
+
 
 
 
@@ -1667,14 +1677,12 @@ App commands[]
     {"buffer",     "Buffer",               trayBuffer,   true,  204, NULL, 0,  0, 3},
 
     /* USER define task */
-    #ifdef USER
-    {"userTask",   "User task",            NULL,         true,  400, NULL, 0, 0, 2};
-    #endif
+    {"userTask",   "User task",            NULL,         true,  400, NULL, 0, 0, 2},
 
     
     /* system graphics-task */
     //keyboard task
-    {"", "", NULL, false, 298, NULL, 0, 0, 0},
+    //{"", "", NULL, false, 298, NULL, 0, 0, 0},
     {"sysledcontrol", "LED control",       sustemLedControl,     true,    299, NULL, 0, 0, 0},
     {"systray",       "Tray",              myTray,               true,    300, NULL, 0, 0, 0},
     {"syscursor",     "Cursor",            systemCursor,         true,    301, NULL, 0, 0, 0},
@@ -2011,3 +2019,157 @@ void myWifiConnect()
     /* IPAddress ip = WiFi.localIP();
     sprintf(lcdBuffer, "%d.%d.%d.%d:%d", ip[0], ip[1], ip[2], ip[3], udpPort);*/
 }
+
+
+//===========================================================================
+
+
+/* Development 2 */
+/* vector */
+struct _taskArguments
+{
+    char const *text;           //command
+    char const *name;           //name task-function
+
+    void (*f)(void);            //task-function
+
+    bool active;                //activ status task-function
+    int indexTask;              //index
+    const uint8_t *bitMap;      //icon task-function
+
+    const uint8_t widthApp;     //width
+    const uint8_t heightApp;    //height
+
+    uint8_t state;              //0-task, 1-desktop, 2-app, 3-tray task
+};
+
+_taskArguments _systems[]
+{
+    /* system task */
+    {"clearcomm",   "Clear command",       clearCommandTerminal, false,     0, NULL, 0, 0, 0},
+    {"deepsleep",   "Deep sleep PWS-mode", powerSaveDeepSleep,   true,      1, NULL, 0, 0, 0},
+    {"rawadc",      "Raw data ADC",        systemRawADC,         false,     2, NULL, 0, 0, 0},
+    {"clearbuffer", "Clear Buffer",        clearBufferString,    false,     3, NULL, 0, 0, 0},
+    {"reboot",      "Reboot board",        rebootBoard,          false,     4, NULL, 0, 0, 0},
+};
+
+_taskArguments _desktop[]
+{
+    /* desktop task. workspace */
+    {"mydesctop",   "My Desctop",          myDesktop,            true,    100, NULL,                  0, 0, 1},
+    /* app's */
+    {"myconsole",   "My Console",          myConsole,            false,   101, iconMyConsole_bits,    0, 0, 2},
+    {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits, 0, 0, 2},
+    {"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    0, 0, 2},
+    {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 0, 0, 2},
+    {"myex",        "My EX",               myEx,                 false,   105, iconMyNullApp_bits,    0, 0, 2},
+};
+
+_taskArguments _user[]
+{
+    {"userTask",   "User task",            null,                 true,  400, NULL, 0, 0, 2},
+};
+
+_taskArguments _tray[]
+{
+    /* taskbar-area */
+    //clear tray
+    //{"cleartray", "Clear Tray",    null,         false, 200, NULL, 0,  0, 3},
+    {"clock",      "Clock",                trayClock,          false, 201, NULL, 40, 0, 3},
+    {"battery",    "Battery control",      trayBattery,        true,  202, NULL, 15, 0, 3},
+    {"fps",        "FPS",                  trayFps,            false, 203, NULL, 10, 0, 3},
+    {"ip",         "Ip adress",            trayDrawIpConnect,  false, 205, NULL, 75, 0, 3},
+    {"buffer",     "Buffer",               trayBuffer,         true,  204, NULL, 0,  0, 3},
+};
+
+_taskArguments _systems2[]
+{
+    /* system graphics-task */
+    //keyboard task
+    //{"", "", NULL, false, 298, NULL, 0, 0, 0},
+    {"sysledcontrol", "LED control",       sustemLedControl,     true,    299, NULL, 0, 0, 0},
+    {"systray",       "Tray",              myTray,               true,    300, NULL, 0, 0, 0},
+    {"syscursor",     "Cursor",            systemCursor,         true,    301, NULL, 0, 0, 0},
+};
+
+namespace
+{
+    std::vector<_taskArguments> _taskSystems;
+};
+
+void _addSystemsTask(const _taskArguments& a)
+{
+    _taskSystems.push_back(a);
+}
+
+void _kernelSystemsTask()
+{
+    for(_taskArguments _ta : _taskSystems)
+    {
+        if ((_ta.active) && (_ta.state != 3)) _ta.f();
+    }
+}
+
+int _sizeTasks()
+{
+    int _size = _taskSystems.size();
+    return _size;
+}
+
+void _pushSystemsTask()
+{
+    for(_taskArguments _all : _systems)
+    {
+        _taskSystems.push_back(_all);
+    }
+
+    /*for(_taskArguments _all : _desktop)
+    {
+        _taskSystems.push_back(_all);
+    }*/
+
+    for(_taskArguments _all : _user)
+    {
+        _taskSystems.push_back(_all);
+    }
+
+    for(_taskArguments _all : _tray)
+    {
+        _taskSystems.push_back(_all);
+    }
+
+    for(_taskArguments _all : _systems2)
+    {
+        _taskSystems.push_back(_all);
+    }
+}
+
+void Terminal::terminal2()
+{
+  TIMER = millis();
+  
+  _gfx.render(_kernelSystemsTask);
+
+  if (Serial.available() != 0)
+  {
+    char text[20]{};
+    Serial.readBytesUntil('\n', text, sizeof(text));
+
+    for (_taskArguments _ta : _taskSystems)
+    {
+      if (not strncmp(_ta.text, text, 20))
+      {
+        if (_ta.active == true) _ta.active = false;
+        else _ta.active = true;
+      }
+    }
+  }
+}
+
+
+
+
+
+
+
+//=================================================================================

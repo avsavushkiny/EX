@@ -10,5 +10,5 @@ void setup()
 
 void loop()
 {  
-    trm.terminal(); 
+    trm.terminal2();
 }
