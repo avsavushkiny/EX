@@ -1640,11 +1640,61 @@ void _myConsole()
     _mess.popUpMessage("!", "Ohhh no :(\nTask-function not defined!\0", 5000);
     _joy.resetPositionXY();
 }
-/* Task. Serial port operation control */
+/* Data Port */
+/* list all port's */
+struct _dataPort
+{
+    short number;
+    short gpio;
+    short state; //0x01(1) - input 0x00(0) - output
+    bool  activ;
+};
+
+_dataPort _allDataPort[]
+{
+    /*
+    Data port
+    [1] GND [2] 3,3V
+    [3] GPIO 35 [4] GPIO 34 [5] GPIO 19
+    [6] TX [7] RX [8] GPIO 21 [9] GPIO 22
+    */
+    
+    {3, 35, 1, false}, //adc
+    {4, 34, 1, false}, //adc
+    {5, 19, 1, false}, //miso
+
+    {6, 1,  0, false}, //tx output UART
+    {7, 3,  1, false}, //rx input UART
+
+    {8, 21, 1, false}, //sda
+    {9, 22, 1, false}  //scl
+};
+
+bool _stateInstallPort = false;
+void _installingPort()
+{
+    if (!_stateInstallPort)
+    {
+        for (_dataPort _dp : _allDataPort)
+        {
+            pinMode(_dp.gpio, _dp.state);
+        }
+    }
+}
+
+
 void _f2()
 {
-    String text = "Application class test.\n\n_app.window(Test Application, 103, f1);\n_app - object\nwindow - class function\nTest Application - name window\n103 - number task\nf1 - function";
-    _gfx.print(text, 10, 25, 10, 5);
+    /*for(_dataPort _dp : _allDataPort)
+    {
+        if ((_dp.gpio == 35) || (_dp.gpio == 34))
+        {
+            _dataDp = analogRead(_dp.gpio);
+        }
+    }*/
+
+    _gfx.print("DataPort 4 " + (String)analogRead(34), 10, 25, 10, 5);
+    _gfx.print("DataPort 3 " + (String)analogRead(35), 10, 35, 10, 5);
 }
 void _myDataPort()
 {
@@ -1973,13 +2023,13 @@ _taskArguments _systems[]
 _taskArguments _desktop[]
 {
     /* desktop task. workspace */
-    {"mydesctop",   "My Desctop",          _myDesktop,            true,    100, NULL,                   0, 0, 1},
+    {"mydesctop",    "My Desctop",          _myDesktop,            true,    100, NULL,                   0, 0, 1},
     /* app's */
-    {"myconsole",   "My Console",          _myConsole,            false,   101, icon_MyConsole_bits,    0, 0, 2},
-    {"myserialport","My Serial port",      _myDataPort,           false,   102, icon_MyDataPort_bits,   0, 0, 2},
-    {"testapp",     "Test Application",    _myTestApp,            false,   103, icon_MyNullApp_bits,    0, 0, 2},
+    {"myconsole",    "My Console",          _myConsole,            false,   101, icon_MyConsole_bits,    0, 0, 2},
+    {"myserialport", "My Data port",        _myDataPort,           false,   102, icon_MyDataPort_bits,   0, 0, 2},
+    {"testapp",      "Test Application",    _myTestApp,            false,   103, icon_MyNullApp_bits,    0, 0, 2},
     //{"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 0, 0, 2},
-    {"myex",        "My EX",               _myTaskManager,        false,   105, icon_MyTaskManager_bits,0, 0, 2},
+    {"mytaskmanager","My Task manager ",    _myTaskManager,        false,   105, icon_MyTaskManager_bits,0, 0, 2},
 };
 
 _taskArguments _user[]
