@@ -1557,7 +1557,32 @@ void Application::window(String name, int indexTask, void (*f1)(void), void (*f2
         }
     }
 }
- 
+/* window designer for the task-function */
+void Application::window(String name, int indexTask, void (*f1)(void))
+{
+    _task.taskKill(100); //kill Desktop
+    _task.taskRun(indexTask);
+    
+    f1();
+    
+    //draw window
+    {
+        _gfx.print(name, 5, 9, 8, 5); u8g2.setDrawColor(1);
+        u8g2.drawFrame(0, 10, 256, 141);
+    }
+    //draw button-state-window
+    {
+        //if (_collapse.button(" COLLAPSE ", 162, 9, _joy.posX0, _joy.posY0)) {}
+        
+        if (_close.button(" CLOSE ", 216, 9, _joy.posX0, _joy.posY0))
+        {
+            _task.taskKill(indexTask);
+            _task.taskRun(100); //run Desctop
+        }
+    }
+}
+
+
 //====================================================
 /* Application */
 /* my tray */
@@ -2012,7 +2037,7 @@ void _pushSystemsTask()
 
     for(_taskArguments &_all : _desktop)
     {
-        //_taskSystems.push_back(_all);
+        _taskSystems.push_back(_all);
     }
 
     for(_taskArguments &_all : _user)

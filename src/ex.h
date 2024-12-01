@@ -298,6 +298,7 @@ class Application
 
     /* Applic */
     void window(String name, int indexTask, void (*f1)(void), void (*f2)(void));
+    void window(String name, int indexTask, void (*f1)(void));
 };
 
 class Terminal
