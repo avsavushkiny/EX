@@ -1844,8 +1844,32 @@ void myTray()
         }
     }
 }
+
+void _myTray()
+{
+    u8g2.setDrawColor(1);
+    u8g2.drawHLine(0, 150, 256); 
+    xTray = 256;
+    
+    for (_taskArguments &_ta : _taskSystems)
+    {
+        if (_ta.state == 3)
+        {
+            if (_ta.active == true)
+            {
+                //xTray += borderTray;
+                xTray -= borderTray + _ta.widthApp;
+                _ta.f();
+                //xTray -= command.widthApp;
+            }
+        }
+    }
+}
+
 /* my desctop */
-void myDesktop()
+void myDesktop(){}
+
+void _myDesktop()
 {
     uint8_t border{4};
     uint8_t xx{border};
@@ -1853,11 +1877,11 @@ void myDesktop()
 
     uint8_t countTask{1};
     
-    for (App &command : commands)
+    for (_taskArguments &_ta : _taskSystems)
     {
-        if (command.state == 2)
+        if (_ta.state == 2)
         {
-            _myConsole.shortcut(command.name, command.bitMap, xx, yy, command.f, _joy.posX0, _joy.posY0);
+            _myConsole.shortcut(_ta.name, _ta.bitMap, xx, yy, _ta.f, _joy.posX0, _joy.posY0);
             countTask++;
 
             xx += (32 + border);
@@ -2026,22 +2050,6 @@ void myWifiConnect()
 
 /* Development 2 */
 /* vector */
-struct _taskArguments
-{
-    char const *text;           //command
-    char const *name;           //name task-function
-
-    void (*f)(void);            //task-function
-
-    bool active;                //activ status task-function
-    int indexTask;              //index
-    const uint8_t *bitMap;      //icon task-function
-
-    const uint8_t widthApp;     //width
-    const uint8_t heightApp;    //height
-
-    uint8_t state;              //0-task, 1-desktop, 2-app, 3-tray task
-};
 
 _taskArguments _systems[]
 {
@@ -2056,7 +2064,7 @@ _taskArguments _systems[]
 _taskArguments _desktop[]
 {
     /* desktop task. workspace */
-    {"mydesctop",   "My Desctop",          myDesktop,            true,    100, NULL,                  0, 0, 1},
+    {"mydesctop",   "My Desctop",          _myDesktop,            true,    100, NULL,                  0, 0, 1},
     /* app's */
     {"myconsole",   "My Console",          myConsole,            false,   101, iconMyConsole_bits,    0, 0, 2},
     {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits, 0, 0, 2},
@@ -2077,7 +2085,7 @@ _taskArguments _tray[]
     //{"cleartray", "Clear Tray",    null,         false, 200, NULL, 0,  0, 3},
     {"clock",      "Clock",                trayClock,          false, 201, NULL, 40, 0, 3},
     {"battery",    "Battery control",      trayBattery,        true,  202, NULL, 15, 0, 3},
-    {"fps",        "FPS",                  trayFps,            false, 203, NULL, 10, 0, 3},
+    {"fps",        "FPS",                  trayFps,            true,  203, NULL, 10, 0, 3},
     {"ip",         "Ip adress",            trayDrawIpConnect,  false, 205, NULL, 75, 0, 3},
     {"buffer",     "Buffer",               trayBuffer,         true,  204, NULL, 0,  0, 3},
 };
@@ -2088,13 +2096,8 @@ _taskArguments _systems2[]
     //keyboard task
     //{"", "", NULL, false, 298, NULL, 0, 0, 0},
     {"sysledcontrol", "LED control",       sustemLedControl,     true,    299, NULL, 0, 0, 0},
-    {"systray",       "Tray",              myTray,               true,    300, NULL, 0, 0, 0},
+    {"systray",       "Tray",              _myTray,               true,    300, NULL, 0, 0, 0},
     {"syscursor",     "Cursor",            systemCursor,         true,    301, NULL, 0, 0, 0},
-};
-
-namespace
-{
-    std::vector<_taskArguments> _taskSystems;
 };
 
 void _addSystemsTask(const _taskArguments& a)
@@ -2104,7 +2107,7 @@ void _addSystemsTask(const _taskArguments& a)
 
 void _kernelSystemsTask()
 {
-    for(_taskArguments _ta : _taskSystems)
+    for(_taskArguments &_ta : _taskSystems)
     {
         if ((_ta.active) && (_ta.state != 3)) _ta.f();
     }
@@ -2118,27 +2121,27 @@ int _sizeTasks()
 
 void _pushSystemsTask()
 {
-    for(_taskArguments _all : _systems)
+    for(_taskArguments &_all : _systems)
     {
         _taskSystems.push_back(_all);
     }
 
-    /*for(_taskArguments _all : _desktop)
+    for(_taskArguments &_all : _desktop)
     {
-        _taskSystems.push_back(_all);
-    }*/
+        //_taskSystems.push_back(_all);
+    }
 
-    for(_taskArguments _all : _user)
+    for(_taskArguments &_all : _user)
     {
         _taskSystems.push_back(_all);
     }
 
-    for(_taskArguments _all : _tray)
+    for(_taskArguments &_all : _tray)
     {
         _taskSystems.push_back(_all);
     }
 
-    for(_taskArguments _all : _systems2)
+    for(_taskArguments &_all : _systems2)
     {
         _taskSystems.push_back(_all);
     }
@@ -2155,7 +2158,7 @@ void Terminal::terminal2()
     char text[20]{};
     Serial.readBytesUntil('\n', text, sizeof(text));
 
-    for (_taskArguments _ta : _taskSystems)
+    for (_taskArguments &_ta : _taskSystems)
     {
       if (not strncmp(_ta.text, text, 20))
       {

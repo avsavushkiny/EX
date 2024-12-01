@@ -21,6 +21,31 @@ extern int H_LCD, W_LCD;
 
 extern void clearCommandTerminal();
 
+/* Development 2 */
+/* Description of the task for the operating system */
+struct _taskArguments
+{
+    char const *text;           //command
+    char const *name;           //name task-function
+
+    void (*f)(void);            //task-function
+
+    bool active;                //activ status task-function
+    int indexTask;              //index
+    const uint8_t *bitMap;      //icon task-function
+
+    const uint8_t widthApp;     //width
+    const uint8_t heightApp;    //height
+
+    uint8_t state;              //0-task, 1-desktop, 2-app, 3-tray task
+};
+
+namespace
+{
+    std::vector<_taskArguments> _taskSystems;
+};
+
+
 class Joystick
 {
 protected:
