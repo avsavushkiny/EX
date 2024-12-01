@@ -19,7 +19,7 @@ extern U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2;
 extern const uint8_t gears_bits[];
 extern int H_LCD, W_LCD;
 
-extern void clearCommandTerminal();
+extern void _clearCommandTerminal();
 
 /* Development 2 */
 /* Description of the task for the operating system */
@@ -305,9 +305,9 @@ class Terminal
 private:
 public:
     /* System terminal */
-    void terminal();
+    //void terminal();
     void terminal2(); //vector only
-    void terminal(void(*f)());
+    //void terminal(void(*f)());
 };
 
 class TimeNTP

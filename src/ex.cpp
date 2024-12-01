@@ -39,7 +39,7 @@ Graphics _gfx;
 Timer _delayCursor, _trm0, _trm1, _stop, _timerUpdateClock, _fps; 
 Application _app; 
 Joystick _joy; 
-Shortcut _myConsole, _wifi;
+Shortcut _shortcutDesktop, _wifi;
 Cursor _crs; 
 PowerSave _pwsDeep; 
 Interface _mess; 
@@ -1208,62 +1208,16 @@ void Timer::stopwatch(void (*f)(void), int interval)
 }
 
 
-/* Powersave mode */
-/* the function checks whether the joystick or button is pressed at a certain moment */
-bool isTouched()
-{
-  if ((_joy.calculateIndexY0() == 0) && (_joy.calculateIndexX0() == 0)) return false;
 
-  return true;
-}
-/* shows a notification about the start of sleep mode */
-void sleepModeScreen()
-{
-    _mess.popUpMessage("Power save", "Light sleep.\nBye, bye my User!\nUse the Joystick to wake up!\0\0", 1000);
-}
-/* a system-task for working in an energy-efficient mode */
-void powerSaveDeepSleep()
-{
-    if (isTouched() == true)
-    {
-        screenTiming = TIMER; u8g2.setPowerSave(0);
-    }
-    
-    //if ((_joy.posY0 >= 150) && (_joy.posX0 <= 100)) BUFFER_STRING = "Deep powersave mode";
-    
-    if ((TIMER - screenTiming > 60000) && (_joy.posY0 >= 150))
-    {
-        screenTiming = TIMER;
-
-        while (isTouched() == false)
-        {
-            sleepModeScreen();
-            _gfx.controlBacklight(false); u8g2.setPowerSave(1);
-            esp_deep_sleep_start(); 
-        }
-    }
-    
-    if ((TIMER - screenTiming > 60000) && (_joy.posY0 < 150))
-    {
-        screenTiming = TIMER;
-
-        while (isTouched() == false)
-        {
-            sleepModeScreen();
-            _gfx.controlBacklight(false); u8g2.setPowerSave(0);
-            esp_light_sleep_start();
-
-        }
-    }
-}
 /* turns off the backlight and turns on an infinite loop
    with the text to pause until the joysticks are pressed or moved */
+bool _isTouched(); void _sleepModeScreen();//prototype
 /* ---> remove support */
 void PowerSave::sleepLight(bool state, uint timeUntil)
 {
   if ((state == true))
   {
-    if (isTouched() == true)
+    if (_isTouched() == true)
     {
       screenTiming = millis();
     }
@@ -1274,10 +1228,10 @@ void PowerSave::sleepLight(bool state, uint timeUntil)
 
       digitalWrite(PIN_BACKLIGHT_LCD, false);
 
-      while (isTouched() == false)
+      while (_isTouched() == false)
       {
         /* Sleep */
-        _gfx.render(sleepModeScreen, 500);
+        _gfx.render(_sleepModeScreen, 500);
         //esp_deep_sleep_start();
         esp_light_sleep_start();
       }
@@ -1291,7 +1245,7 @@ void PowerSave::sleepDeep(bool state, uint timeUntil)
 {
   if ((state == true))
   {
-    if (isTouched() == true)
+    if (_isTouched() == true)
     {
       screenTiming = TIMER;
     }
@@ -1304,7 +1258,7 @@ void PowerSave::sleepDeep(bool state, uint timeUntil)
 
       digitalWrite(PIN_BACKLIGHT_LCD, false);
 
-      while (isTouched() == false)
+      while (_isTouched() == false)
       {
         /* Sleep */
         esp_deep_sleep_start();
@@ -1484,20 +1438,8 @@ void null(){}
 
 
 /* System task-function */
-/* Task. clear buffer */
-void clearBufferString()
-{
-    BUFFER_STRING = "";
-}
-/* Task. calculation of battery capacity */
-int dataRawBattery{};
-int systemUpdateBattery()
-{
-    dataRawBattery = analogRead(PIN_BATTERY);
-    dataRawBattery = map(dataRawBattery, 1890, 2470, 0, 100);
 
-    return dataRawBattery;
-}
+
 /* update NTP time */
 void systemNTPTimeUpdate()
 {
@@ -1508,70 +1450,14 @@ void systemNTPTimeUpdate()
     else _mess.popUpMessage("!", "The Wi-Fi (internet) connection\nis not active.", 2500);
 }
 /* Task. Battery */
-int _t{};
-int systemBattery()
-{
-    if (_t >= 30000) _t = 30000;
-    _timerUpdateClock.timer(systemUpdateBattery, _t); _t += 10000;
 
-    return dataRawBattery;
-}
-/* Task. System cursor output */
-void systemCursor()
-{
-    _joy.updatePositionXY(20);
-    _crs.cursor(true, _joy.posX0, _joy.posY0);
-}
-/* Task. System RawADC */
-void systemRawADC()
-{
-    String text = "Coord X: " + (String)_joy.RAW_DATA_X0 + "Coord Y: " + (String)_joy.RAW_DATA_Y0;
-    BUFFER_STRING = text; 
-}
-/* Task. Sisplaying a list of tasks */
-void systemViewList()
-{
 
-}
-/* Task. Stack, task, command */
-void myConsole()
-{
-    _mess.popUpMessage("!", "Ohhh no :(\nTask-function not defined!\0", 5000);
-    _joy.resetPositionXY();
-}
-/* Task. Serial port operation control */
-void mySerialPort()
-{
-    _mess.popUpMessage("COM port", "A - Ok, B - Cancel" , "Are you sure you want\nto close the task?\0", 5000);
-    //_mess.dialogueMessage("COM port", "Are you sure you want\nto close the task?\0");
-    _joy.resetPositionXY();
-}
-/* Task. System LED control */
-void flagLedControl()
-{
-    for (int i = 0; i < 1; i++)
-    {
-        if (flagStateLedControl == true)
-        {
-            flagStateLedControl = false; delay(250); break;
-        }
-        else
-            flagStateLedControl = true; delay(250);
-    }
-}
-void sustemLedControl()
-{
 
-    //_ledControl.button("LED", 5, 140, flagLedControl, _joy.posX0, _joy.posY0);
-    
-    if (flagStateLedControl == true) _gfx.controlBacklight(true);
-    else _gfx.controlBacklight(false);
-}
-/* Task. Reboot ESP32 */
-void rebootBoard()
-{
-    ESP.restart();
-}
+
+
+
+
+
 /* Task. Taskbar-area */
 int xTray{256}, yTray{159}, borderTray{5};
 void trayClock()
@@ -1579,29 +1465,8 @@ void trayClock()
     //width 40px
     _labelClock.label((String)timeClient.getFormattedTime(), "Click to update time", xTray, yTray, systemNTPTimeUpdate, 8, 5, _joy.posX0, _joy.posY0);
 }
-void trayBattery()
-{
-    //width 10px
-    _labelBattery.label((String)systemBattery(), "Click to LED on/off", xTray, yTray, flagLedControl, 8, 5, _joy.posX0, _joy.posY0);
-}
-/* Task. FPS calculation */
-uint8_t _FPS = 0; uint8_t _fpsCounter = 0; long int _fpsTime = millis();
-void trayFps()
-{
-    //width 10px
-    _gfx.print((String)_FPS, xTray, yTray, 10, 6);
-    // get FPS
-    if ((millis() - _fpsTime) <= 1000)
-    {
-        _fpsCounter++;
-    }
-    else
-    {
-        _fpsTime = millis();
-        _FPS = _fpsCounter;
-        _fpsCounter = 0;
-    }
-}
+
+
 /* Task. Draw IP connect */
 void trayDrawIpConnect()
 {
@@ -1609,13 +1474,6 @@ void trayDrawIpConnect()
     _labelWifi.label(WiFi.localIP().toString(), "Click to disconnect", xTray, yTray, myWifiDisconnect, 8, 5, _joy.posX0, _joy.posY0);
 }
 /* Task. Buffer */
-void trayBuffer()
-{
-    //width 110px (22 chars)
-    u8g2.setDrawColor(1);
-    _gfx.print(BUFFER_STRING, 5, yTray, 8, 5);
-    _trm0.timer(clearBufferString, 100); //clear text-buffer
-}
 
 
 
@@ -1628,167 +1486,46 @@ void trayBuffer()
 
 
 
-/* Terminal */
-/* command type */
-struct App
-{
-    char const *text;           //command
-    char const *name;           //name task-function
 
-    void (*f)(void);            //task-function
 
-    bool active;                //activ status task-function
-    int indexTask;              //index
-    const uint8_t *bitMap;      //icon task-function
-
-    const uint8_t widthApp;     //width
-    const uint8_t heightApp;    //height
-
-    uint8_t state;              //0-task, 1-desktop, 2-app, 3-tray task
-};
-/* enumeration of objects - commands */
-App commands[]
-{
-    /* system task */
-    {"clearcomm",   "Clear command",       clearCommandTerminal, false,     0, NULL, 0, 0, 0},
-    {"deepsleep",   "Deep sleep PWS-mode", powerSaveDeepSleep,   true,      1, NULL, 0, 0, 0},
-    {"rawadc",      "Raw data ADC",        systemRawADC,         false,     2, NULL, 0, 0, 0},
-    {"clearbuffer", "Clear Buffer",        clearBufferString,    false,     3, NULL, 0, 0, 0},
-    {"reboot",      "Reboot board",        rebootBoard,          false,     4, NULL, 0, 0, 0},
-
-    /* desktop task. workspace */
-    {"mydesctop",   "My Desctop",          myDesktop,            true,    100, NULL,                  0, 0, 1},
-    //userDesktop
-
-    /* app */
-    {"myconsole",   "My Console",          myConsole,            false,   101, iconMyConsole_bits,    0, 0, 2},
-    {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits, 0, 0, 2},
-    {"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    0, 0, 2},
-    {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 0, 0, 2},
-    {"myex",        "My EX",               myEx,                 false,   105, iconMyNullApp_bits,    0, 0, 2},
-    
-    /* taskbar-area */
-    //clear tray
-    //{"cleartray", "Clear Tray",    null,         false, 200, NULL, 0,  0, 3},
-    {"clock",      "Clock",                trayClock,    false,  201, NULL, 40, 0, 3},
-    {"battery",    "Battery control",      trayBattery,  true,  202, NULL, 15, 0, 3},
-    {"fps",        "FPS",                  trayFps,      false, 203, NULL, 10, 0, 3},
-    {"ip",         "Ip adress",            trayDrawIpConnect, false, 205, NULL, 75, 0, 3},
-    {"buffer",     "Buffer",               trayBuffer,   true,  204, NULL, 0,  0, 3},
-
-    /* USER define task */
-    {"userTask",   "User task",            NULL,         true,  400, NULL, 0, 0, 2},
-
-    
-    /* system graphics-task */
-    //keyboard task
-    //{"", "", NULL, false, 298, NULL, 0, 0, 0},
-    {"sysledcontrol", "LED control",       sustemLedControl,     true,    299, NULL, 0, 0, 0},
-    {"systray",       "Tray",              myTray,               true,    300, NULL, 0, 0, 0},
-    {"syscursor",     "Cursor",            systemCursor,         true,    301, NULL, 0, 0, 0},
-};
-
-/* delete all commands */
-void clearCommandTerminal()
-{
-  for (App &command : commands)
-  {
-    command.active = false;
-  }
-}
-/* command stack */
-void calcTerminal()
-{
-  for (App &command : commands)
-  {
-    if ((command.active) && (command.state != 3))
-    {
-      command.f();
-    }
-  }
-}
-/* pushing data onto the stack */
-void Terminal::terminal()
-{
-  TIMER = millis();
-  
-  _gfx.render(calcTerminal);
-
-  if (Serial.available() != 0)
-  {
-    char text[20]{};
-    Serial.readBytesUntil('\n', text, sizeof(text));
-
-    for (App &command : commands)
-    {
-      if (not strncmp(command.text, text, 20))
-      {
-        if (command.active == true) command.active = false;
-        else command.active = true;
-      }
-    }
-  }
-}
-/* pushing data onto the stack and User task-function */
-void Terminal::terminal(void(*f)())
-{
-  TIMER = millis();
-  
-  _gfx.render(calcTerminal, f);
-
-  if (Serial.available() != 0)
-  {
-    char text[20]{};
-    Serial.readBytesUntil('\n', text, sizeof(text));
-
-    for (App &command : commands)
-    {
-      if (not strncmp(command.text, text, 20))
-      {
-        if (command.active == true) command.active = false;
-        else command.active = true;
-      }
-    }
-  }
-}
 
 
 /* Task management */
 /* disable a task */
 void Task::taskKill(int indexTask)
 {
-    for (App &command : commands)
+    for (_taskArguments &_ta : _taskSystems)
     {
-        if ((command.active == true) && (command.indexTask == indexTask))
+        if ((_ta.active == true) && (_ta.indexTask == indexTask))
         {
-            command.active = false;
+            _ta.active = false;
         }
     }
 }
 /* start a task */
 void Task::taskRun(int indexTask)
 {
-    for (App &command : commands)
+    for (_taskArguments &_ta : _taskSystems)
     {
-        if ((command.active == false) && (command.indexTask == indexTask))
+        if ((_ta.active == false) && (_ta.indexTask == indexTask))
         {
-            command.active = true;
+            _ta.active = true;
         }
     }
 }
 /* task */
 void Task::task(int indexTask)
 {
-    for (App &command : commands)
+    for (_taskArguments &_ta : _taskSystems)
     {
-        if ((command.active == true) && (command.indexTask == indexTask))
+        if ((_ta.active == true) && (_ta.indexTask == indexTask))
         {
-            command.active = false; delay(150); break;
+            _ta.active = false; delay(150); break;
         }
 
-        if ((command.active == false) && (command.indexTask == indexTask))
+        if ((_ta.active == false) && (_ta.indexTask == indexTask))
         {
-            command.active = true; delay(150); break;
+            _ta.active = true; delay(150); break;
         }  
     }
 }
@@ -1821,30 +1558,9 @@ void Application::window(String name, int indexTask, void (*f1)(void), void (*f2
     }
 }
  
-
-/* App */
+//====================================================
+/* Application */
 /* my tray */
-void myTray()
-{
-    u8g2.setDrawColor(1);
-    u8g2.drawHLine(0, 150, 256); 
-    xTray = 256;
-    
-    for (App &command : commands)
-    {
-        if (command.state == 3)
-        {
-            if (command.active == true)
-            {
-                //xTray += borderTray;
-                xTray -= borderTray + command.widthApp;
-                command.f();
-                //xTray -= command.widthApp;
-            }
-        }
-    }
-}
-
 void _myTray()
 {
     u8g2.setDrawColor(1);
@@ -1865,10 +1581,7 @@ void _myTray()
         }
     }
 }
-
 /* my desctop */
-void myDesktop(){}
-
 void _myDesktop()
 {
     uint8_t border{4};
@@ -1881,7 +1594,7 @@ void _myDesktop()
     {
         if (_ta.state == 2)
         {
-            _myConsole.shortcut(_ta.name, _ta.bitMap, xx, yy, _ta.f, _joy.posX0, _joy.posY0);
+            _shortcutDesktop.shortcut(_ta.name, _ta.bitMap, xx, yy, _ta.f, _joy.posX0, _joy.posY0);
             countTask++;
 
             xx += (32 + border);
@@ -1895,30 +1608,59 @@ void _myDesktop()
     
     _gfx.print("My Desktop", 5, 8, 8, 5);
     u8g2.drawHLine(0, 10, 256);
-
-    
-
-    /*test led*/ //_gfx.controlBacklight(true);
 }
+/* Task. Stack, task, command */
+void _myConsole()
+{
+    _mess.popUpMessage("!", "Ohhh no :(\nTask-function not defined!\0", 5000);
+    _joy.resetPositionXY();
+}
+/* Task. Serial port operation control */
+void _f2()
+{
+    String text = "Application class test.\n\n_app.window(Test Application, 103, f1);\n_app - object\nwindow - class function\nTest Application - name window\n103 - number task\nf1 - function";
+    _gfx.print(text, 10, 25, 10, 5);
+}
+void _myDataPort()
+{
+    bool stateTaskMyDataPort = _mess.dialogueMessage("Data port", "Pinout\n[1] GND [2] 3,3V\n[3] GPIO 35 [4] GPIO 34 [5] GPIO 19\n[6] TX [7] RX\n[8] GPIO 21 [9] GPIO 22\n\nMake a connection?");
+    if (stateTaskMyDataPort == true)
+    {
+        _app.window("Data port", 103, _f2);
+    }
+    if (stateTaskMyDataPort == false) _task.taskKill(102);
 
-
-/* my EX. View the task list */
+    _joy.resetPositionXY();
+}
+/* Test Application. Function */
+void _f1()
+{
+    String text = "Application class test.\n\n_app.window(Test Application, 103, f1);\n_app - object\nwindow - class function\nTest Application - name window\n103 - number task\nf1 - function";
+    _gfx.print(text, 10, 25, 10, 5);
+}
+/* Test application. Call object */
+void _myTestApp()
+{
+    _app.window("Test Application", 103, _f1);
+}
+/* Task Manager */
+/* my Task Manager. View the task list */
 int _numberIndexTask{};
-void myExChangingStatusTask()
+void _changingStatusTask()
 {
     _task.task(_numberIndexTask);
 }
 
-void myExDialogueChangingStatusTask()
+void _dialogueChangingStatusTask()
 {
     String textDialogue = "Click OK to start or stop\nthe process: " + (String)_numberIndexTask;
     bool state = _mess.dialogueMessage("?", textDialogue);
 
-    if (state == true) {myExChangingStatusTask();}
+    if (state == true) {_changingStatusTask();}
     if (state == false) {}
 }
 
-void myExViewTaskList()
+void _viewTaskList()
 {
     int xx{5}, yy{30};
 
@@ -1927,16 +1669,16 @@ void myExViewTaskList()
 
     _gfx.print("Active tasks:", 5, 20, 8, 5);
 
-    for (App &command : commands)
+    for (_taskArguments &_ta : _taskSystems)
     { 
-        if (command.active == true)
+        if (_ta.active == true)
         {
-            String _Text = command.text;
+            String _Text = _ta.text;
             uint8_t sizeText = _Text.length();
 
-            _numberIndexTask = command.indexTask;
+            _numberIndexTask = _ta.indexTask;
 
-            _taskList.label(_Text, command.name, xx, yy, myExDialogueChangingStatusTask, 8, 5, _joy.posX0, _joy.posY0);
+            _taskList.label(_Text, _ta.name, xx, yy, _dialogueChangingStatusTask, 8, 5, _joy.posX0, _joy.posY0);
             
             if ((xx + (sizeText * 5) + 5) <= 240) //256 - 5 - 5
             {
@@ -1956,16 +1698,16 @@ void myExViewTaskList()
 
     yy += 30;
     
-    for (App &command : commands)
+    for (_taskArguments &_ta : _taskSystems)
     { 
-        if (command.active == false)
+        if (_ta.active == false)
         {
-            String _Text = command.text;
+            String _Text = _ta.text;
             uint8_t sizeText = _Text.length();
 
-            _numberIndexTask = command.indexTask;
+            _numberIndexTask = _ta.indexTask;
             
-            _taskList.label(_Text, command.name, xx, yy, myExDialogueChangingStatusTask, 8, 5, _joy.posX0, _joy.posY0);
+            _taskList.label(_Text, _ta.name, xx, yy, _dialogueChangingStatusTask, 8, 5, _joy.posX0, _joy.posY0);
             
             if ((xx + (sizeText * 5) + 5) <= 240) //256 - 5 - 5
             {
@@ -1980,25 +1722,167 @@ void myExViewTaskList()
     }
 }
 
-void myEx()
+void _myTaskManager()
 {
-    _app.window("View the task list", 105, myExViewTaskList, null);
+    _app.window("View the task list", 105, _viewTaskList, null);
+}
+/* Clear all commands */
+void _clearCommandTerminal()
+{
+  for (_taskArguments &_ta : _taskSystems)
+  {
+    _ta.active = false;
+  }
+}
+/* Powersave mode */
+/* the function checks whether the joystick or button is pressed at a certain moment */
+bool _isTouched()
+{
+  if ((_joy.calculateIndexY0() == 0) && (_joy.calculateIndexX0() == 0)) return false;
+
+  return true;
+}
+/* shows a notification about the start of sleep mode */
+void _sleepModeScreen()
+{
+    _mess.popUpMessage("Power save", "Light sleep.\nBye, bye my User!\nUse the Joystick to wake up!\0\0", 1000);
+}
+/* a system-task for working in an energy-efficient mode */
+void _powerSaveBoard()
+{
+    if (_isTouched() == true)
+    {
+        screenTiming = TIMER; u8g2.setPowerSave(0);  //off powersave
+    }
+    
+    //if ((_joy.posY0 >= 150) && (_joy.posX0 <= 100)) BUFFER_STRING = "Deep powersave mode";
+    
+    if ((TIMER - screenTiming > 60000) && (_joy.posY0 >= 150))
+    {
+        screenTiming = TIMER;
+
+        while (_isTouched() == false)
+        {
+            _sleepModeScreen();            //output message
+            _gfx.controlBacklight(false); //off backlight
+            u8g2.setPowerSave(1);         //off display
+            esp_deep_sleep_start();       //run powersave, DEEP
+        }
+    }
+    
+    if ((TIMER - screenTiming > 60000) && (_joy.posY0 < 150))
+    {
+        screenTiming = TIMER;
+
+        while (_isTouched() == false)
+        {
+            _sleepModeScreen();             //output message
+            _gfx.controlBacklight(false);  //off backlight
+            u8g2.setPowerSave(0);          //on display
+            esp_light_sleep_start();       //run powersave, LIGHT
+        }
+    }
+}
+/* Task. System RawADC */
+void _systemRawADC()
+{
+    String text = "Coord X: " + (String)_joy.RAW_DATA_X0 + " Coord Y: " + (String)_joy.RAW_DATA_Y0;
+    BUFFER_STRING = text; 
+}
+/* Task. clear buffer */
+void _clearBufferString()
+{
+    BUFFER_STRING = "";
+}
+/* Task. Reboot ESP32 */
+void _rebootBoard()
+{
+    ESP.restart();
+}
+/* User workspace */
+/* Function */
+void _userWorkSpace(){}
+/* Tray */
+/* buffer */
+void _trayBuffer()
+{
+    //width 110px (22 chars)
+    u8g2.setDrawColor(1);
+    _gfx.print(BUFFER_STRING, 5, yTray, 8, 5);
+    _trm0.timer(_clearBufferString, 100); //clear text-buffer
+}
+/* Battery */
+int _t{};
+int dataRawBattery{};
+int _systemUpdateBattery()
+{
+    dataRawBattery = analogRead(PIN_BATTERY);
+    dataRawBattery = map(dataRawBattery, 1890, 2470, 0, 100);
+
+    return dataRawBattery;
+}
+int _systemBattery()
+{
+    if (_t >= 30000) _t = 30000;
+    _timerUpdateClock.timer(_systemUpdateBattery, _t); _t += 10000;
+
+    return dataRawBattery;
+}
+/* LED */
+/* Task. System LED control */
+void _flagLedControl()
+{
+    for (int i = 0; i < 1; i++)
+    {
+        if (flagStateLedControl == true)
+        {
+            flagStateLedControl = false; delay(250); break;
+        }
+        else
+            flagStateLedControl = true; delay(250);
+    }
+}
+void _sustemLedControl()
+{
+    //_ledControl.button("LED", 5, 140, flagLedControl, _joy.posX0, _joy.posY0);
+    
+    if (flagStateLedControl == true) _gfx.controlBacklight(true);
+    else _gfx.controlBacklight(false);
+}
+void _trayBattery()
+{
+    //width 10px
+    _labelBattery.label((String)_systemBattery(), "Click to LED on/off", xTray, yTray, _flagLedControl, 8, 5, _joy.posX0, _joy.posY0);
+}
+/* FPS */
+uint8_t _FPS = 0; uint8_t _fpsCounter = 0; long int _fpsTime = millis();
+void _trayFps()
+{
+    //width 10px
+    _gfx.print((String)_FPS, xTray, yTray, 10, 6);
+    // get FPS
+    if ((millis() - _fpsTime) <= 1000)
+    {
+        _fpsCounter++;
+    }
+    else
+    {
+        _fpsTime = millis();
+        _FPS = _fpsCounter;
+        _fpsCounter = 0;
+    }
+}
+/* Cursor */
+void _systemCursor()
+{
+    _joy.updatePositionXY(20);
+    _crs.cursor(true, _joy.posX0, _joy.posY0);
 }
 
 
-/* my test */
-void draw2Frame()
-{
-    u8g2.drawFrame(-15, 15, 50, 50);
-    u8g2.drawFrame(15, -15, 50, 50);
-    u8g2.drawFrame(241, 30, 50, 50);
-}
 
-/* [!] Don’t forget to assign a task number and enter it into the task array. */
-void testApp()
-{
-    _app.window("Test Application", 103, draw2Frame, null);
-}
+
+
 
 /* my wi-fi */
 void myWifiDisconnect()
@@ -2054,28 +1938,28 @@ void myWifiConnect()
 _taskArguments _systems[]
 {
     /* system task */
-    {"clearcomm",   "Clear command",       clearCommandTerminal, false,     0, NULL, 0, 0, 0},
-    {"deepsleep",   "Deep sleep PWS-mode", powerSaveDeepSleep,   true,      1, NULL, 0, 0, 0},
-    {"rawadc",      "Raw data ADC",        systemRawADC,         false,     2, NULL, 0, 0, 0},
-    {"clearbuffer", "Clear Buffer",        clearBufferString,    false,     3, NULL, 0, 0, 0},
-    {"reboot",      "Reboot board",        rebootBoard,          false,     4, NULL, 0, 0, 0},
+    {"clearcomm",   "Clear command",       _clearCommandTerminal, false,     0, NULL, 0, 0, 0},
+    {"deepsleep",   "Deep sleep PWS-mode", _powerSaveBoard,       true,      1, NULL, 0, 0, 0},
+    {"rawadc",      "Raw data ADC",        _systemRawADC,         false,     2, NULL, 0, 0, 0},
+    {"clearbuffer", "Clear Buffer",        _clearBufferString,    false,     3, NULL, 0, 0, 0},
+    {"reboot",      "Reboot board",        _rebootBoard,          false,     4, NULL, 0, 0, 0},
 };
 
 _taskArguments _desktop[]
 {
     /* desktop task. workspace */
-    {"mydesctop",   "My Desctop",          _myDesktop,            true,    100, NULL,                  0, 0, 1},
+    {"mydesctop",   "My Desctop",          _myDesktop,            true,    100, NULL,                   0, 0, 1},
     /* app's */
-    {"myconsole",   "My Console",          myConsole,            false,   101, iconMyConsole_bits,    0, 0, 2},
-    {"myserialport","My Serial port",      mySerialPort,         false,   102, iconMySerialPort_bits, 0, 0, 2},
-    {"testapp",     "Test Application",    testApp,              false,   103, iconMyNullApp_bits,    0, 0, 2},
-    {"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 0, 0, 2},
-    {"myex",        "My EX",               myEx,                 false,   105, iconMyNullApp_bits,    0, 0, 2},
+    {"myconsole",   "My Console",          _myConsole,            false,   101, icon_MyConsole_bits,    0, 0, 2},
+    {"myserialport","My Serial port",      _myDataPort,           false,   102, icon_MyDataPort_bits,   0, 0, 2},
+    {"testapp",     "Test Application",    _myTestApp,            false,   103, icon_MyNullApp_bits,    0, 0, 2},
+    //{"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 0, 0, 2},
+    {"myex",        "My EX",               _myTaskManager,        false,   105, icon_MyTaskManager_bits,0, 0, 2},
 };
 
 _taskArguments _user[]
 {
-    {"userTask",   "User task",            null,                 true,  400, NULL, 0, 0, 2},
+    {"userworkspace","User workspace",     _userWorkSpace,        false,  400, icon_UserWorkSpace_bits, 0, 0, 2},
 };
 
 _taskArguments _tray[]
@@ -2083,11 +1967,11 @@ _taskArguments _tray[]
     /* taskbar-area */
     //clear tray
     //{"cleartray", "Clear Tray",    null,         false, 200, NULL, 0,  0, 3},
-    {"clock",      "Clock",                trayClock,          false, 201, NULL, 40, 0, 3},
-    {"battery",    "Battery control",      trayBattery,        true,  202, NULL, 15, 0, 3},
-    {"fps",        "FPS",                  trayFps,            true,  203, NULL, 10, 0, 3},
-    {"ip",         "Ip adress",            trayDrawIpConnect,  false, 205, NULL, 75, 0, 3},
-    {"buffer",     "Buffer",               trayBuffer,         true,  204, NULL, 0,  0, 3},
+    //{"clock",      "Clock",                trayClock,          false, 201, NULL, 40, 0, 3},
+    {"battery",    "Battery control",      _trayBattery,        true,  202, NULL, 15, 0, 3},
+    {"fps",        "FPS",                  _trayFps,            true,  203, NULL, 10, 0, 3},
+    //{"ip",         "Ip adress",            trayDrawIpConnect,  false, 205, NULL, 75, 0, 3},
+    {"buffer",     "Buffer",               _trayBuffer,         true,  204, NULL, 0,  0, 3},
 };
 
 _taskArguments _systems2[]
@@ -2095,9 +1979,9 @@ _taskArguments _systems2[]
     /* system graphics-task */
     //keyboard task
     //{"", "", NULL, false, 298, NULL, 0, 0, 0},
-    {"sysledcontrol", "LED control",       sustemLedControl,     true,    299, NULL, 0, 0, 0},
+    {"sysledcontrol", "LED control",       _sustemLedControl,     true,    299, NULL, 0, 0, 0},
     {"systray",       "Tray",              _myTray,               true,    300, NULL, 0, 0, 0},
-    {"syscursor",     "Cursor",            systemCursor,         true,    301, NULL, 0, 0, 0},
+    {"syscursor",     "Cursor",            _systemCursor,         true,    301, NULL, 0, 0, 0},
 };
 
 void _addSystemsTask(const _taskArguments& a)
