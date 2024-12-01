@@ -1675,7 +1675,6 @@ void _installingPort()
     }
 }
 
-
 void _f2()
 {
     /*for(_dataPort _dp : _allDataPort)
@@ -1694,7 +1693,7 @@ void _myDataPort()
     bool stateTaskMyDataPort = _mess.dialogueMessage("Data port", "Pinout\n[1] GND [2] 3,3V\n[3] GPIO 35 [4] GPIO 34 [5] GPIO 19\n[6] TX [7] RX\n[8] GPIO 21 [9] GPIO 22\n\nMake a connection?");
     if (stateTaskMyDataPort == true)
     {
-        _app.window("Data port", 103, _f2);
+        _app.window("Data port", 102, _f2);
     }
     if (stateTaskMyDataPort == false) _task.taskKill(102);
 
