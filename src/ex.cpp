@@ -17,6 +17,8 @@
            - Add tasks: Reboot board, FPS.
            - Add powersave mode display
            - Fix bug-code
+ [v 0.0.3] -> Using a vector for a task list.
+           - Fix bug-code
 */
 
 #include <iostream>
@@ -1438,8 +1440,6 @@ void null(){}
 
 
 /* System task-function */
-
-
 /* update NTP time */
 void systemNTPTimeUpdate()
 {
@@ -1449,14 +1449,6 @@ void systemNTPTimeUpdate()
     }
     else _mess.popUpMessage("!", "The Wi-Fi (internet) connection\nis not active.", 2500);
 }
-/* Task. Battery */
-
-
-
-
-
-
-
 
 /* Task. Taskbar-area */
 int xTray{256}, yTray{159}, borderTray{5};
@@ -1465,7 +1457,6 @@ void trayClock()
     //width 40px
     _labelClock.label((String)timeClient.getFormattedTime(), "Click to update time", xTray, yTray, systemNTPTimeUpdate, 8, 5, _joy.posX0, _joy.posY0);
 }
-
 
 /* Task. Draw IP connect */
 void trayDrawIpConnect()
@@ -1581,6 +1572,8 @@ void Application::window(String name, int indexTask, void (*f1)(void))
         }
     }
 }
+
+
 
 
 //====================================================
@@ -1959,6 +1952,9 @@ void _systemCursor()
 
 
 
+
+
+
 /* my wi-fi */
 void myWifiDisconnect()
 {
@@ -2030,6 +2026,7 @@ _taskArguments _desktop[]
     {"testapp",      "Test Application",    _myTestApp,            false,   103, icon_MyNullApp_bits,    0, 0, 2},
     //{"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 0, 0, 2},
     {"mytaskmanager","My Task manager ",    _myTaskManager,        false,   105, icon_MyTaskManager_bits,0, 0, 2},
+    //{"dataportapp",  "Data port App",       _myDataPortApp,        false,   106, NULL,                   0, 0, 0},
 };
 
 _taskArguments _user[]
