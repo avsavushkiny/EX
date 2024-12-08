@@ -34,8 +34,8 @@
 
 //version Library and Text
 const int8_t VERSION_LIB[] = {0, 0, 3};
-String VERSION_ADD_INFORMATION = "V";
-String TEXT_UI_BEGIN = "The experience system. 2023-2024\nDev: Ksenofontov S, Syatkina E\nSamoilov M, Savushkin A";
+String VERSION_ADD_INFORMATION = "";
+String TEXT_UI_BEGIN = "The experience system. 2023-2024\nDev: Savushkin A, Ksenofontov S,\nSyatkina E, Samoilov M, ";
 
 Graphics _gfx; 
 Timer _delayCursor, _trm0, _trm1, _stop, _timerUpdateClock, _fps; 
@@ -54,7 +54,7 @@ bool stateWifiSetup = false;
 bool stateWifi = false;
 
 /* LED control */
-bool systemStateLedControl = true; bool flagStateLedControl = true;
+bool systemStateLedControl = true; bool flagStateLedControl = false;
 
 /* Time NTP*/
 WiFiUDP ntpUDP;
@@ -149,6 +149,8 @@ void Graphics::initializationSystem()
     pinMode(PIN_BUTTON_B,     INPUT);
     pinMode(PIN_BATTERY,      INPUT);
 
+    /* off-backlight */
+    _gfx.controlBacklight(false);
     //platform logo output
     image_width = ex_width;
     image_height = ex_height; _pushSystemsTask(); int _ssize = _sizeTasks();
@@ -288,7 +290,14 @@ bool Graphics::winkPrint(void (*f)(String, int, int), String text, int x, int y,
         return 1;
     }
 }
-
+/* wait display */
+bool Graphics::waitDisplay()
+{
+    u8g2.clearBuffer();
+    u8g2.drawXBMP(((W_LCD - wait_width)/2), ((H_LCD - wait_height)/2), wait_width, wait_height, wait_bits);
+    delay(150);
+    u8g2.sendBuffer(); return true;
+}
 
 /* Cursor */
 /* displaying the cursor on the screen */
@@ -688,6 +697,7 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
     
     if (Joystick::pressKeyENTER() == true)
     {
+      _gfx.waitDisplay();
       f();
       return true;
     }
@@ -1624,6 +1634,7 @@ void _myDesktop()
         }
     }
     
+    u8g2.drawXBMP(56, 0, grayLine_width, grayLine_height, grayLine_bits);
     _gfx.print("My Desktop", 5, 8, 8, 5);
     u8g2.drawHLine(0, 10, 256);
 }

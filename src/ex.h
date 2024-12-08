@@ -146,6 +146,8 @@ public:
     /* Runs a void-function with text-string and output x-y-coordinates parameters.
        The interval-interval controls the output. */
     bool winkPrint(void (*f)(String, int, int), String text, int x, int y, /*delay*/ int interval);
+    /* Wait display */
+    bool waitDisplay();
 };
 
 class Timer
