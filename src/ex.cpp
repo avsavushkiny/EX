@@ -6,6 +6,7 @@
                                   https://windows87.github.io/xbm-viewer-converter/
   [!] midi to arduino tones converter https://arduinomidi.netlify.app/
       ntp client                  https://github.com/arduino-libraries/NTPClient
+  [!] u8g2 library reference      https://github.com/olikraus/u8g2/wiki/u8g2reference
 */
 
 /*
@@ -62,18 +63,16 @@ NTPClient timeClient(ntpUDP, "ntp.apple.com", 10800, 60000);
 
 /* Prototype function */
 void null();
-void clearCommandTerminal(); void testApp(); void myDesktop();
-void myWifiConnect(); void myWifiDisconnect(); void sustemLedControl(); void flagLedControl();
-void myTray();
-void myEx(); void myExViewTaskList();
-void _pushSystemsTask(); int _sizeTasks(); //vector only
+void myWifiConnect(); void myWifiDisconnect();
+//vector only
+void _pushSystemsTask(); int _sizeTasks(); 
 
 
 //for screensaver
 unsigned long screenTiming{}, screenTiming2{}, TIMER{};
 
 //buffer -->use enum?
-String BUFFER_STRING{};
+String BUFFER_STRING{""}; //Hi I'm EX OS, Experience board!
 int BUFFER_INT{};
 double BUFFER_DOUBLE{};
 
@@ -1591,8 +1590,13 @@ void Application::window(String name, int indexTask, void (*f1)(void))
 /* my tray */
 void _myTray()
 {
-    u8g2.setDrawColor(1);
-    u8g2.drawHLine(0, 150, 256); 
+    u8g2.setDrawColor(2);
+    u8g2.drawHLine(0, 150, 256);
+    
+    //u8g2.setDrawColor(2);
+    //u8g2.drawBox(0,150,256,10);
+
+
     xTray = 256;
     
     for (_taskArguments &_ta : _taskSystems)
@@ -1608,6 +1612,8 @@ void _myTray()
             }
         }
     }
+
+    u8g2.setDrawColor(1);
 }
 /* my desctop */
 void _myDesktop()
@@ -1634,7 +1640,7 @@ void _myDesktop()
         }
     }
     
-    u8g2.drawXBMP(56, 0, grayLine_width, grayLine_height, grayLine_bits);
+    u8g2.drawXBMP(56, 0, grayLine_width, grayLine_height, grayLine_bits); //grayline
     _gfx.print("My Desktop", 5, 8, 8, 5);
     u8g2.drawHLine(0, 10, 256);
 }
