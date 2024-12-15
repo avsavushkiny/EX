@@ -1,13 +1,35 @@
-/*
-    Library for EX board.
+/**
+ * The MIT License (MIT)
+ * Copyright (c) 2025 Alexander Savushkin
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
-    [!] Required u8g2 library
-
-    author: Savushkin Alexander
-    git:    @avsavushkiny
-    e-mail: avsavushkiny@live.ru
-    date:   22.01.2024
-*/
+/**
+ * Library "Experiment" console
+ *
+ * [!] Required u8g2 library
+ * 
+ * author: Alexander Savushkin
+ * sub-authors: Sergey Ksenofontov
+ * git:    @avsavushkiny
+ * e-mail: avsavushkiny@live.ru
+ * phone:  +7 (953) 034 4001
+ */
 
 #include <U8g2lib.h>
 
@@ -21,7 +43,6 @@ extern int H_LCD, W_LCD;
 
 extern void _clearCommandTerminal();
 
-/* Development 2 */
 /* Description of the task for the operating system */
 struct _taskArguments
 {
@@ -45,11 +66,18 @@ namespace
     std::vector<_taskArguments> _taskSystems;
 };
 
-
+/**
+ * @brief The Joystick class represents a joystick.
+ *
+ * This class contains methods for working with the joystick, including getting keyboard and joystick
+ * events, calculating joystick coordinates and updating coordinates.
+ */
 class Joystick
 {
 protected:
-    /* Event Key */
+    /**
+     * @brief HardwareButton Events
+     */
     enum EventKey
     {
         KEY_PRESSED_ENTER,
@@ -58,7 +86,10 @@ protected:
         KEY_PRESSED_B,
         KEY_NOT_PRESSED,
     } EVENT_KEY;
-    /* Event Joystick */
+    
+    /**
+     * @brief Joystick Events
+     */
     enum EventJoystick
     {
         JOY_ACTIVE_X,
@@ -80,8 +111,12 @@ private:
     int OBJ_Y0{}, OBJ_Y1{}, OBJ_X0{}, OBJ_X1{};
     unsigned long prevTime{};
 public:
-    /* Raw data from Sticks. */
+    /**
+     * @brief The variables contain raw data obtained from the joystick.
+     */
+    /* The variables contain raw data obtained from the joystick. */
     int RAW_DATA_Y0{}, RAW_DATA_Y1{}, RAW_DATA_X0{}, RAW_DATA_X1{};
+    
     /* Contains the coordinates of the Sticks along the axes. */
     int calculatePositionX0();
     int calculatePositionY0();

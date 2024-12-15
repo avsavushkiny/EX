@@ -1,15 +1,4 @@
 /*
-  Contains function settings for working with the display.
-
-  [!] Required u8g2 library
-  [!] bmp to xbmp image converter https://www.online-utility.org/image/convert/to/XBM
-                                  https://windows87.github.io/xbm-viewer-converter/
-  [!] midi to arduino tones converter https://arduinomidi.netlify.app/
-      ntp client                  https://github.com/arduino-libraries/NTPClient
-  [!] u8g2 library reference      https://github.com/olikraus/u8g2/wiki/u8g2reference
-*/
-
-/*
  [v 0.0.1] -> First release.
            - The first implementation. The terminal is used, the organization of tasks.
            - Create classes Graphics, Timer, Interface, Powersave, Melody, Button, Shortcut, Application, Label, Task.
@@ -20,6 +9,18 @@
            - Fix bug-code
  [v 0.0.3] -> Using a vector for a task list.
            - Fix bug-code
+*/
+
+/*
+  Contains function settings for working with the display.
+
+  [!] Required u8g2 library
+  [!] bmp to xbmp image converter https://www.online-utility.org/image/convert/to/XBM
+                                  https://windows87.github.io/xbm-viewer-converter/
+  [!] midi to arduino tones converter https://arduinomidi.netlify.app/
+      ntp client                  https://github.com/arduino-libraries/NTPClient
+  [!] u8g2 library reference      https://github.com/olikraus/u8g2/wiki/u8g2reference
+
 */
 
 #include <iostream>
