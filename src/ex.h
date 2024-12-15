@@ -20,7 +20,7 @@
  */
 
 /**
- * Library "Experiment" console
+ * @mainpage "Experiment" console
  *
  * [!] Required u8g2 library
  * 
