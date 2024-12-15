@@ -114,17 +114,28 @@ public:
     /**
      * @brief The variables contain raw data obtained from the joystick.
      */
-    /* The variables contain raw data obtained from the joystick. */
     int RAW_DATA_Y0{}, RAW_DATA_Y1{}, RAW_DATA_X0{}, RAW_DATA_X1{};
     
-    /* Contains the coordinates of the Sticks along the axes. */
+    /**
+     * @brief Contains the coordinates of the Sticks along the axes.
+     * @return Returns integer coordinate values.
+     * @warning Do not run more than once.
+     */
     int calculatePositionX0();
     int calculatePositionY0();
     int calculatePositionX1();
     int calculatePositionY1();
 
-    /* Variables for storing coordinates from the axes of the Sticks. */
+    /**
+     * @brief Variables for storing coordinates from the axes of the Sticks.
+     * @warning Before getting the coordinates, run the updatePosition method.
+     */
     int posX0{}, posY0{}, posX1{}, posY1{};
+
+    /**
+     * @brief Variables for storing Stick indexes.
+     * @warning Before getting the coordinates, run the updatePosition method.
+     */
     int indexX0{}, indexY0{}, indexX1{}, indexY1{};
     
     /* Generates 1 or 0 if the button is pressed or not. */
