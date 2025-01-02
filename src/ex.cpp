@@ -36,8 +36,7 @@
 
 //version Library and Text
 const int8_t VERSION_LIB[] = {0, 0, 3};
-String VERSION_ADD_INFORMATION = "";
-String TEXT_UI_BEGIN = "The experience system. 2023-2024\nDev: Savushkin A, Ksenofontov S,\nSyatkina E, Samoilov M, ";
+String TEXT_UI_BEGIN = "Sozvezdiye OS\nThe experience system. 2023-2024\nDev: Savushkin A, Ksenofontov S,\nSyatkina E, Samoilov M";
 
 Graphics _gfx; 
 Timer _delayCursor, _trm0, _trm1, _stop, _timerUpdateClock, _fps; 
@@ -66,7 +65,7 @@ NTPClient timeClient(ntpUDP, "ntp.apple.com", 10800, 60000);
 void null();
 void myWifiConnect(); void myWifiDisconnect();
 //vector only
-void _pushSystemsTask(); int _sizeTasks(); 
+bool _pushSystemsTask(); int _sizeTasks(); 
 
 
 //for screensaver
@@ -126,47 +125,62 @@ bool Graphics::controlBacklight(bool state) //p-n-p transistor
 /* graphics output objects */
 void Graphics::initializationSystem()
 {
-    /* GPIO release from sleep */
-    //esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, 1);
-    //esp_sleep_enable_ext0_wakeup(GPIO_NUM_39, 1);
-    esp_sleep_enable_ext0_wakeup(GPIO_NUM_32, 1); // Stick 0
-    //esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, 1); // Stick 0
-    //esp_sleep_enable_ext0_wakeup(GPIO_NUM_14, 1); // EX button
+    /* 
+       GPIO release from sleep
+
+       esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, 1);
+       esp_sleep_enable_ext0_wakeup(GPIO_NUM_39, 1); 
+       esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, 1); // Stick 0
+       esp_sleep_enable_ext0_wakeup(GPIO_NUM_14, 1); // EX button
+    */
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_32, 1);    // Stick 0
     
-    //setting the operating system state
-    //setting display, contrast
+    /* setting the operating system state */
     u8g2.begin(); Serial.begin(9600);
+    
+    /* setting display, contrast */
     u8g2.setContrast(143); //143//150
-    //setting the resolution of the analog-to-digital converter
+
+    /* setting the resolution of the analog-to-digital converter */
     analogReadResolution(RESOLUTION_ADC);
-    //display backlight
+
+    /* determine the backlight-port mode */
     pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
-    //_gfx.controlBacklight(true);
-    //PIN mode
+    // you can immediately turn on the display backlight _gfx.controlBacklight(true);
+    
+    
+    /* determine the operating modes of digital ports */
     pinMode(PIN_BUTTON_ENTER, INPUT);
     pinMode(PIN_BUTTON_EX,    INPUT);
     pinMode(PIN_BUTTON_A,     INPUT);
     pinMode(PIN_BUTTON_B,     INPUT);
     pinMode(PIN_BATTERY,      INPUT);
 
-    /* off-backlight */
+    /* turn off display backlight */
     _gfx.controlBacklight(false);
-    //platform logo output
-    image_width = ex_width;
-    image_height = ex_height; _pushSystemsTask(); int _ssize = _sizeTasks();
-    //--
+
+    /*
+       Vector
+       moving system-task to the vector
+       determine the number of tasks in the vector
+    */
+    _pushSystemsTask();
+    int _ssize = _sizeTasks();
+
+    /*
+        UI-begin
+        display detailed information
+    */
     u8g2.clearBuffer();
-    u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, ex_bits);
-    _gfx.print(10, TEXT_UI_BEGIN, 32, ((H_LCD/2) + (image_height/2) + 7), 10, 6);
-    _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2] + " " + VERSION_ADD_INFORMATION, 0, H_LCD, 10, 4);
-    
+    // u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, ex_bits);
+    _gfx.print(10, TEXT_UI_BEGIN, 32, (H_LCD/2) + 7, 10, 6);
+
+    _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2], 0, H_LCD, 10, 4);
     _gfx.print(6, (String)_ssize, 0, 6, 10, 6);
+
     u8g2.sendBuffer();
-    //--
 
     delay(2500);
-
-
 }
 /* data render (full frame) */
 void Graphics::render(void (*f)(), int timeDelay)
@@ -1586,6 +1600,8 @@ void Application::window(String name, int indexTask, void (*f1)(void))
 
 
 
+
+
 //====================================================
 /* Application */
 /* my tray */
@@ -2092,7 +2108,7 @@ int _sizeTasks()
     return _size;
 }
 
-void _pushSystemsTask()
+bool _pushSystemsTask()
 {
     for(_taskArguments &_all : _systems)
     {
@@ -2118,6 +2134,8 @@ void _pushSystemsTask()
     {
         _taskSystems.push_back(_all);
     }
+
+    return true;
 }
 
 void Terminal::terminal2()
