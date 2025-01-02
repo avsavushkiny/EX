@@ -36,7 +36,6 @@
 
 //version Library and Text
 const int8_t VERSION_LIB[] = {0, 0, 3};
-String TEXT_UI_BEGIN = "Sozvezdiye OS\nThe experience system. 2023-2024\nDev: Savushkin A, Ksenofontov S,\nSyatkina E, Samoilov M";
 
 Graphics _gfx; 
 Timer _delayCursor, _trm0, _trm1, _stop, _timerUpdateClock, _fps; 
@@ -173,11 +172,9 @@ void Graphics::initializationSystem()
     */
     u8g2.clearBuffer();
     // u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, ex_bits);
-    _gfx.print(10, TEXT_UI_BEGIN, 32, (H_LCD/2) + 7, 10, 6);
-
+    _gfx.print(10, "Sozvezdiye OS", 89, H_LCD/2, 10, 6);
     _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2], 0, H_LCD, 10, 4);
     _gfx.print(6, (String)_ssize, 0, 6, 10, 6);
-
     u8g2.sendBuffer();
 
     delay(2500);
