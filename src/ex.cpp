@@ -48,6 +48,7 @@ Interface _mess;
 Button _ok, _no, _collapse, _expand, _close, _ledControl;
 TimeNTP _timentp; Task _task;
 Label _labelClock, _labelBattery, _labelWifi, _taskList;
+TextBox _textBox;
 
 /* WIFI */
 bool stateWifiSetup = false;
@@ -66,7 +67,6 @@ void myWifiConnect(); void myWifiDisconnect();
 //vector only
 bool _pushSystemsTask(); int _sizeTasks(); 
 
-
 //for screensaver
 unsigned long screenTiming{}, screenTiming2{}, TIMER{};
 
@@ -75,7 +75,7 @@ String BUFFER_STRING{""}; //Hi I'm EX OS, Experience board!
 int BUFFER_INT{};
 double BUFFER_DOUBLE{};
 
-//for timer
+//for classes-timer
 unsigned long previousMillis{};
 unsigned long prevTime_0{};
 const long interval{300};
@@ -85,8 +85,10 @@ U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/5, /* dc=*/17, /* reset
 
 /* Liquid crystal display resolution. */
 int H_LCD{160}, W_LCD{256};
-/* Analog-to-digital converter resolution (Chip PICO 2040). */
+
+/* Analog-to-digital converter resolution (Chip ESP32). */
 const int8_t RESOLUTION_ADC{12};
+
 /* Port data. */
 const int8_t PIN_STICK_0X = 33;  // adc 
 const int8_t PIN_STICK_0Y = 32;  // adc 
@@ -103,7 +105,12 @@ const int8_t PIN_BACKLIGHT_LCD = 0;  // gp
 const int8_t PIN_BUZZER  = 26;       // gp 
 const int8_t PIN_BATTERY = 39;       // gp
 
-/* Backlight */
+
+/* 
+    class
+    Graphics
+*/
+/* backlight */
 bool Graphics::controlBacklight(bool state) //p-n-p transistor
 {
     pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
@@ -119,9 +126,7 @@ bool Graphics::controlBacklight(bool state) //p-n-p transistor
         return false;
     }
 }
-
-/* Graphics */
-/* graphics output objects */
+/* system initialization */
 void Graphics::initializationSystem()
 {
     /* 
@@ -147,7 +152,6 @@ void Graphics::initializationSystem()
     pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
     // you can immediately turn on the display backlight _gfx.controlBacklight(true);
     
-    
     /* determine the operating modes of digital ports */
     pinMode(PIN_BUTTON_ENTER, INPUT);
     pinMode(PIN_BUTTON_EX,    INPUT);
@@ -172,7 +176,7 @@ void Graphics::initializationSystem()
     */
     u8g2.clearBuffer();
     // u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, ex_bits);
-    _gfx.print(10, "Sozvezdiye OS", 89, H_LCD/2, 10, 6);
+    _textBox.text("Sozvezdiye OS", 128, 80);
     _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2], 0, H_LCD, 10, 4);
     _gfx.print(6, (String)_ssize, 0, 6, 10, 6);
     u8g2.sendBuffer();
@@ -214,9 +218,6 @@ void Graphics::clear()
     u8g2.clearBuffer();
     u8g2.sendBuffer();
 }
-
-
-/* Print */
 /* text output with parameters, add size font, add line interval (def: 10) and character interval (def: 6) */
 void Graphics::print(int8_t sizeFont, String text, int x, int y, int8_t lii, int8_t chi) // text, x-position, y-position, line interval (8-10), character interval (4-6)
 {
@@ -310,7 +311,11 @@ bool Graphics::waitDisplay()
     u8g2.sendBuffer(); return true;
 }
 
-/* Cursor */
+
+/* 
+    class
+    Cursor
+*/
 /* displaying the cursor on the screen */
 bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
 {
@@ -328,7 +333,10 @@ bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
 }
 
 
-/* Interface */
+/* 
+    class
+    Interface
+*/
 /* displaying a message to the user */
 void Interface::message(String text, int duration)
 {
@@ -605,8 +613,11 @@ bool Interface::dialogueMessage(String label, String text)
 }
 
 
-/* Button */
-/* Button return boolean state */
+/* 
+    class
+    Button
+*/
+/* button return boolean state */
 bool Button::button(String text, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
 {
   uint8_t sizeText = text.length();
@@ -637,7 +648,7 @@ bool Button::button(String text, uint8_t x, uint8_t y, void (*f)(void), int xCur
   
   return false;
 }
-/* Button return boolean state */
+/* button return boolean state */
 bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor)
 {
   uint8_t sizeText = text.length();
@@ -669,7 +680,10 @@ bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t 
 }
 
 
-/* Shortcut */
+/* 
+    class
+    Shortcut
+*/
 /* displaying a shortcut to a task-function */
 bool Shortcut::shortcut(const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
 {
@@ -748,8 +762,11 @@ bool Shortcut::shortcutFrame(String name, uint8_t w, uint8_t h, uint8_t x, uint8
 }
 
 
-/* Label */
-/*  */
+/* 
+    class
+    Label
+*/
+/* text object as a link */
 bool Label::label(String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t lii, uint8_t chi, int xCursor, int yCursor)
 {
     /*u8g2.setDrawColor(1);
@@ -821,7 +838,7 @@ bool Label::label(String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t li
 
     return false;
 }
-/*  */
+/* text object as a link, sends the description to the output buffer */
 bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*f)(void), uint8_t lii, uint8_t chi, int xCursor, int yCursor)
 {
     uint8_t sizeText = text.length();
@@ -869,7 +886,53 @@ bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*
 }
 
 
-/* Joystic and Key */
+/* 
+    class
+    TextBox
+*/
+void TextBox::text(String text, int x, int y)
+{
+    uint8_t sizeText = text.length();
+
+    uint8_t countLine{1}, countChar{0}, maxChar{}, h_frame{}, border{5}, a{}; 
+
+    for (int i = 0; i <= sizeText; i++)
+    {
+        if (text[i] != '\0')
+        {
+            ++countChar;
+
+            if (text[i] == '\n')
+            {
+                countLine++;
+
+                if ((text[i] == '\n') && (countChar > maxChar))
+                {
+                    maxChar = countChar;
+                    countChar = 0;
+                }
+            }
+
+            if ((text[i] == '\0') || (text[i+1] == '\0'))
+            {
+                if (countChar > maxChar)
+                {
+                    maxChar = countChar;
+                    countChar = 0;
+                }
+            }
+            if (countChar > maxChar) maxChar = countChar;
+        }
+    }
+    
+    _gfx.print(text, x - (maxChar*6)/2, y - a + 10);
+}
+
+
+/* 
+    class
+    Joystic and Key
+*/
 /* button control */
 bool Joystick::pressKeyENTER()
 {
@@ -1604,7 +1667,7 @@ void Application::window(String name, int indexTask, void (*f1)(void))
 /* my tray */
 void _myTray()
 {
-    u8g2.setDrawColor(2);
+    u8g2.setDrawColor(1);
     u8g2.drawHLine(0, 150, 256);
     
     //u8g2.setDrawColor(2);
@@ -1654,7 +1717,6 @@ void _myDesktop()
         }
     }
     
-    u8g2.drawXBMP(56, 0, grayLine_width, grayLine_height, grayLine_bits); //grayline
     _gfx.print("My Desktop", 5, 8, 8, 5);
     u8g2.drawHLine(0, 10, 256);
 }
