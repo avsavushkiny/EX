@@ -86,6 +86,9 @@ U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2(U8G2_R0, /* cs=*/5, /* dc=*/17, /* reset
 /* Liquid crystal display resolution. */
 int H_LCD{160}, W_LCD{256};
 
+/* Global coordinates */
+int GLOBAL_X{0}, GLOBAL_Y{0};
+
 /* Analog-to-digital converter resolution (Chip ESP32). */
 const int8_t RESOLUTION_ADC{12};
 
@@ -176,12 +179,13 @@ void Graphics::initializationSystem()
     */
     u8g2.clearBuffer();
     // u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, ex_bits);
-    _textBox.text("Sozvezdiye OS", 128, 80);
+    //_textBox.textFrame("Sozvezdiye OS\nExperiment\ndev2-vector", 128, 80);
+    _textBox.text2("Sozvezdiye OS\nExperiment board\n2024", _textBox.middle, _textBox.shadow, 128, 80);
     _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2], 0, H_LCD, 10, 4);
     _gfx.print(6, (String)_ssize, 0, 6, 10, 6);
     u8g2.sendBuffer();
 
-    delay(2500);
+    delay(15500);
 }
 /* data render (full frame) */
 void Graphics::render(void (*f)(), int timeDelay)
@@ -890,6 +894,7 @@ bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*
     class
     TextBox
 */
+/* text-box */
 void TextBox::text(String text, int x, int y)
 {
     uint8_t sizeText = text.length();
@@ -925,8 +930,120 @@ void TextBox::text(String text, int x, int y)
         }
     }
     
+    h_frame = countLine * 10; a = h_frame/2;
+    
     _gfx.print(text, x - (maxChar*6)/2, y - a + 10);
 }
+/* text-box and frame */
+void TextBox::textFrame(String text, int x, int y)
+{
+    uint8_t sizeText = text.length();
+
+    uint8_t countLine{1}, countChar{0}, maxChar{}, h_frame{}, border{5}, a{}; 
+
+    for (int i = 0; i <= sizeText; i++)
+    {
+        if (text[i] != '\0')
+        {
+            ++countChar;
+
+            if (text[i] == '\n')
+            {
+                countLine++;
+
+                if ((text[i] == '\n') && (countChar > maxChar))
+                {
+                    maxChar = countChar;
+                    countChar = 0;
+                }
+            }
+
+            if ((text[i] == '\0') || (text[i+1] == '\0'))
+            {
+                if (countChar > maxChar)
+                {
+                    maxChar = countChar;
+                    countChar = 0;
+                }
+            }
+            if (countChar > maxChar) maxChar = countChar;
+        }
+    }
+    
+    h_frame = countLine * 10; a = h_frame/2;
+    
+    u8g2.drawFrame((x-(maxChar*6)/2) - border, y - a - border, (maxChar * 6) + (border * 2), h_frame + (border * 2));
+    _gfx.print(text, x - (maxChar*6)/2, y - a + 10);
+}
+
+void TextBox::text2(String str, objectLocation location, objectBoundary boundary, int x, int y)
+{
+    short border{5}; short border2{8}; short charHeight{10}; short charWidth{6};
+    int count{0}; int maxChar{0};
+    int line{1}; // there will always be at least one line of text in the text
+
+    for (char c : str)
+    {
+        if (c == '\n')
+        {
+            if (count > maxChar) maxChar = count;
+            count = 0; line++;
+        }
+        else
+        {
+            count++;
+        }
+    }
+
+    int numberOfPixels = maxChar * charWidth; // the maximum number of pixels based on the number of characters in a line
+    int numberOfPixelsToOffset = (maxChar / 2) * charWidth; // a given number of pixels must be offset
+
+    /* location */
+    if (location == middle)
+    {
+        _gfx.print(str, x - numberOfPixelsToOffset + GLOBAL_X, y + GLOBAL_Y);
+
+        if (boundary == noBorder){ /* we don't draw anything */ }
+        if (boundary == oneLine)
+        {
+            u8g2.drawFrame(x - numberOfPixelsToOffset - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * 10));
+        }
+        if (boundary == twoLine)
+        {
+            u8g2.drawFrame(x - numberOfPixelsToOffset - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * 10));
+            u8g2.drawFrame(x - numberOfPixelsToOffset - border2 + GLOBAL_X, y - charHeight - border2 + GLOBAL_Y, border2 + border2 + numberOfPixels, border2 + border2 + (line * 10));
+        }
+        if (boundary == shadow)
+        {
+            u8g2.drawFrame(x - numberOfPixelsToOffset - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * 10));
+            // draw line 1
+            u8g2.drawHLine(x - numberOfPixelsToOffset - border + 1 /*px*/ + GLOBAL_X, y + border + ((line - 1) * 10) + GLOBAL_Y, numberOfPixels + border + border);
+            u8g2.drawVLine(x + numberOfPixelsToOffset + border + GLOBAL_X, y - charHeight - border + 1 /*px*/ + GLOBAL_Y, border + border + (line * 10));
+            // draw line 2
+            u8g2.drawHLine(x - numberOfPixelsToOffset - border + 2 /*px*/ + GLOBAL_X, y + border + ((line - 1) * 10) + 1 /*px*/ + GLOBAL_Y, numberOfPixels + border + border);
+            u8g2.drawVLine(x + numberOfPixelsToOffset + border + 1 /*px*/ + GLOBAL_X, y - charHeight - border + 2 /*px*/ + GLOBAL_Y, border + border + (line * 10));
+        }
+    }
+
+    if (location == left)
+    {
+        _gfx.print(str, x + GLOBAL_X, y + GLOBAL_Y);
+        u8g2.drawFrame(x - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * 10));
+    }
+
+    if (location == right)
+    {
+        _gfx.print(str, x - numberOfPixels + GLOBAL_X, y + GLOBAL_Y);
+        u8g2.drawFrame(x - numberOfPixels - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * 10));
+    }
+
+    //debug
+    _gfx.print((String)maxChar, 0, 30);
+    _gfx.print((String)line, 0, 40);
+}
+
+
+
 
 
 /* 
@@ -1261,7 +1378,10 @@ int8_t Joystick::calculateIndexX1() // obj 1x
 }
 
 
-/* Timer */
+/* 
+    class
+    Timer
+*/
 /* starting a task-function with an interval */
 void Timer::timer(void (*f)(void), int interval)
 {
@@ -1294,7 +1414,10 @@ void Timer::stopwatch(void (*f)(void), int interval)
 }
 
 
-
+/* 
+    class
+    PowerSave
+*/
 /* turns off the backlight and turns on an infinite loop
    with the text to pause until the joysticks are pressed or moved */
 bool _isTouched(); void _sleepModeScreen();//prototype
@@ -1356,7 +1479,10 @@ void PowerSave::sleepDeep(bool state, uint timeUntil)
 }
 
 
-/* Song engine */
+/* 
+    class
+    Melody
+*/
 /* playing a melody */
 void songEngine(uint arr[][2], uint noteCount)
 {
@@ -1606,7 +1732,10 @@ void Task::task(int indexTask)
 }
 
 
-/* Application */
+/* 
+    class
+    Application
+*/
 /* window designer for the task-function */
 void Application::window(String name, int indexTask, void (*f1)(void), void (*f2)(void))
 {

@@ -265,8 +265,15 @@ class TextBox
 {
 private:
 public:
+    /* Properties Text-box */
+    enum objectLocation {left, middle, right};
+    enum objectBoundary {noBorder, oneLine, twoLine, shadow};
     /* Text-box */
     void text(String text, int x, int y);
+    /* Text-box andr frame */
+    void textFrame(String text, int x, int y);
+    //void text2(String str, int x, int y);
+    void text2(String str, objectLocation location, objectBoundary boundary, int x, int y);
 };
 
 class Cursor
