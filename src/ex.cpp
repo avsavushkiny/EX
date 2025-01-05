@@ -179,13 +179,13 @@ void Graphics::initializationSystem()
     */
     u8g2.clearBuffer();
     // u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, ex_bits);
-    //_textBox.textFrame("Sozvezdiye OS\nExperiment\ndev2-vector", 128, 80);
-    _textBox.text2("Sozvezdiye OS\nExperiment board\n2024", _textBox.middle, _textBox.shadow, 8, 6, 128, 80);
+    _textBox.text("Sozvezdiye OS\n\nExperiment board\n2024", _textBox.middle, _textBox.noBorder, 10, 6, 128, 80);
+
     _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2], 0, H_LCD, 10, 4);
     _gfx.print(6, (String)_ssize, 0, 6, 10, 6);
     u8g2.sendBuffer();
 
-    delay(15500);
+    delay(1500);
 }
 /* data render (full frame) */
 void Graphics::render(void (*f)(), int timeDelay)
@@ -894,95 +894,15 @@ bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*
     class
     TextBox
 */
-/* text-box */
-void TextBox::text(String text, int x, int y)
+/* dynamic Frame */
+void TextBox::text(String str, objectLocation location, objectBoundary boundary, short charH, short charW, int x, int y)
 {
-    uint8_t sizeText = text.length();
-
-    uint8_t countLine{1}, countChar{0}, maxChar{}, h_frame{}, border{5}, a{}; 
-
-    for (int i = 0; i <= sizeText; i++)
-    {
-        if (text[i] != '\0')
-        {
-            ++countChar;
-
-            if (text[i] == '\n')
-            {
-                countLine++;
-
-                if ((text[i] == '\n') && (countChar > maxChar))
-                {
-                    maxChar = countChar;
-                    countChar = 0;
-                }
-            }
-
-            if ((text[i] == '\0') || (text[i+1] == '\0'))
-            {
-                if (countChar > maxChar)
-                {
-                    maxChar = countChar;
-                    countChar = 0;
-                }
-            }
-            if (countChar > maxChar) maxChar = countChar;
-        }
-    }
-    
-    h_frame = countLine * 10; a = h_frame/2;
-    
-    _gfx.print(text, x - (maxChar*6)/2, y - a + 10);
-}
-/* text-box and frame */
-void TextBox::textFrame(String text, int x, int y)
-{
-    uint8_t sizeText = text.length();
-
-    uint8_t countLine{1}, countChar{0}, maxChar{}, h_frame{}, border{5}, a{}; 
-
-    for (int i = 0; i <= sizeText; i++)
-    {
-        if (text[i] != '\0')
-        {
-            ++countChar;
-
-            if (text[i] == '\n')
-            {
-                countLine++;
-
-                if ((text[i] == '\n') && (countChar > maxChar))
-                {
-                    maxChar = countChar;
-                    countChar = 0;
-                }
-            }
-
-            if ((text[i] == '\0') || (text[i+1] == '\0'))
-            {
-                if (countChar > maxChar)
-                {
-                    maxChar = countChar;
-                    countChar = 0;
-                }
-            }
-            if (countChar > maxChar) maxChar = countChar;
-        }
-    }
-    
-    h_frame = countLine * 10; a = h_frame/2;
-    
-    u8g2.drawFrame((x-(maxChar*6)/2) - border, y - a - border, (maxChar * 6) + (border * 2), h_frame + (border * 2));
-    _gfx.print(text, x - (maxChar*6)/2, y - a + 10);
-}
-
-void TextBox::text2(String str, objectLocation location, objectBoundary boundary, short charH, short charW, int x, int y)
-{
-    short border{5}; short border2{8}; short charHeight{charH}; short charWidth{charW};
-    int count{0}; int maxChar{0};
+    short border{5}; short border2{8}; // size border
+    short charHeight{charH}; short charWidth{charW}; // size char
+    int count{0}; int maxChar{0}; // for counting characters
     int line{1}; // there will always be at least one line of text in the text
 
-    for (char c : str)
+    for (char c : str) // count the characters in each line
     {
         if (c == '\n')
         {
@@ -1023,27 +943,163 @@ void TextBox::text2(String str, objectLocation location, objectBoundary boundary
             u8g2.drawHLine(x - numberOfPixelsToOffset - border + 2 /*px*/ + GLOBAL_X, y + border + ((line - 1) * charHeight) + 1 /*px*/ + GLOBAL_Y, numberOfPixels + border + border);
             u8g2.drawVLine(x + numberOfPixelsToOffset + border + 1 /*px*/ + GLOBAL_X, y - charHeight - border + 2 /*px*/ + GLOBAL_Y, border + border + (line * charHeight));
         }
+        if (boundary == shadowNoFrame)
+        {
+            // draw line 1
+            u8g2.drawHLine(x - numberOfPixelsToOffset - border + 1 /*px*/ + GLOBAL_X, y + border + ((line - 1) * charHeight) + GLOBAL_Y, numberOfPixels + border + border);
+            u8g2.drawVLine(x + numberOfPixelsToOffset + border + GLOBAL_X, y - charHeight - border + 1 /*px*/ + GLOBAL_Y, border + border + (line * charHeight));
+            // draw line 2
+            u8g2.drawHLine(x - numberOfPixelsToOffset - border + 2 /*px*/ + GLOBAL_X, y + border + ((line - 1) * charHeight) + 1 /*px*/ + GLOBAL_Y, numberOfPixels + border + border);
+            u8g2.drawVLine(x + numberOfPixelsToOffset + border + 1 /*px*/ + GLOBAL_X, y - charHeight - border + 2 /*px*/ + GLOBAL_Y, border + border + (line * charHeight));
+        }
     }
 
     if (location == left)
     {
-        _gfx.print(str, x + GLOBAL_X, y + GLOBAL_Y);
-        u8g2.drawFrame(x - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * 10));
+        _gfx.print(str, x + GLOBAL_X, y + GLOBAL_Y, charHeight, charWidth);
+        
+        if (boundary == noBorder){ /* we don't draw anything */ }
+        if (boundary == oneLine)
+        {
+            u8g2.drawFrame(x - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * charHeight));
+        }
+        if (boundary == twoLine)
+        {
+            u8g2.drawFrame(x - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * charHeight));
+            u8g2.drawFrame(x - border2 + GLOBAL_X, y - charHeight - border2 + GLOBAL_Y, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight));
+        }
+        if (boundary == shadow)
+        {
+            u8g2.drawFrame(x - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * charHeight));
+            // draw line 1
+            u8g2.drawHLine(x - border + 1 /*px*/ + GLOBAL_X, y + border + ((line - 1) * charHeight) + GLOBAL_Y, numberOfPixels + border + border);
+            u8g2.drawVLine(x + numberOfPixels + border + GLOBAL_X, y - charHeight - border + 1 /*px*/ + GLOBAL_Y, border + border + (line * charHeight));
+            // draw line 2
+            u8g2.drawHLine(x - border + 2 /*px*/ + GLOBAL_X, y + border + ((line - 1) * charHeight) + 1 /*px*/ + GLOBAL_Y, numberOfPixels + border + border);
+            u8g2.drawVLine(x + numberOfPixels + border + 1 /*px*/ + GLOBAL_X, y - charHeight - border + 2 /*px*/ + GLOBAL_Y, border + border + (line * charHeight));
+        }
+        if (boundary == shadowNoFrame)
+        {
+            // draw line 1
+            u8g2.drawHLine(x - border + 1 /*px*/ + GLOBAL_X, y + border + ((line - 1) * charHeight) + GLOBAL_Y, numberOfPixels + border + border);
+            u8g2.drawVLine(x + numberOfPixels + border + GLOBAL_X, y - charHeight - border + 1 /*px*/ + GLOBAL_Y, border + border + (line * charHeight));
+            // draw line 2
+            u8g2.drawHLine(x - border + 2 /*px*/ + GLOBAL_X, y + border + ((line - 1) * charHeight) + 1 /*px*/ + GLOBAL_Y, numberOfPixels + border + border);
+            u8g2.drawVLine(x + numberOfPixels + border + 1 /*px*/ + GLOBAL_X, y - charHeight - border + 2 /*px*/ + GLOBAL_Y, border + border + (line * charHeight));
+        }
     }
 
     if (location == right)
     {
         _gfx.print(str, x - numberOfPixels + GLOBAL_X, y + GLOBAL_Y);
-        u8g2.drawFrame(x - numberOfPixels - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * 10));
+        
+        if (boundary == noBorder){ /* we don't draw anything */ }
+        if (boundary == oneLine)
+        {
+            u8g2.drawFrame(x - numberOfPixels - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * charHeight));
+        }
+        if (boundary == twoLine)
+        {
+            u8g2.drawFrame(x - numberOfPixels - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * charHeight));
+            u8g2.drawFrame(x - numberOfPixels - border2 + GLOBAL_X, y - charHeight - border2 + GLOBAL_Y, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight));
+        }
+        if (boundary == shadow)
+        {
+            u8g2.drawFrame(x - numberOfPixels - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * charHeight));
+            // draw line 1
+            u8g2.drawHLine(x - numberOfPixels - border + 1 /*px*/ + GLOBAL_X, y + border + ((line - 1) * charHeight) + GLOBAL_Y, numberOfPixels + border + border);
+            u8g2.drawVLine(x + border + GLOBAL_X, y - charHeight - border + 1 /*px*/ + GLOBAL_Y, border + border + (line * charHeight));
+            // draw line 2
+            u8g2.drawHLine(x - numberOfPixels - border + 2 /*px*/ + GLOBAL_X, y + border + ((line - 1) * charHeight) + 1 /*px*/ + GLOBAL_Y, numberOfPixels + border + border);
+            u8g2.drawVLine(x + border + 1 /*px*/ + GLOBAL_X, y - charHeight - border + 2 /*px*/ + GLOBAL_Y, border + border + (line * charHeight)); 
+        }
+        if (boundary == shadowNoFrame)
+        {
+            // draw line 1
+            u8g2.drawHLine(x - numberOfPixels - border + 1 /*px*/ + GLOBAL_X, y + border + ((line - 1) * charHeight) + GLOBAL_Y, numberOfPixels + border + border);
+            u8g2.drawVLine(x + border + GLOBAL_X, y - charHeight - border + 1 /*px*/ + GLOBAL_Y, border + border + (line * charHeight));
+            // draw line 2
+            u8g2.drawHLine(x - numberOfPixels - border + 2 /*px*/ + GLOBAL_X, y + border + ((line - 1) * charHeight) + 1 /*px*/ + GLOBAL_Y, numberOfPixels + border + border);
+            u8g2.drawVLine(x + border + 1 /*px*/ + GLOBAL_X, y - charHeight - border + 2 /*px*/ + GLOBAL_Y, border + border + (line * charHeight)); 
+        }
     }
 
     //debug
-    _gfx.print((String)maxChar, 0, 30);
-    _gfx.print((String)line, 0, 40);
+    //_gfx.print((String)maxChar, 0, 30);
+    //_gfx.print((String)line, 0, 40);
 }
+/* add static and dynamic Frame */
+void TextBox::text(String str, objectBoundary boundary, int sizeH, int sizeW, short charH, short charW, int x, int y)
+{
+    short border{5}; short border2{8}; // size border
+    int count{0}; int countChars{0}; int maxChar{0}; // for counting characters
+    int line{1}; // there will always be at least one line of text in the text
+    int numberOfCharacters{0}; // количество символов
+    int ch{0}, ln{0}; int xx{x}, yy{y}; 
+    
+    //String text = str; // object
 
+    if (boundary == noBorder){ /* we don't draw anything */ }
+    if (boundary == oneLine)
+    {
+        u8g2.drawFrame(x, y, sizeW, sizeH);
+    }
+    if (boundary == twoLine)
+    {
+        u8g2.drawFrame(x, y, sizeW, sizeH);
+        u8g2.drawFrame(x - 3, y - 3, sizeW + 3, sizeH + 3);
+    }
+    if (boundary == shadow)
+    {
 
+    }
+    
+    
+    
+    for (char c : str)
+    {
+        numberOfCharacters++;
+    }
 
+    int numberOfCharactersLineFrame = (sizeW - border - border) / charW; // количество символов в строчке Фрейма
+    int numberOfLines = numberOfCharacters / numberOfCharactersLineFrame; // количество строк
+    int numberOfLinesFrame = (sizeH - border - border) / charH; // количество строчек в Фрейме
+    
+    for (char c : str)
+    {
+        u8g2.setFont(u8g2_font_6x10_tr);
+        u8g2.setCursor(xx + border, yy + charH + border);
+        u8g2.print(c);
+
+        // adds dots if frame is full
+        /*if ((ln >= numberOfLinesFrame - 1) && (numberOfCharactersLineFrame == (ch + 3)))
+        {
+            u8g2.print("...");
+        }
+        else u8g2.print(c);*/
+        
+        xx += charW;
+        ch++;
+
+        if (ch >= numberOfCharactersLineFrame)
+        {
+            yy += charH; ch = 0; xx = x; ln++;
+        }
+
+        if (ln >= numberOfLinesFrame)
+        {
+            // draw glyph
+            /*u8g2.setFont(u8g2_font_unifont_t_symbols);
+            u8g2.drawGlyph(x + sizeW - 8, y + sizeH + 2, 0x2198);*/
+
+            u8g2.drawTriangle(x + sizeW, y + sizeH - 8, x + sizeW, y + sizeH, x + sizeW - 8, y + sizeH);
+            break;
+        }
+    }
+    //debug
+    _gfx.print((String)numberOfLines, 0, 30);
+    _gfx.print((String)numberOfLinesFrame, 0, 40);
+}
 
 
 /* 
@@ -1847,6 +1903,10 @@ void _myDesktop()
     }
     
     _gfx.print("My Desktop", 5, 8, 8, 5);
+    
+    // debug
+    _textBox.text("Sozvezdiye OS, branch dev2-vector", _textBox.twoLine, 50, 46, 10, 6, 128, 80);
+
     u8g2.drawHLine(0, 10, 256);
 }
 /* Task. Stack, task, command */
