@@ -180,7 +180,7 @@ void Graphics::initializationSystem()
     u8g2.clearBuffer();
     // u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, ex_bits);
     //_textBox.textFrame("Sozvezdiye OS\nExperiment\ndev2-vector", 128, 80);
-    _textBox.text2("Sozvezdiye OS\nExperiment board\n2024", _textBox.middle, _textBox.shadow, 128, 80);
+    _textBox.text2("Sozvezdiye OS\nExperiment board\n2024", _textBox.middle, _textBox.shadow, 8, 6, 128, 80);
     _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2], 0, H_LCD, 10, 4);
     _gfx.print(6, (String)_ssize, 0, 6, 10, 6);
     u8g2.sendBuffer();
@@ -976,9 +976,9 @@ void TextBox::textFrame(String text, int x, int y)
     _gfx.print(text, x - (maxChar*6)/2, y - a + 10);
 }
 
-void TextBox::text2(String str, objectLocation location, objectBoundary boundary, int x, int y)
+void TextBox::text2(String str, objectLocation location, objectBoundary boundary, short charH, short charW, int x, int y)
 {
-    short border{5}; short border2{8}; short charHeight{10}; short charWidth{6};
+    short border{5}; short border2{8}; short charHeight{charH}; short charWidth{charW};
     int count{0}; int maxChar{0};
     int line{1}; // there will always be at least one line of text in the text
 
@@ -1001,27 +1001,27 @@ void TextBox::text2(String str, objectLocation location, objectBoundary boundary
     /* location */
     if (location == middle)
     {
-        _gfx.print(str, x - numberOfPixelsToOffset + GLOBAL_X, y + GLOBAL_Y);
+        _gfx.print(str, x - numberOfPixelsToOffset + GLOBAL_X, y + GLOBAL_Y, charHeight, charWidth);
 
         if (boundary == noBorder){ /* we don't draw anything */ }
         if (boundary == oneLine)
         {
-            u8g2.drawFrame(x - numberOfPixelsToOffset - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * 10));
+            u8g2.drawFrame(x - numberOfPixelsToOffset - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * charHeight));
         }
         if (boundary == twoLine)
         {
-            u8g2.drawFrame(x - numberOfPixelsToOffset - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * 10));
-            u8g2.drawFrame(x - numberOfPixelsToOffset - border2 + GLOBAL_X, y - charHeight - border2 + GLOBAL_Y, border2 + border2 + numberOfPixels, border2 + border2 + (line * 10));
+            u8g2.drawFrame(x - numberOfPixelsToOffset - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * charHeight));
+            u8g2.drawFrame(x - numberOfPixelsToOffset - border2 + GLOBAL_X, y - charHeight - border2 + GLOBAL_Y, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight));
         }
         if (boundary == shadow)
         {
-            u8g2.drawFrame(x - numberOfPixelsToOffset - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * 10));
+            u8g2.drawFrame(x - numberOfPixelsToOffset - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * charHeight));
             // draw line 1
-            u8g2.drawHLine(x - numberOfPixelsToOffset - border + 1 /*px*/ + GLOBAL_X, y + border + ((line - 1) * 10) + GLOBAL_Y, numberOfPixels + border + border);
-            u8g2.drawVLine(x + numberOfPixelsToOffset + border + GLOBAL_X, y - charHeight - border + 1 /*px*/ + GLOBAL_Y, border + border + (line * 10));
+            u8g2.drawHLine(x - numberOfPixelsToOffset - border + 1 /*px*/ + GLOBAL_X, y + border + ((line - 1) * charHeight) + GLOBAL_Y, numberOfPixels + border + border);
+            u8g2.drawVLine(x + numberOfPixelsToOffset + border + GLOBAL_X, y - charHeight - border + 1 /*px*/ + GLOBAL_Y, border + border + (line * charHeight));
             // draw line 2
-            u8g2.drawHLine(x - numberOfPixelsToOffset - border + 2 /*px*/ + GLOBAL_X, y + border + ((line - 1) * 10) + 1 /*px*/ + GLOBAL_Y, numberOfPixels + border + border);
-            u8g2.drawVLine(x + numberOfPixelsToOffset + border + 1 /*px*/ + GLOBAL_X, y - charHeight - border + 2 /*px*/ + GLOBAL_Y, border + border + (line * 10));
+            u8g2.drawHLine(x - numberOfPixelsToOffset - border + 2 /*px*/ + GLOBAL_X, y + border + ((line - 1) * charHeight) + 1 /*px*/ + GLOBAL_Y, numberOfPixels + border + border);
+            u8g2.drawVLine(x + numberOfPixelsToOffset + border + 1 /*px*/ + GLOBAL_X, y - charHeight - border + 2 /*px*/ + GLOBAL_Y, border + border + (line * charHeight));
         }
     }
 

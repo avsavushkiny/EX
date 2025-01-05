@@ -273,7 +273,7 @@ public:
     /* Text-box andr frame */
     void textFrame(String text, int x, int y);
     //void text2(String str, int x, int y);
-    void text2(String str, objectLocation location, objectBoundary boundary, int x, int y);
+    void text2(String str, objectLocation location, objectBoundary boundary, short charH, short charW, int x, int y);
 };
 
 class Cursor
