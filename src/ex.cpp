@@ -325,8 +325,8 @@ bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
 {
     if (stateCursor == true)
     {
-        u8g2.setDrawColor(2);
-        u8g2.setBitmapMode(1);
+        u8g2.setDrawColor(1);  //0-white 1-black 2-inversion
+        u8g2.setBitmapMode(1); //0-non transparent 1-transparent
         u8g2.drawXBMP(xCursor, yCursor, cursor_w, cursor_h, cursor_bits);
         u8g2.setDrawColor(1);
         u8g2.setBitmapMode(0);
@@ -1047,13 +1047,26 @@ void TextBox::text(String str, objectBoundary boundary, int sizeH, int sizeW, sh
     if (boundary == twoLine)
     {
         u8g2.drawFrame(x, y, sizeW, sizeH);
-        u8g2.drawFrame(x - 3, y - 3, sizeW + 3, sizeH + 3);
+        u8g2.drawFrame(x - 3, y - 3, sizeW + 6, sizeH + 6);
     }
     if (boundary == shadow)
     {
+        u8g2.drawFrame(x, y, sizeW, sizeH);
 
+        u8g2.drawHLine(x + 1, y + sizeH, sizeW);
+        u8g2.drawHLine(x + 2, y + sizeH + 1, sizeW);
+
+        u8g2.drawVLine(x + sizeW, y + 1, sizeH);
+        u8g2.drawVLine(x + sizeW + 1, y + 2, sizeH);
     }
-    
+    if (boundary == shadowNoFrame)
+    {
+        u8g2.drawHLine(x + 1, y + sizeH, sizeW);
+        u8g2.drawHLine(x + 2, y + sizeH + 1, sizeW);
+
+        u8g2.drawVLine(x + sizeW, y + 1, sizeH);
+        u8g2.drawVLine(x + sizeW + 1, y + 2, sizeH);
+    }
     
     
     for (char c : str)
@@ -1884,7 +1897,7 @@ void _myDesktop()
     uint8_t xx{border};
     uint8_t yy{15}; 
 
-    uint8_t countTask{1};
+    uint8_t countTask{1};s
     
     for (_taskArguments &_ta : _taskSystems)
     {
@@ -1905,7 +1918,8 @@ void _myDesktop()
     _gfx.print("My Desktop", 5, 8, 8, 5);
     
     // debug
-    _textBox.text("Sozvezdiye OS, branch dev2-vector", _textBox.twoLine, 50, 46, 10, 6, 128, 80);
+    _textBox.text("Sozvezdiye OS, branch dev2-vector", _textBox.oneLine, 50, 46, 10, 6, 10, 80);
+    _textBox.text("Sozvezdiye OS, branch dev2-vector", _textBox.shadow, 50, 86, 10, 6, 70, 80);
 
     u8g2.drawHLine(0, 10, 256);
 }
