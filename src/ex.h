@@ -268,10 +268,21 @@ public:
     /* Properties Text-box */
     enum objectLocation {left, middle, right};
     enum objectBoundary {noBorder, oneLine, twoLine, shadow, shadowNoFrame};
-
+    /**/
+    //String textObject;
     /* Text-box */
-    void text(String str, objectLocation location, objectBoundary boundary, short charH, short charW, int x, int y);
-    void text(String str, objectBoundary boundary, int sizeH, int sizeW, short charH, short charW, int x, int y);
+    void textBox(String str, objectLocation location, objectBoundary boundary, short charH, short charW, int x, int y);
+    void textBox(String str, objectBoundary boundary, int sizeH, int sizeW, short charH, short charW, int x, int y);
+};
+
+class Form
+{
+private:
+    short outerBoundaryForm {20};
+    short innerBoundaryForm {10};
+public:
+    enum objectLocationForm {together, itself};
+    void form(String title, String text, objectLocationForm location);
 };
 
 class Cursor

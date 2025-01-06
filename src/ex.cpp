@@ -170,6 +170,7 @@ void Graphics::initializationSystem()
        moving system-task to the vector
        determine the number of tasks in the vector
     */
+    //_taskSystems.reserve(50); // reserve
     _pushSystemsTask();
     int _ssize = _sizeTasks();
 
@@ -179,7 +180,7 @@ void Graphics::initializationSystem()
     */
     u8g2.clearBuffer();
     // u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, ex_bits);
-    _textBox.text("Sozvezdiye OS\n\nExperiment board\n2024", _textBox.middle, _textBox.noBorder, 10, 6, 128, 80);
+    _textBox.textBox("Sozvezdiye OS\n\nExperiment board\n2024", _textBox.middle, _textBox.noBorder, 10, 6, 128, 80);
 
     _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2], 0, H_LCD, 10, 4);
     _gfx.print(6, (String)_ssize, 0, 6, 10, 6);
@@ -380,7 +381,7 @@ void Interface::message(String text, int duration)
     delay(duration);
 }
 /* displaying a message to the user */
-void Interface::popUpMessage(String label, String text, uint tDelay)
+void Interface:: popUpMessage(String label, String text, uint tDelay)
 {
     uint8_t sizeText = text.length();
 
@@ -895,7 +896,7 @@ bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*
     TextBox
 */
 /* dynamic Frame */
-void TextBox::text(String str, objectLocation location, objectBoundary boundary, short charH, short charW, int x, int y)
+void TextBox::textBox(String str, objectLocation location, objectBoundary boundary, short charH, short charW, int x, int y)
 {
     short border{5}; short border2{8}; // size border
     short charHeight{charH}; short charWidth{charW}; // size char
@@ -1028,8 +1029,8 @@ void TextBox::text(String str, objectLocation location, objectBoundary boundary,
     //_gfx.print((String)maxChar, 0, 30);
     //_gfx.print((String)line, 0, 40);
 }
-/* add static and dynamic Frame */
-void TextBox::text(String str, objectBoundary boundary, int sizeH, int sizeW, short charH, short charW, int x, int y)
+/* static Frame */
+void TextBox::textBox(String str, objectBoundary boundary, int sizeH, int sizeW, short charH, short charW, int x, int y)
 {
     short border{5}; short border2{8}; // size border
     int count{0}; int countChars{0}; int maxChar{0}; // for counting characters
@@ -1037,7 +1038,7 @@ void TextBox::text(String str, objectBoundary boundary, int sizeH, int sizeW, sh
     int numberOfCharacters{0}; // количество символов
     int ch{0}, ln{0}; int xx{x}, yy{y}; 
     
-    //String text = str; // object
+    //String textObject = str; // object
 
     if (boundary == noBorder){ /* we don't draw anything */ }
     if (boundary == oneLine)
@@ -1110,10 +1111,41 @@ void TextBox::text(String str, objectBoundary boundary, int sizeH, int sizeW, sh
         }
     }
     //debug
-    _gfx.print((String)numberOfLines, 0, 30);
-    _gfx.print((String)numberOfLinesFrame, 0, 40);
+    //_gfx.print((String)numberOfLines, 0, 30);
+    //_gfx.print((String)numberOfLinesFrame, 0, 40);
 }
 
+
+/* 
+    class
+    Form
+*/
+/* форма вывода сообщения */
+void Form::form(String title, String text, objectLocationForm location)
+{
+    TextBox _textBoxForm;
+
+    while (1)
+    {
+        u8g2.clearBuffer(); // -->
+
+        if (_close.button("CLOSE", 196, 28, _joy.posX0, _joy.posY0))
+        {
+            break;
+        }
+
+        _joy.updatePositionXY(20);
+        _crs.cursor(true, _joy.posX0, _joy.posY0);
+
+        u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm, 216, 120);
+        u8g2.drawHLine(outerBoundaryForm, outerBoundaryForm + 9, 216);
+
+        _gfx.print(10, title, 25, 28, 10, 6);
+        _textBoxForm.textBox(text, _textBoxForm.noBorder, 100, 196, 10, 6, 30, 35);
+        
+        u8g2.sendBuffer(); // <--
+    }
+}
 
 /* 
     class
@@ -1897,7 +1929,7 @@ void _myDesktop()
     uint8_t xx{border};
     uint8_t yy{15}; 
 
-    uint8_t countTask{1};s
+    uint8_t countTask{1};
     
     for (_taskArguments &_ta : _taskSystems)
     {
@@ -1916,18 +1948,16 @@ void _myDesktop()
     }
     
     _gfx.print("My Desktop", 5, 8, 8, 5);
-    
-    // debug
-    _textBox.text("Sozvezdiye OS, branch dev2-vector", _textBox.oneLine, 50, 46, 10, 6, 10, 80);
-    _textBox.text("Sozvezdiye OS, branch dev2-vector", _textBox.shadow, 50, 86, 10, 6, 70, 80);
 
     u8g2.drawHLine(0, 10, 256);
 }
-/* Task. Stack, task, command */
+/* Task. Stack, task, command */ 
 void _myConsole()
 {
-    _mess.popUpMessage("!", "Ohhh no :(\nTask-function not defined!\0", 5000);
-    _joy.resetPositionXY();
+    //_mess.popUpMessage("!", "Ohhh no :(\nTask-function not defined!\0", 5000);
+    Form _form;
+    _form.form("Title", "Platform Sozvesdiye\nSozvezdiye OS, Dev Aleksander Savushkin\n2025", _form.itself);
+    //_joy.resetPositionXY();
 }
 /* Data Port */
 /* list all port's */
@@ -2241,6 +2271,10 @@ void _systemCursor()
     _joy.updatePositionXY(20);
     _crs.cursor(true, _joy.posX0, _joy.posY0);
 }
+
+
+
+
 
 
 
