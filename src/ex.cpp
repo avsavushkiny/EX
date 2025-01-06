@@ -660,7 +660,7 @@ bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t 
 
   if ((xCursor >= x && xCursor <= (x + (sizeText * 5) + 4)) && (yCursor >= y - 8 && yCursor <= y + 2))
   {
-    u8g2.setDrawColor(1);
+    //u8g2.setDrawColor(1);
     u8g2.drawBox(x, y - 8, (sizeText * 5) + 5, 10);
 
     if (Joystick::pressKeyENTER() == true)
@@ -670,16 +670,52 @@ bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t 
   }
   else
   {
-    u8g2.setDrawColor(1);
+    //u8g2.setDrawColor(1);
     u8g2.drawFrame(x, y - 8, (sizeText * 5) + 5, 10);
   }
 
   u8g2.setCursor(x + 3, y);
   u8g2.setFont(u8g2_font_profont10_mr);
+
   u8g2.setFontMode(1);
+
   u8g2.setDrawColor(2);
   u8g2.print(text);
-  u8g2.setFontMode(0);
+  u8g2.setDrawColor(1);
+  
+  u8g2.setFontMode(1);
+  
+  return false;
+}
+
+bool Button::button2(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor)
+{
+  uint8_t sizeText = text.length(); short border{3}; short charW{5};
+
+  if ((xCursor >= x && xCursor <= (x + (sizeText * charW) + border + border)) && (yCursor >= y && yCursor <= y + 13))
+  {
+    u8g2.drawBox(x, y, (sizeText * charW) + border + border, 13);
+
+    if (Joystick::pressKeyENTER() == true)
+    {
+      return true;
+    }
+  }
+  else
+  {
+    u8g2.drawFrame(x, y, (sizeText * charW) + border + border, 13);
+  }
+
+  //u8g2.setCursor(x + border, y + 7 /* font H */ + border);
+  //u8g2.setFont(u8g2_font_6x10_tr);
+
+  u8g2.setFontMode(1);
+
+  u8g2.setDrawColor(2);
+  _gfx.print(text, x + border, y + 7 /* font H */ + border, 8, charW);
+  u8g2.setDrawColor(1);
+  
+  u8g2.setFontMode(1);
   
   return false;
 }
@@ -1123,25 +1159,25 @@ void TextBox::textBox(String str, objectBoundary boundary, int sizeH, int sizeW,
 /* форма вывода сообщения */
 void Form::form(String title, String text, objectLocationForm location)
 {
-    TextBox _textBoxForm;
+    TextBox _textBoxForm; Button _closeForm;
 
     while (1)
     {
         u8g2.clearBuffer(); // -->
 
-        if (_close.button("CLOSE", 196, 28, _joy.posX0, _joy.posY0))
+        if (_closeForm.button2("CLOSE", 205, outerBoundaryForm - 12 + 6, _joy.posX0, _joy.posY0))
         {
             break;
         }
 
+        u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120);
+
+        _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 1 + 6, 10, 5);
+        _textBoxForm.textBox(text, _textBoxForm.noBorder, 100, 196, 10, 5, outerBoundaryForm + innerBoundaryForm, outerBoundaryForm + innerBoundaryForm + 6);
+
+        // cursor
         _joy.updatePositionXY(20);
         _crs.cursor(true, _joy.posX0, _joy.posY0);
-
-        u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm, 216, 120);
-        u8g2.drawHLine(outerBoundaryForm, outerBoundaryForm + 9, 216);
-
-        _gfx.print(10, title, 25, 28, 10, 6);
-        _textBoxForm.textBox(text, _textBoxForm.noBorder, 100, 196, 10, 6, 30, 35);
         
         u8g2.sendBuffer(); // <--
     }

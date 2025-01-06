@@ -234,6 +234,7 @@ public:
     bool button(String text, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor);
     /* Return boolean state */
     bool button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor);
+    bool button2(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor);
 };
 
 class Shortcut : Joystick
@@ -279,7 +280,7 @@ class Form
 {
 private:
     short outerBoundaryForm {20};
-    short innerBoundaryForm {10};
+    short innerBoundaryForm {5};
 public:
     enum objectLocationForm {together, itself};
     void form(String title, String text, objectLocationForm location);
