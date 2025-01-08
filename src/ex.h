@@ -43,7 +43,10 @@ extern int H_LCD, W_LCD;
 
 extern void _clearCommandTerminal();
 
-/* Description of the task for the operating system */
+/* 
+    Dev2
+    Description of the task for the operating system
+*/
 struct _taskArguments
 {
     char const *text;           //command
@@ -64,6 +67,40 @@ struct _taskArguments
 namespace
 {
     std::vector<_taskArguments> _taskSystems;
+};
+
+/*
+    Dev3
+    Vector + Dispatcher tasks
+*/
+
+struct TaskArguments
+{
+    String name;
+    std::function<void()> func;
+    const uint8_t *bitMap;
+    int type;
+    int index;
+    bool activ;
+};
+
+struct TaskStack
+{
+    std::function<void()> func;
+    int index;
+    int delay;
+};
+
+class TaskDispatcher
+{
+public:
+    void addTask(const TaskArguments &task);
+    bool removeTaskByName(const String &taskName);
+    void runTask();
+    void terminal3();
+private:
+    std::vector<TaskStack> taskStack;
+    std::vector<TaskArguments> tasks;
 };
 
 /**

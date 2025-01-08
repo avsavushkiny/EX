@@ -32,7 +32,10 @@
 #include <WiFi.h>
 #include "NTPClient.h"
 #include <WiFiUdp.h>
+
 #include <vector>
+#include <functional>
+#include <algorithm>
 
 //version Library and Text
 const int8_t VERSION_LIB[] = {0, 0, 3};
@@ -2368,8 +2371,10 @@ void myWifiConnect()
 //===========================================================================
 
 
-/* Development 2 */
-/* vector */
+/* 
+    Dev 2
+    Vector
+*/
 
 _taskArguments _systems[]
 {
@@ -2493,9 +2498,34 @@ void Terminal::terminal2()
 }
 
 
-
-
-
-
-
 //=================================================================================
+
+
+/*
+    Dev 3
+    Vector + Dispatcher tasks
+*/
+
+void TaskDispatcher::addTask(const TaskArguments &task)
+{
+    tasks.push_back(task);
+}
+
+bool TaskDispatcher::removeTaskByName(const String &taskName)
+{
+    auto it = std::find_if(tasks.begin(), tasks.end(), [&taskName](const TaskArguments &task) { return task.name == taskName; });
+    
+    if (it != tasks.end())
+    {
+        tasks.erase(it);
+        return true;
+    }
+
+    return false; 
+}
+
+void TaskDispatcher::runTask()
+{}
+
+void TaskDispatcher::terminal3()
+{}
