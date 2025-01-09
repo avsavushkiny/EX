@@ -2506,6 +2506,21 @@ void Terminal::terminal2()
     Vector + Dispatcher tasks
 */
 
+TaskArguments system0[]
+{
+    {"sysled", _sustemLedControl, null, 0, 0, true},
+    //{"systray", _myTray, null, 0, 0, true},
+    {"syscursor", _systemCursor, null, 0, 0, true},
+};
+
+TaskArguments tray[]
+{
+    {"sysbattery", _trayBattery, null, 0, 0, true},
+    //{"sysfps", _trayFps, null, 0, 0, true},
+    {"sysbuffer", _trayBuffer, null, 0, 0, true},
+};
+
+
 void TaskDispatcher::addTask(const TaskArguments &task)
 {
     tasks.push_back(task);
@@ -2524,7 +2539,7 @@ bool TaskDispatcher::removeTaskByName(const String &taskName)
     return false; 
 }
 
-void TaskDispatcher::runTask()
+void TaskDispatcher::runTasks()
 {
     while (!tasks.empty())
     {
@@ -2533,12 +2548,12 @@ void TaskDispatcher::runTask()
 
         if (task.activ)
         {
-            task.func();
+            task.f();
         }
     }
 }
 
-void TaskDispatcher::terminal3()
+void TaskDispatcher::runTasksCyclically()
 {
     while (!tasks.empty())
     {
@@ -2547,9 +2562,47 @@ void TaskDispatcher::terminal3()
 
         if (task.activ)
         {
-            task.func();
+            task.f();
         }
 
         tasks.insert(tasks.begin(), task);
     }
+}
+
+void runTasksCore()
+{
+    while (!tasks.empty())
+    {
+        const auto &task = tasks.back();
+        tasks.pop_back();
+
+        if (task.activ)
+        {
+            task.f();
+        }
+
+        tasks.insert(tasks.begin(), task);
+    }
+}
+
+void TaskDispatcher::terminal3()
+{
+  TIMER = millis();
+  
+  _gfx.render(runTasksCore);
+
+  /*if (Serial.available() != 0)
+  {
+    char text[20]{};
+    Serial.readBytesUntil('\n', text, sizeof(text));
+
+    for (_taskArguments &_ta : _taskSystems)
+    {
+      if (not strncmp(_ta.text, text, 20))
+      {
+        if (_ta.active == true) _ta.active = false;
+        else _ta.active = true;
+      }
+    }
+  }*/
 }

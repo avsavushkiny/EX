@@ -77,7 +77,7 @@ namespace
 struct TaskArguments
 {
     String name;
-    std::function<void()> func;
+    void (*f)(void);
     const uint8_t *bitMap;
     int type;
     int index;
@@ -91,17 +91,25 @@ struct TaskStack
     int delay;
 };
 
+
 class TaskDispatcher
 {
 public:
     void addTask(const TaskArguments &task);
     bool removeTaskByName(const String &taskName);
-    void runTask();
+    void runTasks();
+    void runTasksCyclically();
+
     void terminal3();
 private:
+};
+
+namespace
+{
     std::vector<TaskStack> taskStack;
     std::vector<TaskArguments> tasks;
 };
+
 
 
 /*
@@ -154,6 +162,15 @@ public:
         }
     }
 };
+
+
+
+
+
+
+
+
+
 
 /**
  * @brief The Joystick class represents a joystick.
