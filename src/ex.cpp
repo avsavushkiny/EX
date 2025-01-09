@@ -2525,7 +2525,31 @@ bool TaskDispatcher::removeTaskByName(const String &taskName)
 }
 
 void TaskDispatcher::runTask()
-{}
+{
+    while (!tasks.empty())
+    {
+        const auto &task = tasks.back();
+        tasks.back();
+
+        if (task.activ)
+        {
+            task.func();
+        }
+    }
+}
 
 void TaskDispatcher::terminal3()
-{}
+{
+    while (!tasks.empty())
+    {
+        const auto &task = tasks.back();
+        tasks.pop_back();
+
+        if (task.activ)
+        {
+            task.func();
+        }
+
+        tasks.insert(tasks.begin(), task);
+    }
+}
