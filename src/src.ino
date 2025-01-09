@@ -3,9 +3,6 @@
 Graphics gfx;
 Terminal trm;
 
-TaskDispatcher td;
-
-
 void setup()
 {  
     gfx.initializationSystem();

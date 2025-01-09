@@ -53,6 +53,8 @@ TimeNTP _timentp; Task _task;
 Label _labelClock, _labelBattery, _labelWifi, _taskList;
 TextBox _textBox;
 
+TaskDispatcher td;
+
 /* WIFI */
 bool stateWifiSetup = false;
 bool stateWifi = false;
@@ -66,9 +68,7 @@ NTPClient timeClient(ntpUDP, "ntp.apple.com", 10800, 60000);
 
 /* Prototype function */
 void null();
-void myWifiConnect(); void myWifiDisconnect();
 //vector only
-bool _pushSystemsTask(); int _sizeTasks(); 
 
 //for screensaver
 unsigned long screenTiming{}, screenTiming2{}, TIMER{};
@@ -174,8 +174,7 @@ void Graphics::initializationSystem()
        determine the number of tasks in the vector
     */
     //_taskSystems.reserve(50); // reserve
-    _pushSystemsTask();
-    int _ssize = _sizeTasks();
+    //int _ssize = td.sizeTasks(tasks);
 
     /*
         UI-begin
@@ -1789,145 +1788,8 @@ void Melody::song(listMelody num)
 void null(){}
 
 
-/* System task-function */
-/* update NTP time */
-void systemNTPTimeUpdate()
-{
-    if (WiFi.status() == WL_CONNECTED)
-    {
-        timeClient.update();
-    }
-    else _mess.popUpMessage("!", "The Wi-Fi (internet) connection\nis not active.", 2500);
-}
-
 /* Task. Taskbar-area */
 int xTray{256}, yTray{159}, borderTray{5};
-void trayClock()
-{
-    //width 40px
-    _labelClock.label((String)timeClient.getFormattedTime(), "Click to update time", xTray, yTray, systemNTPTimeUpdate, 8, 5, _joy.posX0, _joy.posY0);
-}
-
-/* Task. Draw IP connect */
-void trayDrawIpConnect()
-{
-    //width 75px
-    _labelWifi.label(WiFi.localIP().toString(), "Click to disconnect", xTray, yTray, myWifiDisconnect, 8, 5, _joy.posX0, _joy.posY0);
-}
-/* Task. Buffer */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/* Task management */
-/* disable a task */
-void Task::taskKill(int indexTask)
-{
-    for (_taskArguments &_ta : _taskSystems)
-    {
-        if ((_ta.active == true) && (_ta.indexTask == indexTask))
-        {
-            _ta.active = false;
-        }
-    }
-}
-/* start a task */
-void Task::taskRun(int indexTask)
-{
-    for (_taskArguments &_ta : _taskSystems)
-    {
-        if ((_ta.active == false) && (_ta.indexTask == indexTask))
-        {
-            _ta.active = true;
-        }
-    }
-}
-/* task */
-void Task::task(int indexTask)
-{
-    for (_taskArguments &_ta : _taskSystems)
-    {
-        if ((_ta.active == true) && (_ta.indexTask == indexTask))
-        {
-            _ta.active = false; delay(150); break;
-        }
-
-        if ((_ta.active == false) && (_ta.indexTask == indexTask))
-        {
-            _ta.active = true; delay(150); break;
-        }  
-    }
-}
-
-
-/* 
-    class
-    Application
-*/
-/* window designer for the task-function */
-void Application::window(String name, int indexTask, void (*f1)(void), void (*f2)(void))
-{
-    _task.taskKill(100); //kill Desktop
-    _task.taskRun(indexTask);
-    
-    f1(); //calc
-    f2(); //graphics
-    
-    //draw window
-    {
-        _gfx.print(name, 5, 9, 8, 5); u8g2.setDrawColor(1);
-        u8g2.drawFrame(0, 10, 256, 141);
-    }
-    //draw button-state-window
-    {
-        //if (_collapse.button(" COLLAPSE ", 162, 9, _joy.posX0, _joy.posY0)) {}
-        
-        if (_close.button(" CLOSE ", 216, 9, _joy.posX0, _joy.posY0))
-        {
-            _task.taskKill(indexTask);
-            _task.taskRun(100); //run Desctop
-        }
-    }
-}
-/* window designer for the task-function */
-void Application::window(String name, int indexTask, void (*f1)(void))
-{
-    _task.taskKill(100); //kill Desktop
-    _task.taskRun(indexTask);
-    
-    f1();
-    
-    //draw window
-    {
-        _gfx.print(name, 5, 9, 8, 5); u8g2.setDrawColor(1);
-        u8g2.drawFrame(0, 10, 256, 141);
-    }
-    //draw button-state-window
-    {
-        //if (_collapse.button(" COLLAPSE ", 162, 9, _joy.posX0, _joy.posY0)) {}
-        
-        if (_close.button(" CLOSE ", 216, 9, _joy.posX0, _joy.posY0))
-        {
-            _task.taskKill(indexTask);
-            _task.taskRun(100); //run Desctop
-        }
-    }
-}
-
-
-
 
 
 
@@ -1945,7 +1807,7 @@ void _myTray()
 
     xTray = 256;
     
-    for (_taskArguments &_ta : _taskSystems)
+    for (TaskArguments &_ta : tasks)
     {
         if (_ta.state == 3)
         {
@@ -1970,7 +1832,7 @@ void _myDesktop()
 
     uint8_t countTask{1};
     
-    for (_taskArguments &_ta : _taskSystems)
+    for (TaskArguments &_ta : tasks)
     {
         if (_ta.state == 2)
         {
@@ -2000,97 +1862,15 @@ void _myConsole()
 }
 /* Data Port */
 /* list all port's */
-struct _dataPort
-{
-    short number;
-    short gpio;
-    short state; //0x01(1) - input 0x00(0) - output
-    bool  activ;
-};
-
-_dataPort _allDataPort[]
-{
-    /*
-    Data port
-    [1] GND [2] 3,3V
-    [3] GPIO 35 [4] GPIO 34 [5] GPIO 19
-    [6] TX [7] RX [8] GPIO 21 [9] GPIO 22
-    */
-    
-    {3, 35, 1, false}, //adc
-    {4, 34, 1, false}, //adc
-    {5, 19, 1, false}, //miso
-
-    {6, 1,  0, false}, //tx output UART
-    {7, 3,  1, false}, //rx input UART
-
-    {8, 21, 1, false}, //sda
-    {9, 22, 1, false}  //scl
-};
-
-bool _stateInstallPort = false;
-void _installingPort()
-{
-    if (!_stateInstallPort)
-    {
-        for (_dataPort _dp : _allDataPort)
-        {
-            pinMode(_dp.gpio, _dp.state);
-        }
-    }
-}
-
-void _f2()
-{
-    /*for(_dataPort _dp : _allDataPort)
-    {
-        if ((_dp.gpio == 35) || (_dp.gpio == 34))
-        {
-            _dataDp = analogRead(_dp.gpio);
-        }
-    }*/
-
-    _gfx.print("DataPort 4 " + (String)analogRead(34), 10, 25, 10, 5);
-    _gfx.print("DataPort 3 " + (String)analogRead(35), 10, 35, 10, 5);
-}
-void _myDataPort()
-{
-    bool stateTaskMyDataPort = _mess.dialogueMessage("Data port", "Pinout\n[1] GND [2] 3,3V\n[3] GPIO 35 [4] GPIO 34 [5] GPIO 19\n[6] TX [7] RX\n[8] GPIO 21 [9] GPIO 22\n\nMake a connection?");
-    if (stateTaskMyDataPort == true)
-    {
-        _app.window("Data port", 102, _f2);
-    }
-    if (stateTaskMyDataPort == false) _task.taskKill(102);
-
-    _joy.resetPositionXY();
-}
 /* Test Application. Function */
-void _f1()
-{
-    String text = "Application class test.\n\n_app.window(Test Application, 103, f1);\n_app - object\nwindow - class function\nTest Application - name window\n103 - number task\nf1 - function";
-    _gfx.print(text, 10, 25, 10, 5);
-}
 /* Test application. Call object */
 void _myTestApp()
 {
-    _app.window("Test Application", 103, _f1);
+
 }
 /* Task Manager */
-/* my Task Manager. View the task list */
-int _numberIndexTask{};
-void _changingStatusTask()
-{
-    _task.task(_numberIndexTask);
-}
 
-void _dialogueChangingStatusTask()
-{
-    String textDialogue = "Click OK to start or stop\nthe process: " + (String)_numberIndexTask;
-    bool state = _mess.dialogueMessage("?", textDialogue);
 
-    if (state == true) {_changingStatusTask();}
-    if (state == false) {}
-}
 
 void _viewTaskList()
 {
@@ -2101,7 +1881,7 @@ void _viewTaskList()
 
     _gfx.print("Active tasks:", 5, 20, 8, 5);
 
-    for (_taskArguments &_ta : _taskSystems)
+    for (TaskArguments &_ta : tasks)
     { 
         if (_ta.active == true)
         {
@@ -2130,7 +1910,7 @@ void _viewTaskList()
 
     yy += 30;
     
-    for (_taskArguments &_ta : _taskSystems)
+    for (TaskArguments &_ta : tasks)
     { 
         if (_ta.active == false)
         {
@@ -2156,12 +1936,12 @@ void _viewTaskList()
 
 void _myTaskManager()
 {
-    _app.window("View the task list", 105, _viewTaskList, null);
+    
 }
 /* Clear all commands */
 void _clearCommandTerminal()
 {
-  for (_taskArguments &_ta : _taskSystems)
+  for (TaskArguments &_ta : tasks)
   {
     _ta.active = false;
   }
@@ -2231,9 +2011,7 @@ void _rebootBoard()
 {
     ESP.restart();
 }
-/* User workspace */
-/* Function */
-void _userWorkSpace(){}
+
 /* Tray */
 /* buffer */
 void _trayBuffer()
@@ -2315,211 +2093,16 @@ void _systemCursor()
 
 
 
-
-
-
-
-
-
-
-
-/* my wi-fi */
-void myWifiDisconnect()
-{
-    WiFi.disconnect(true);
-    WiFi.mode(WIFI_OFF);
-
-    //_mess.popUpMessage("!", "Wi-Fi is disabled!\0", 2000);
-    
-    _task.taskKill(104); _task.taskKill(205);
-    stateWifiSetup = false; stateWifi = false;
-}
-/* my wi-fi */
-void myWifiConnect()
-{
-    _task.taskRun(104);
-    
-    {
-        //add network selection
-    }
-
-    if (stateWifiSetup == false)
-    {
-        //WiFi.begin("Allowed", "Serjant1985"); stateWifiSetup = true;
-        WiFi.begin("RT-GPON-6089", "u7PxRkFQ"); stateWifiSetup = true;
-    }
-
-    if (WiFi.status() != WL_CONNECTED)
-    {
-        BUFFER_STRING = "Wi-Fi...";
-        stateWifi = false;
-        _stop.stopwatch(myWifiDisconnect, 10000);
-    }
-    else
-    {
-        stateWifi = true;
-        _task.taskRun(205);
-        //_gfx.print(WiFi.localIP().toString(), 130, 159, 8, 5);
-        //_disconnect.button("X", 115, 158, myWifiDisconnect, _joy.posX0, _joy.posY0);
-    }
-
-    /* IPAddress ip = WiFi.localIP();
-    sprintf(lcdBuffer, "%d.%d.%d.%d:%d", ip[0], ip[1], ip[2], ip[3], udpPort);*/
-}
-
-
-//===========================================================================
-
-
-/* 
-    Dev 2
-    Vector
-*/
-
-_taskArguments _systems[]
-{
-    /* system task */
-    {"clearcomm",   "Clear command",       _clearCommandTerminal, false,     0, NULL, 0, 0, 0},
-    {"deepsleep",   "Deep sleep PWS-mode", _powerSaveBoard,       true,      1, NULL, 0, 0, 0},
-    {"rawadc",      "Raw data ADC",        _systemRawADC,         false,     2, NULL, 0, 0, 0},
-    {"clearbuffer", "Clear Buffer",        _clearBufferString,    false,     3, NULL, 0, 0, 0},
-    {"reboot",      "Reboot board",        _rebootBoard,          false,     4, NULL, 0, 0, 0},
-};
-
-_taskArguments _desktop[]
-{
-    /* desktop task. workspace */
-    {"mydesctop",    "My Desctop",          _myDesktop,            true,    100, NULL,                   0, 0, 1},
-    /* app's */
-    {"myconsole",    "My Console",          _myConsole,            false,   101, icon_MyConsole_bits,    0, 0, 2},
-    {"myserialport", "My Data port",        _myDataPort,           false,   102, icon_MyDataPort_bits,   0, 0, 2},
-    {"testapp",      "Test Application",    _myTestApp,            false,   103, icon_MyNullApp_bits,    0, 0, 2},
-    //{"mywifi",      "My WiFi",             myWifiConnect,        false,   104, iconMyWiFiClient_bits, 0, 0, 2},
-    {"mytaskmanager","My Task manager ",    _myTaskManager,        false,   105, icon_MyTaskManager_bits,0, 0, 2},
-    //{"dataportapp",  "Data port App",       _myDataPortApp,        false,   106, NULL,                   0, 0, 0},
-};
-
-_taskArguments _user[]
-{
-    {"userworkspace","User workspace",     _userWorkSpace,        false,  400, icon_UserWorkSpace_bits, 0, 0, 2},
-};
-
-_taskArguments _tray[]
-{
-    /* taskbar-area */
-    //clear tray
-    //{"cleartray", "Clear Tray",    null,         false, 200, NULL, 0,  0, 3},
-    //{"clock",      "Clock",                trayClock,          false, 201, NULL, 40, 0, 3},
-    {"battery",    "Battery control",      _trayBattery,        true,  202, NULL, 15, 0, 3},
-    {"fps",        "FPS",                  _trayFps,            true,  203, NULL, 10, 0, 3},
-    //{"ip",         "Ip adress",            trayDrawIpConnect,  false, 205, NULL, 75, 0, 3},
-    {"buffer",     "Buffer",               _trayBuffer,         true,  204, NULL, 0,  0, 3},
-};
-
-_taskArguments _systems2[]
-{
-    /* system graphics-task */
-    //keyboard task
-    //{"", "", NULL, false, 298, NULL, 0, 0, 0},
-    {"sysledcontrol", "LED control",       _sustemLedControl,     true,    299, NULL, 0, 0, 0},
-    {"systray",       "Tray",              _myTray,               true,    300, NULL, 0, 0, 0},
-    {"syscursor",     "Cursor",            _systemCursor,         true,    301, NULL, 0, 0, 0},
-};
-
-void _addSystemsTask(const _taskArguments& a)
-{
-    _taskSystems.push_back(a);
-}
-
-void _kernelSystemsTask()
-{
-    for(_taskArguments &_ta : _taskSystems)
-    {
-        if ((_ta.active) && (_ta.state != 3)) _ta.f();
-    }
-}
-
-int _sizeTasks()
-{
-    int _size = _taskSystems.size();
-    return _size;
-}
-
-bool _pushSystemsTask()
-{
-    for(_taskArguments &_all : _systems)
-    {
-        _taskSystems.push_back(_all);
-    }
-
-    for(_taskArguments &_all : _desktop)
-    {
-        _taskSystems.push_back(_all);
-    }
-
-    for(_taskArguments &_all : _user)
-    {
-        _taskSystems.push_back(_all);
-    }
-
-    for(_taskArguments &_all : _tray)
-    {
-        _taskSystems.push_back(_all);
-    }
-
-    for(_taskArguments &_all : _systems2)
-    {
-        _taskSystems.push_back(_all);
-    }
-
-    return true;
-}
-
-void Terminal::terminal2()
-{
-  TIMER = millis();
-  
-  _gfx.render(_kernelSystemsTask);
-
-  if (Serial.available() != 0)
-  {
-    char text[20]{};
-    Serial.readBytesUntil('\n', text, sizeof(text));
-
-    for (_taskArguments &_ta : _taskSystems)
-    {
-      if (not strncmp(_ta.text, text, 20))
-      {
-        if (_ta.active == true) _ta.active = false;
-        else _ta.active = true;
-      }
-    }
-  }
-}
-
-
-//=================================================================================
-
-
 /*
     Dev 3
     Vector + Dispatcher tasks
 */
 
-TaskArguments system0[]
+int TaskDispatcher::sizeTasks(const TaskArguments &task)
 {
-    {"sysled", _sustemLedControl, null, 0, 0, true},
-    //{"systray", _myTray, null, 0, 0, true},
-    {"syscursor", _systemCursor, null, 0, 0, true},
-};
-
-TaskArguments tray[]
-{
-    {"sysbattery", _trayBattery, null, 0, 0, true},
-    //{"sysfps", _trayFps, null, 0, 0, true},
-    {"sysbuffer", _trayBuffer, null, 0, 0, true},
-};
-
+    int size = task.size();
+    return size;
+}
 
 void TaskDispatcher::addTask(const TaskArguments &task)
 {
@@ -2590,19 +2173,4 @@ void TaskDispatcher::terminal3()
   TIMER = millis();
   
   _gfx.render(runTasksCore);
-
-  /*if (Serial.available() != 0)
-  {
-    char text[20]{};
-    Serial.readBytesUntil('\n', text, sizeof(text));
-
-    for (_taskArguments &_ta : _taskSystems)
-    {
-      if (not strncmp(_ta.text, text, 20))
-      {
-        if (_ta.active == true) _ta.active = false;
-        else _ta.active = true;
-      }
-    }
-  }*/
 }
