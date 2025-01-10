@@ -150,7 +150,7 @@ void Graphics::initializationSystem()
     u8g2.begin(); Serial.begin(9600);
     
     /* setting display, contrast */
-    u8g2.setContrast(150); //143//150
+    u8g2.setContrast(143); //143//150
 
     /* setting the resolution of the analog-to-digital converter */
     analogReadResolution(RESOLUTION_ADC);
@@ -2096,6 +2096,10 @@ void _systemCursor()
     _crs.cursor(true, _joy.posX0, _joy.posY0);
 }
 
+/*
+    Dev 3
+    Vector + Dispatcher tasks
+*/
 
 TaskArguments system0[] //0 systems, 1 desktopTask
 {
@@ -2104,10 +2108,6 @@ TaskArguments system0[] //0 systems, 1 desktopTask
     {"mydesktop", _myDesktop, NULL, 0, 0, true},
     {"myTablet", _myTablet, icon_mytablet_bits, 1, 0, false}
 };
-/*
-    Dev 3
-    Vector + Dispatcher tasks
-*/
 
 int TaskDispatcher::sizeTasks()
 {
