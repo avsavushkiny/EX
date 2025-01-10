@@ -69,6 +69,7 @@ NTPClient timeClient(ntpUDP, "ntp.apple.com", 10800, 60000);
 /* Prototype function */
 void null();
 //vector only
+void addTasksForSystems();
 
 //for screensaver
 unsigned long screenTiming{}, screenTiming2{}, TIMER{};
@@ -149,7 +150,7 @@ void Graphics::initializationSystem()
     u8g2.begin(); Serial.begin(9600);
     
     /* setting display, contrast */
-    u8g2.setContrast(143); //143//150
+    u8g2.setContrast(150); //143//150
 
     /* setting the resolution of the analog-to-digital converter */
     analogReadResolution(RESOLUTION_ADC);
@@ -173,6 +174,7 @@ void Graphics::initializationSystem()
        moving system-task to the vector
        determine the number of tasks in the vector
     */
+    addTasksForSystems();
     //_taskSystems.reserve(50); // reserve
     //int _ssize = td.sizeTasks(tasks);
 
@@ -185,7 +187,7 @@ void Graphics::initializationSystem()
     _textBox.textBox("Sozvezdiye OS\n\nExperiment board\n2024", _textBox.middle, _textBox.noBorder, 10, 6, 128, 80);
 
     _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2], 0, H_LCD, 10, 4);
-    _gfx.print(6, (String)_ssize, 0, 6, 10, 6);
+    //_gfx.print(6, (String)_ssize, 0, 6, 10, 6);
     u8g2.sendBuffer();
 
     delay(1500);
@@ -1809,7 +1811,7 @@ void _myTray()
     
     for (TaskArguments &_ta : tasks)
     {
-        if (_ta.state == 3)
+        /*if (_ta.state == 3)
         {
             if (_ta.active == true)
             {
@@ -1818,7 +1820,7 @@ void _myTray()
                 _ta.f();
                 //xTray -= command.widthApp;
             }
-        }
+        }*/
     }
 
     u8g2.setDrawColor(1);
@@ -1832,11 +1834,11 @@ void _myDesktop()
 
     uint8_t countTask{1};
     
-    for (TaskArguments &_ta : tasks)
+    for (TaskArguments &t : tasks)
     {
-        if (_ta.state == 2)
+        if ((t.activ == false) && (t.bitMap != NULL) && (t.type == 1))
         {
-            _shortcutDesktop.shortcut(_ta.name, _ta.bitMap, xx, yy, _ta.f, _joy.posX0, _joy.posY0);
+            _shortcutDesktop.shortcut(t.name, t.bitMap, xx, yy, t.f, _joy.posX0, _joy.posY0);
             countTask++;
 
             xx += (32 + border);
@@ -1846,6 +1848,11 @@ void _myDesktop()
                 xx = 4; yy += (32 + border); countTask = 0;
             }
         }
+        /*else
+        {
+            Form form1;
+            form1.form("Notice", "There are no tasks to output to the desktop.", form1.itself);
+        }*/
     }
     
     _gfx.print("My Desktop", 5, 8, 8, 5);
@@ -1853,11 +1860,11 @@ void _myDesktop()
     u8g2.drawHLine(0, 10, 256);
 }
 /* Task. Stack, task, command */ 
-void _myConsole()
+void _myTablet()
 {
     //_mess.popUpMessage("!", "Ohhh no :(\nTask-function not defined!\0", 5000);
     Form _form;
-    _form.form("Title", "Platform Sozvesdiye\nSozvezdiye OS, Dev Aleksander Savushkin\n2025", _form.itself);
+    _form.form("Hello friends!", "Platform Sozvesdiye\nCreate by Alexksander Savushkin\n01/2025", _form.itself);
     //_joy.resetPositionXY();
 }
 /* Data Port */
@@ -1874,7 +1881,7 @@ void _myTestApp()
 
 void _viewTaskList()
 {
-    int xx{5}, yy{30};
+    /*int xx{5}, yy{30};
 
     u8g2.setFontMode(1);
     u8g2.setDrawColor(2);
@@ -1931,7 +1938,7 @@ void _viewTaskList()
                 xx = 5; yy += 10;
             }
         }
-    }
+    }*/
 }
 
 void _myTaskManager()
@@ -1943,7 +1950,7 @@ void _clearCommandTerminal()
 {
   for (TaskArguments &_ta : tasks)
   {
-    _ta.active = false;
+    _ta.activ = false;
   }
 }
 /* Powersave mode */
@@ -1960,7 +1967,7 @@ void _sleepModeScreen()
     _mess.popUpMessage("Power save", "Light sleep.\nBye, bye my User!\nUse the Joystick to wake up!\0\0", 1000);
 }
 /* a system-task for working in an energy-efficient mode */
-void _powerSaveBoard()
+void _systemPowerSaveBoard()
 {
     if (_isTouched() == true)
     {
@@ -2090,18 +2097,22 @@ void _systemCursor()
 }
 
 
-
-
-
+TaskArguments system0[] //0 systems, 1 desktopTask
+{
+    {"systemcursor", _systemCursor, NULL, 0, 0, true},
+    {"systempowersave", _systemPowerSaveBoard, NULL, 0, 0, true},
+    {"mydesktop", _myDesktop, NULL, 0, 0, true},
+    {"myTablet", _myTablet, icon_mytablet_bits, 1, 0, false}
+};
 /*
     Dev 3
     Vector + Dispatcher tasks
 */
 
-int TaskDispatcher::sizeTasks(const TaskArguments &task)
+int TaskDispatcher::sizeTasks()
 {
-    int size = task.size();
-    return size;
+    int sizeVector = tasks.size();
+    return sizeVector;
 }
 
 void TaskDispatcher::addTask(const TaskArguments &task)
@@ -2109,7 +2120,7 @@ void TaskDispatcher::addTask(const TaskArguments &task)
     tasks.push_back(task);
 }
 
-bool TaskDispatcher::removeTaskByName(const String &taskName)
+bool TaskDispatcher::removeTaskVector(const String &taskName)
 {
     auto it = std::find_if(tasks.begin(), tasks.end(), [&taskName](const TaskArguments &task) { return task.name == taskName; });
     
@@ -2122,49 +2133,38 @@ bool TaskDispatcher::removeTaskByName(const String &taskName)
     return false; 
 }
 
-void TaskDispatcher::runTasks()
+bool TaskDispatcher::removeTask(const String &taskName)
 {
-    while (!tasks.empty())
+    for (TaskArguments &t : tasks)
     {
-        const auto &task = tasks.back();
-        tasks.back();
-
-        if (task.activ)
+        if ((t.activ) && (t.name == taskName))
         {
-            task.f();
+            t.activ == false; return true;
         }
     }
+    return false;
 }
 
-void TaskDispatcher::runTasksCyclically()
+bool TaskDispatcher::runTask(const String &taskName)
 {
-    while (!tasks.empty())
+    for (TaskArguments &t : tasks)
     {
-        const auto &task = tasks.back();
-        tasks.pop_back();
-
-        if (task.activ)
+        if ((!t.activ) && (t.name == taskName))
         {
-            task.f();
+            t.activ == true; return true;
         }
-
-        tasks.insert(tasks.begin(), task);
     }
+    return false;
 }
 
 void runTasksCore()
 {
-    while (!tasks.empty())
+    for (TaskArguments &t : tasks)
     {
-        const auto &task = tasks.back();
-        tasks.pop_back();
-
-        if (task.activ)
+        if (t.activ)
         {
-            task.f();
+            t.f();
         }
-
-        tasks.insert(tasks.begin(), task);
     }
 }
 
@@ -2173,4 +2173,12 @@ void TaskDispatcher::terminal3()
   TIMER = millis();
   
   _gfx.render(runTasksCore);
+}
+
+void addTasksForSystems()
+{
+    for (TaskArguments &t : system0)
+    {
+        tasks.push_back(t);
+    }
 }

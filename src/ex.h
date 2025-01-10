@@ -69,12 +69,12 @@ struct TaskStack
 class TaskDispatcher
 {
 public:
-    int sizeTasks(const TaskArguments &task);
+    int sizeTasks();
     
     void addTask(const TaskArguments &task);
-    bool removeTaskByName(const String &taskName);
-    void runTasks();
-    void runTasksCyclically();
+    bool removeTaskVector(const String &taskName);
+    bool removeTask(const String &taskName);
+    bool runTask(const String &taskName);
 
     void terminal3();
 private:
@@ -83,7 +83,9 @@ private:
 namespace
 {
     std::vector<TaskStack> taskStack;
+
     std::vector<TaskArguments> tasks;
+    std::vector<TaskArguments> tasksTray;
 };
 
 

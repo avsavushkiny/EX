@@ -3,6 +3,8 @@
 Graphics gfx;
 Terminal trm;
 
+TaskDispatcher dispatcher;
+
 void setup()
 {  
     gfx.initializationSystem();
@@ -10,5 +12,5 @@ void setup()
 
 void loop()
 {  
-    td.terminal3();
+    dispatcher.terminal3();
 }
