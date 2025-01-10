@@ -100,58 +100,6 @@ namespace
 
 
 
-/*
-    Dev3
-    Element
-*/
-
-class Element {
-public:
-    virtual void render() const = 0;
-};
-
-// Класс для текстового элемента
-class TextElement : public Element {
-private:
-    String text;
-public:
-    explicit TextElement(const String& text) : text(text) {}
-    void render() const override {}
-};
-
-/*
-    Dev3
-    Form
-*/
-
-class Forms {
-private:
-    std::vector<Element*> elements;
-public:
-    ~Forms() {
-        // Освобождаем память от динамически выделенных объектов
-        for (auto* element : elements) {
-            delete element;
-        }
-    }
-
-    void addElement(const String& text) {
-        elements.push_back(new TextElement(text));
-    }
-
-    template<typename T>
-    void addElement(T&& element) {
-        elements.push_back(new T(std::forward<T>(element)));
-    }
-
-    void formRender() const {
-        for (const auto* element : elements) {
-            element->render();
-        }
-    }
-};
-
-
 
 
 
