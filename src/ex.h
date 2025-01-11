@@ -45,9 +45,8 @@ extern void _clearCommandTerminal();
 
 /*
     Dev3
-    Vector + Dispatcher tasks
+    Dispatcher tasks
 */
-
 struct TaskArguments
 {
     String name;
@@ -89,31 +88,112 @@ namespace
 };
 
 
+/*
+    Dev3
+    FormElement - Форма с элементами
+*/
+class FormElement
+{
+public:
+    FormElement(const String &text, void (*f)(void), int x, int y) : m_text(text), m_f(f), m_x(x), m_y(y) {}
+
+    virtual ~FormElement() = default;
+
+    void callFunction()
+    {
+        m_f();
+    }
+
+    virtual void display() const = 0;
+
+private:
+protected:
+    String m_text;
+    void (*m_f)(void);
+    int m_x;
+    int m_y;
+};
+
+/* Text message */
+class TextMessage0 : FormElement
+{
+public:
+    using FormElement::FormElement;
+
+    void display() const override
+    {
+        // логика вывода текстового сообщения
+    }
+};
+
+/* TextBox */
+class TextBox0 : FormElement
+{
+public:
+    using FormElement::FormElement;
+
+    void display() const override
+    {
+        // логика вывода текстового сообщения
+    }
+};
+
+/* Label */
+class Label0 : FormElement
+{
+public:
+    using FormElement::FormElement;
+
+    std::function<void()> onClick;
+
+    void display() const override
+    {
+        // логика вывода текстового сообщения
+    }
+};
+
+/* Button */
+class Button0 : FormElement
+{
+public:
+    using FormElement::FormElement;
+
+    std::function<void()> onClick;
+
+    void display() const override
+    {
+        // логика вывода текстового сообщения
+    }
+};
+
+/* Checkbox */
+class Checkbox0 : FormElement
+{
+public:
+    using FormElement::FormElement;
+
+    bool isChecked = false;
+
+    void display() const override
+    {
+        // логика вывода текстового сообщения
+        if (isChecked)
+        {
+        }
+        else
+        {
+        }
+    }
+};
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * @brief The Joystick class represents a joystick.
- *
- * This class contains methods for working with the joystick, including getting keyboard and joystick
- * events, calculating joystick coordinates and updating coordinates.
- */
+/*
+    Dev1
+*/
 class Joystick
 {
 protected:
