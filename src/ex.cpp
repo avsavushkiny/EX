@@ -1163,7 +1163,7 @@ void TextBox::textBox(String str, objectBoundary boundary, int sizeH, int sizeW,
     Form
 */
 /* форма вывода сообщения */
-void Form::form(String title, String text, objectLocationForm location)
+void Form0::form(String title, String text, objectLocationForm location)
 {
     TextBox _textBoxForm; Button _closeForm;
 
@@ -1796,13 +1796,12 @@ void nullFunction(){}
 int xTray{256}, yTray{159}, borderTray{5};
 
 
-
-
-// ex.cpp
-void TextMessage0::display() const
+// debug Form1
+void TextMessage1::display1() const
 {
     _gfx.print(m_text, m_x, m_y);
 }
+
 
 
 
@@ -1875,10 +1874,14 @@ void _myDesktop()
 /* Task. Stack, task, command */ 
 void _myTablet()
 {
-    //_mess.popUpMessage("!", "Ohhh no :(\nTask-function not defined!\0", 5000);
-    Form _form;
-    _form.form("Hello friends!", "Platform Sozvesdiye\nCreate by Alexksander Savushkin\n01/2025", _form.itself);
-    //_joy.resetPositionXY();
+    //Form0 _form;
+    //_form.form("Hello friends!", "Platform Sozvesdiye\nCreate by Alexksander Savushkin\n01/2025", _form.itself);
+
+    Form1 form1;
+    form1.addTextMessage1("hello", 10, 20);
+    form1.addTextMessage1("hello2", 10, 30);
+
+    form1.displayForm1();
 
 }
 /* Data Port */
@@ -2117,10 +2120,11 @@ void _systemCursor()
 
 TaskArguments system0[] //0 systems, 1 desktopTask
 {
-    {"systemcursor", _systemCursor, NULL, 0, 0, true},
     {"systempowersave", _systemPowerSaveBoard, NULL, 0, 0, true},
     {"mydesktop", _myDesktop, NULL, 0, 0, true},
-    {"myTablet", _myTablet, icon_mytablet_bits, 1, 0, false}
+    {"myTablet", _myTablet, icon_mytablet_bits, 1, 0, false},
+    // [!] Last task
+    {"systemcursor", _systemCursor, NULL, 0, 0, true}
 };
 
 int TaskDispatcher::sizeTasks()

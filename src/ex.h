@@ -47,60 +47,66 @@ extern void _clearCommandTerminal();
     Dev3
     Dispatcher tasks
 */
+/* Task Settings */
 struct TaskArguments
 {
-    String name;
-    void (*f)(void);
-    const uint8_t *bitMap;
-    int type;
-    int index;
-    bool activ;
+    String name;           // Short task name
+    void (*f)(void);       // Pointer to task function
+    const uint8_t *bitMap; // Pointer to xbmp image
+    int type;              // Task type, 0 - system, 1 - desktop
+    int index;             // Task index
+    bool activ;            // Task Status
 };
-
+/* Task Stack parameters */
 struct TaskStack
 {
-    std::function<void()> func;
+    void (*f)(void);
     int index;
     int delay;
 };
-
-
+/* Task Manager Class */
 class TaskDispatcher
 {
 public:
+    // Determine the number of Tasks in the Vector
     int sizeTasks();
-    
+    // Add a task to Vector
     void addTask(const TaskArguments &task);
+    // Remove task from Vector
     bool removeTaskVector(const String &taskName);
+    // Make the Task inactive
     bool removeTask(const String &taskName);
+    // Make the Task active
     bool runTask(const String &taskName);
-
+    // Running all tasks from Vector
     void terminal3();
 private:
 };
-
+/* Defining Vectors */
 namespace
 {
-    std::vector<TaskStack> taskStack;
-
-    std::vector<TaskArguments> tasks;
-    std::vector<TaskArguments> tasksTray;
+    std::vector<TaskStack> taskStack;     // Task Stack Vector
+    std::vector<TaskArguments> tasks;     // Vector of main tasks
+    std::vector<TaskArguments> tasksTray; // Notification bar task vector
 };
 
 
 /*
-    Dev3
-    FormElement - Форма с элементами
+    Dev3 [not used]
+    120125 - Aleksander Savushkin
+    FormElement - Form with elements
+
+    Abstract class constructor
 */
-class FormElement
+class FormElement0
 {
 public:
-    FormElement(const String &text, void (*f)(void), int x, int y) : m_text(text), m_f(f), m_x(x), m_y(y) {}
+    FormElement0(const String &text, void (*f)(void), int x, int y) : m_text(text), m_f(f), m_x(x), m_y(y) {}
 
-    virtual ~FormElement() = default;
-    virtual void display() const = 0;
+    virtual ~FormElement0() = default;
+    virtual void display0() const = 0;
 
-    void callFunction()
+    void callFunction0()
     {
         m_f();
     }
@@ -112,72 +118,48 @@ protected:
     int m_x;
     int m_y;
 };
-
 /* Text message */
-class TextMessage0 : FormElement
+class TextMessage0 : public FormElement0
 {
 public:
-    using FormElement::FormElement;
+    using FormElement0::FormElement0;
 
-    void display() const override;
+    void display0() const override
+    {
+    }
 
-    /*void display() const override
+    // ex.cpp //void display() const override;
+    /*
+    void TextMessage0::display() const
     {
         _gfx.print(m_text, m_x, m_y);
-    }*/
-};
-
-/* TextBox */
-class TextBox0 : FormElement
-{
-public:
-    using FormElement::FormElement;
-
-    void display() const override
-    {
-        // логика вывода текстового сообщения
     }
+    */
 };
-
-/* Label */
-class Label0 : FormElement
-{
-public:
-    using FormElement::FormElement;
-
-    std::function<void()> onClick;
-
-    void display() const override
-    {
-        // логика вывода текстового сообщения
-    }
-};
-
 /* Button */
-class Button0 : FormElement
+class Button0 : FormElement0
 {
 public:
-    using FormElement::FormElement;
+    using FormElement0::FormElement0;
 
     std::function<void()> onClick;
 
-    void display() const override
+    void display0() const override
     {
-        // логика вывода текстового сообщения
+        // output logic
     }
 };
-
 /* Checkbox */
-class Checkbox0 : FormElement
+class Checkbox0 : FormElement0
 {
 public:
-    using FormElement::FormElement;
+    using FormElement0::FormElement0;
 
     bool isChecked = false;
 
-    void display() const override
+    void display0() const override
     {
-        // логика вывода текстового сообщения
+        // output logic
         if (isChecked)
         {
         }
@@ -186,32 +168,123 @@ public:
         }
     }
 };
-
-
-
-
 namespace
 {
-    std::vector<FormElement*> formElements;
+    std::vector<FormElement0*> formElements0;
 };
-
-// добавляем элементы
-inline void addElement(FormElement* element)
+// adding elements
+inline void addElement0(FormElement0* element)
 {
-    formElements.push_back(element);
+    formElements0.push_back(element);
 }
-
-// вывод Формы на дисплей
-inline void displayFormElement()
+// displaying Forms
+inline void displayFormElement0()
 {
     u8g2.clearBuffer(); // -->
-        for (auto& element : formElements)
+        for (auto& element : formElements0)
         {
-            element->display();
+            element->display0();
         }
     u8g2.sendBuffer(); // <--
 }
+/*
+    Use Dev3
+    
+    // Create an instance of the TextMessage0 class
+    TextMessage0* msg = new TextMessage0("Hello, World!", nullptr, 10, 20);
+    
+    // Adding an element to the list
+    addElement0(msg);
+    
+    // Displaying all form elements
+    displayFormElement0();
+    
+    // Clearing memory
+    delete msg;
+*/
 
+
+
+
+
+
+/*
+    Dev3
+    Form1
+*/
+class Element1
+{
+public:
+    virtual void display1() const = 0;
+};
+
+class Button1 : public Element1
+{
+public:
+    Button1(const String& label, void (*onClick)(), int x, int y) : m_label(label), m_onClick(onClick), m_x(x), m_y(y) {}
+
+    void display1() const override {}
+
+    void click()
+    {
+        if (m_onClick != nullptr)
+            m_onClick();
+    }
+
+private:
+    String m_label;
+    void (*m_onClick)(void);
+    int m_x;
+    int m_y;
+};
+
+class TextMessage1 : public Element1
+{
+public:
+    TextMessage1(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
+
+    //void display1() const override {}
+    void display1() const override;
+
+private:
+    String m_text;
+    int m_x;
+    int m_y;
+};
+
+class Form1
+{
+private:
+    std::vector<Element1*> m_elements;
+public:
+    ~Form1()
+    {
+        for (Element1* element : m_elements)
+        {
+            delete element;
+        }
+    }
+
+    void addButton1(const String& label, void (*onClick)(), int x, int y)
+    {
+        m_elements.push_back(new Button1(label, onClick, x, y));
+    }
+
+    void addTextMessage1(const String& text, int x, int y)
+    {
+        m_elements.push_back(new TextMessage1(text, x, y));
+    }
+
+    void displayForm1() const
+    {
+        u8g2.clearBuffer(); // -->
+            for (const auto &element : m_elements)
+            {
+                element->display1();
+            }
+        u8g2.sendBuffer(); // <--
+    }
+};
 
 
 
@@ -425,7 +498,7 @@ public:
     void textBox(String str, objectBoundary boundary, int sizeH, int sizeW, short charH, short charW, int x, int y);
 };
 
-class Form
+class Form0
 {
 private:
     short outerBoundaryForm {20};
