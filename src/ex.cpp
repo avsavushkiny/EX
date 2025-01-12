@@ -1789,11 +1789,22 @@ void Melody::song(listMelody num)
 
 
 /* Null function */
-void null(){}
+void nullFunction(){}
 
 
 /* Task. Taskbar-area */
 int xTray{256}, yTray{159}, borderTray{5};
+
+
+
+
+// ex.cpp
+void TextMessage0::display() const
+{
+    _gfx.print(m_text, m_x, m_y);
+}
+
+
 
 
 
@@ -1868,6 +1879,16 @@ void _myTablet()
     Form _form;
     _form.form("Hello friends!", "Platform Sozvesdiye\nCreate by Alexksander Savushkin\n01/2025", _form.itself);
     //_joy.resetPositionXY();
+
+    //addElement(std::make_unique<TextMessage0>("hello", nullFunction, 0, 10));
+    
+    //addElement(TextMessage0("hello", nullFunction, 0, 10));
+    //displayFormElement();
+
+addElement(std::make_unique<TextMessage0>("hello", nullFunction, 0, 10));
+
+
+
 }
 /* Data Port */
 /* list all port's */

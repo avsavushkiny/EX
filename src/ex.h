@@ -98,13 +98,12 @@ public:
     FormElement(const String &text, void (*f)(void), int x, int y) : m_text(text), m_f(f), m_x(x), m_y(y) {}
 
     virtual ~FormElement() = default;
+    virtual void display() const = 0;
 
     void callFunction()
     {
         m_f();
     }
-
-    virtual void display() const = 0;
 
 private:
 protected:
@@ -120,10 +119,12 @@ class TextMessage0 : FormElement
 public:
     using FormElement::FormElement;
 
-    void display() const override
+    void display() const override;
+
+    /*void display() const override
     {
-        // логика вывода текстового сообщения
-    }
+        _gfx.print(m_text, m_x, m_y);
+    }*/
 };
 
 /* TextBox */
@@ -185,6 +186,29 @@ public:
         }
     }
 };
+
+namespace
+{
+    std::vector<FormElement*> formElements;
+};
+
+// добавляем элементы
+inline void addElement(FormElement* element)
+{
+    formElements.push_back(element);
+}
+
+// вывод Формы на дисплей
+inline void displayFormElement()
+{
+    for (auto& element : formElements)
+    {
+        u8g2.clearBuffer(); // -->
+        element->display();
+        u8g2.sendBuffer(); // <--
+    }
+}
+
 
 
 
