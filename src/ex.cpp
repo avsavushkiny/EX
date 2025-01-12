@@ -1880,15 +1880,6 @@ void _myTablet()
     _form.form("Hello friends!", "Platform Sozvesdiye\nCreate by Alexksander Savushkin\n01/2025", _form.itself);
     //_joy.resetPositionXY();
 
-    //addElement(std::make_unique<TextMessage0>("hello", nullFunction, 0, 10));
-    
-    //addElement(TextMessage0("hello", nullFunction, 0, 10));
-    //displayFormElement();
-
-addElement(std::make_unique<TextMessage0>("hello", nullFunction, 0, 10));
-
-
-
 }
 /* Data Port */
 /* list all port's */

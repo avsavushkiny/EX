@@ -187,6 +187,9 @@ public:
     }
 };
 
+
+
+
 namespace
 {
     std::vector<FormElement*> formElements;
@@ -201,12 +204,12 @@ inline void addElement(FormElement* element)
 // вывод Формы на дисплей
 inline void displayFormElement()
 {
-    for (auto& element : formElements)
-    {
-        u8g2.clearBuffer(); // -->
-        element->display();
-        u8g2.sendBuffer(); // <--
-    }
+    u8g2.clearBuffer(); // -->
+        for (auto& element : formElements)
+        {
+            element->display();
+        }
+    u8g2.sendBuffer(); // <--
 }
 
 
