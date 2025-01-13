@@ -1797,7 +1797,7 @@ int xTray{256}, yTray{159}, borderTray{5};
 
 
 // debug Form1
-void TextMessage1::display1() const
+void TextMessage1::show1() const
 {
     _gfx.print(m_text, m_x, m_y);
 }
@@ -1881,7 +1881,7 @@ void _myTablet()
     form1.addTextMessage1("hello", 10, 20);
     form1.addTextMessage1("hello2", 10, 30);
 
-    form1.displayForm1();
+    form1.showForm1();
 
 }
 /* Data Port */

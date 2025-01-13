@@ -215,7 +215,7 @@ inline void displayFormElement0()
 class Element1
 {
 public:
-    virtual void display1() const = 0;
+    virtual void show1() const = 0;
 };
 
 class Button1 : public Element1
@@ -223,7 +223,7 @@ class Button1 : public Element1
 public:
     Button1(const String& label, void (*onClick)(), int x, int y) : m_label(label), m_onClick(onClick), m_x(x), m_y(y) {}
 
-    void display1() const override {}
+    void show1() const override {}
 
     void click()
     {
@@ -244,7 +244,7 @@ public:
     TextMessage1(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
 
     //void display1() const override {}
-    void display1() const override;
+    void show1() const override;
 
 private:
     String m_text;
@@ -275,12 +275,12 @@ public:
         m_elements.push_back(new TextMessage1(text, x, y));
     }
 
-    void displayForm1() const
+    void showForm1() const
     {
         u8g2.clearBuffer(); // -->
             for (const auto &element : m_elements)
             {
-                element->display1();
+                element->show1();
             }
         u8g2.sendBuffer(); // <--
     }
