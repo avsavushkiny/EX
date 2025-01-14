@@ -1796,7 +1796,7 @@ void nullFunction(){}
 int xTray{256}, yTray{159}, borderTray{5};
 
 
-// debug Form1
+/* Form1 */
 void TextMessage1::show1() const
 {
     _gfx.print(m_text, m_x, m_y);
@@ -1884,16 +1884,16 @@ void _myTablet()
     form1.showForm1();
 
 }
-/* Data Port */
-/* list all port's */
-/* Test Application. Function */
-/* Test application. Call object */
+
+
+
+
+
+
 void _myTestApp()
 {
 
 }
-/* Task Manager */
-
 
 
 void _viewTaskList()

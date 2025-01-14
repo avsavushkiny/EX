@@ -256,6 +256,13 @@ class Form1
 {
 private:
     std::vector<Element1*> m_elements;
+
+    enum size
+    {
+        middle,
+        full,
+    };
+
 public:
     ~Form1()
     {
