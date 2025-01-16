@@ -1806,16 +1806,69 @@ int xTray{256}, yTray{159}, borderTray{5};
     Dev3
     Form1
 */
-void fTextMessage::fShow() const
+void fText::fShow() const
 {
-    _gfx.print(m_text, m_x, m_y, 10, 5);
+    // 6px - offset by Y
+    _gfx.print(m_text, outerBoundaryForm + m_x, outerBoundaryForm + 6 + highChar + m_y, 10, 5);
 }
 
+void Form::showForm(const String& title, formLocation location) const
+{
+    Button fClose;
 
+    if (location == itself)
+    {
+        while(1)
+        {
+            u8g2.clearBuffer(); // -->
 
+            if (fClose.button2("CLOSE", 205, outerBoundaryForm - 12 + 6, _joy.posX0, _joy.posY0))
+            {
+                break;
+            }
 
+            u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
+            _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 1 + 6, 10, 5);
 
+                for (const auto &element : m_elements)
+                {
+                    element->fShow();
+                }
+            
+            // cursor
+            _joy.updatePositionXY(20);
+            _crs.cursor(true, _joy.posX0, _joy.posY0);
 
+            u8g2.sendBuffer(); // <--
+        }
+    }
+
+    if (location == together)
+    {
+        while (1)
+        {
+            if (fClose.button2("CLOSE", 205, outerBoundaryForm - 12 + 6, _joy.posX0, _joy.posY0))
+            {
+                break;
+            }
+
+            u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
+            _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 1 + 6, 10, 5);
+                //_textBoxForm.textBox(text, _textBoxForm.noBorder, 100, 196, 10, 5, outerBoundaryForm + innerBoundaryForm, outerBoundaryForm + innerBoundaryForm + 6);
+
+                for (const auto &element : m_elements)
+                {
+                    element->fShow();
+                }
+
+            // cursor
+            _joy.updatePositionXY(20);
+            _crs.cursor(true, _joy.posX0, _joy.posY0);
+
+            u8g2.sendBuffer(); // -->
+        }
+    }
+}
 
 
 
@@ -1894,10 +1947,10 @@ void _myTablet()
     //_form.form("Hello friends!", "Platform Sozvesdiye\nCreate by Alexksander Savushkin\n01/2025", _form.itself);
 
     Form form1;
-    form1.addTextMessage("hello", 10, 20);
-    form1.addTextMessage("hello2", 10, 30);
+    form1.addText("hello", 5, 5);
+    form1.addText("hello2 hello3\nhello4 hello5 hello6", 5, 50);
 
-    form1.showForm();
+    form1.showForm("Test", form1.itself);
 
 }
 

@@ -122,15 +122,19 @@ private:
     int m_y;
 };
 
-class fTextMessage : public fElement
+class fText : public fElement
 {
 public:
-    fTextMessage(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
+    fText(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
 
-    //void display1() const override {}
     void fShow() const override;
 
 private:
+    short const outerBoundaryForm {20};
+    short const innerBoundaryForm {5};
+
+    short const highChar {10};
+
     String m_text;
     int m_x;
     int m_y;
@@ -141,12 +145,8 @@ class Form
 private:
     std::vector<fElement*> m_elements;
 
-    enum size
-    {
-        middle,
-        full,
-    };
-
+    short const outerBoundaryForm {20};
+    short const innerBoundaryForm {5};
 public:
     ~Form()
     {
@@ -156,25 +156,19 @@ public:
         }
     }
 
+    enum formLocation {together, itself};
+    
     void addButton(const String& label, void (*onClick)(), int x, int y)
     {
         m_elements.push_back(new fButton(label, onClick, x, y));
     }
 
-    void addTextMessage(const String& text, int x, int y)
+    void addText(const String& text, int x, int y)
     {
-        m_elements.push_back(new fTextMessage(text, x, y));
+        m_elements.push_back(new fText(text, x, y));
     }
 
-    void showForm() const
-    {
-        u8g2.clearBuffer(); // -->
-            for (const auto &element : m_elements)
-            {
-                element->fShow();
-            }
-        u8g2.sendBuffer(); // <--
-    }
+    void showForm(const String& title, formLocation location) const;
 };
 
 
