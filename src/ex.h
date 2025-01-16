@@ -91,141 +91,25 @@ namespace
 };
 
 
-/*
-    Dev3 [not used]
-    120125 - Aleksander Savushkin
-    FormElement - Form with elements
-
-    Abstract class constructor
-*/
-class FormElement0
-{
-public:
-    FormElement0(const String &text, void (*f)(void), int x, int y) : m_text(text), m_f(f), m_x(x), m_y(y) {}
-
-    virtual ~FormElement0() = default;
-    virtual void display0() const = 0;
-
-    void callFunction0()
-    {
-        m_f();
-    }
-
-private:
-protected:
-    String m_text;
-    void (*m_f)(void);
-    int m_x;
-    int m_y;
-};
-/* Text message */
-class TextMessage0 : public FormElement0
-{
-public:
-    using FormElement0::FormElement0;
-
-    void display0() const override
-    {
-    }
-
-    // ex.cpp //void display() const override;
-    /*
-    void TextMessage0::display() const
-    {
-        _gfx.print(m_text, m_x, m_y);
-    }
-    */
-};
-/* Button */
-class Button0 : FormElement0
-{
-public:
-    using FormElement0::FormElement0;
-
-    std::function<void()> onClick;
-
-    void display0() const override
-    {
-        // output logic
-    }
-};
-/* Checkbox */
-class Checkbox0 : FormElement0
-{
-public:
-    using FormElement0::FormElement0;
-
-    bool isChecked = false;
-
-    void display0() const override
-    {
-        // output logic
-        if (isChecked)
-        {
-        }
-        else
-        {
-        }
-    }
-};
-namespace
-{
-    std::vector<FormElement0*> formElements0;
-};
-// adding elements
-inline void addElement0(FormElement0* element)
-{
-    formElements0.push_back(element);
-}
-// displaying Forms
-inline void displayFormElement0()
-{
-    u8g2.clearBuffer(); // -->
-        for (auto& element : formElements0)
-        {
-            element->display0();
-        }
-    u8g2.sendBuffer(); // <--
-}
-/*
-    Use Dev3
-    
-    // Create an instance of the TextMessage0 class
-    TextMessage0* msg = new TextMessage0("Hello, World!", nullptr, 10, 20);
-    
-    // Adding an element to the list
-    addElement0(msg);
-    
-    // Displaying all form elements
-    displayFormElement0();
-    
-    // Clearing memory
-    delete msg;
-*/
-
-
-
-
-
 
 /*
     Dev3
     Form1
 */
-class Element1
+class fElement
 {
 public:
-    virtual void show1() const = 0;
+    virtual void fShow() const = 0;
 };
 
-class Button1 : public Element1
+class fButton : public fElement
 {
 public:
-    Button1(const String& label, void (*onClick)(), int x, int y) : m_label(label), m_onClick(onClick), m_x(x), m_y(y) {}
+    fButton(const String& label, void (*onClick)(), int x, int y) : m_label(label), m_onClick(onClick), m_x(x), m_y(y) {}
 
-    void show1() const override {}
+    void fShow() const override {}
 
-    void click()
+    void fClick()
     {
         if (m_onClick != nullptr)
             m_onClick();
@@ -238,13 +122,13 @@ private:
     int m_y;
 };
 
-class TextMessage1 : public Element1
+class fTextMessage : public fElement
 {
 public:
-    TextMessage1(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
+    fTextMessage(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
 
     //void display1() const override {}
-    void show1() const override;
+    void fShow() const override;
 
 private:
     String m_text;
@@ -252,10 +136,10 @@ private:
     int m_y;
 };
 
-class Form1
+class Form
 {
 private:
-    std::vector<Element1*> m_elements;
+    std::vector<fElement*> m_elements;
 
     enum size
     {
@@ -264,30 +148,30 @@ private:
     };
 
 public:
-    ~Form1()
+    ~Form()
     {
-        for (Element1* element : m_elements)
+        for (fElement* element : m_elements)
         {
             delete element;
         }
     }
 
-    void addButton1(const String& label, void (*onClick)(), int x, int y)
+    void addButton(const String& label, void (*onClick)(), int x, int y)
     {
-        m_elements.push_back(new Button1(label, onClick, x, y));
+        m_elements.push_back(new fButton(label, onClick, x, y));
     }
 
-    void addTextMessage1(const String& text, int x, int y)
+    void addTextMessage(const String& text, int x, int y)
     {
-        m_elements.push_back(new TextMessage1(text, x, y));
+        m_elements.push_back(new fTextMessage(text, x, y));
     }
 
-    void showForm1() const
+    void showForm() const
     {
         u8g2.clearBuffer(); // -->
             for (const auto &element : m_elements)
             {
-                element->show1();
+                element->fShow();
             }
         u8g2.sendBuffer(); // <--
     }

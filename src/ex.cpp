@@ -1796,11 +1796,27 @@ void nullFunction(){}
 int xTray{256}, yTray{159}, borderTray{5};
 
 
-/* Form1 */
-void TextMessage1::show1() const
+
+
+
+
+
+
+/*
+    Dev3
+    Form1
+*/
+void fTextMessage::fShow() const
 {
-    _gfx.print(m_text, m_x, m_y);
+    _gfx.print(m_text, m_x, m_y, 10, 5);
 }
+
+
+
+
+
+
+
 
 
 
@@ -1877,13 +1893,17 @@ void _myTablet()
     //Form0 _form;
     //_form.form("Hello friends!", "Platform Sozvesdiye\nCreate by Alexksander Savushkin\n01/2025", _form.itself);
 
-    Form1 form1;
-    form1.addTextMessage1("hello", 10, 20);
-    form1.addTextMessage1("hello2", 10, 30);
+    Form form1;
+    form1.addTextMessage("hello", 10, 20);
+    form1.addTextMessage("hello2", 10, 30);
 
-    form1.showForm1();
+    form1.showForm();
 
 }
+
+
+
+
 
 
 
