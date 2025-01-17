@@ -150,7 +150,7 @@ void Graphics::initializationSystem()
     u8g2.begin(); Serial.begin(9600);
     
     /* setting display, contrast */
-    u8g2.setContrast(143); //143//150
+    u8g2.setContrast(150); //143//150
 
     /* setting the resolution of the analog-to-digital converter */
     analogReadResolution(RESOLUTION_ADC);
@@ -1806,75 +1806,76 @@ int xTray{256}, yTray{159}, borderTray{5};
     Dev3
     Form1
 */
+/* Text */
 void fText::fShow() const
 {
     // 6px - offset by Y
     _gfx.print(m_text, outerBoundaryForm + m_x, outerBoundaryForm + 6 + highChar + m_y, 10, 5);
 }
 
-void Form::showForm(const String& title, formLocation location) const
+/* Button */
+void fButton::fShow() const
 {
-    Button fClose;
+    uint8_t sizeText = m_label.length();
+    short border{3};
+    short charW{5};
 
-    if (location == itself)
+    int x{m_x + outerBoundaryForm}, y{m_y + outerBoundaryForm + 6 /* offset by Y */};
+
+
+    if ((_joy.posX0 >= x && _joy.posX0 <= (x + (sizeText * charW) + border + border)) && (_joy.posY0 >= y && _joy.posY0 <= y + 13))
     {
-        while(1)
+        u8g2.drawBox(x, y, (sizeText * charW) + border + border, 13);
+        if (_joy.pressKeyENTER() == true)
         {
-            u8g2.clearBuffer(); // -->
-
-            if (fClose.button2("CLOSE", 205, outerBoundaryForm - 12 + 6, _joy.posX0, _joy.posY0))
-            {
-                break;
-            }
-
-            u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
-            _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 1 + 6, 10, 5);
-
-                for (const auto &element : m_elements)
-                {
-                    element->fShow();
-                }
-            
-            // cursor
-            _joy.updatePositionXY(20);
-            _crs.cursor(true, _joy.posX0, _joy.posY0);
-
-            u8g2.sendBuffer(); // <--
+            m_onClick(); 
         }
     }
-
-    if (location == together)
+    else
     {
-        while (1)
-        {
-            if (fClose.button2("CLOSE", 205, outerBoundaryForm - 12 + 6, _joy.posX0, _joy.posY0))
-            {
-                break;
-            }
-
-            u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
-            _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 1 + 6, 10, 5);
-                //_textBoxForm.textBox(text, _textBoxForm.noBorder, 100, 196, 10, 5, outerBoundaryForm + innerBoundaryForm, outerBoundaryForm + innerBoundaryForm + 6);
-
-                for (const auto &element : m_elements)
-                {
-                    element->fShow();
-                }
-
-            // cursor
-            _joy.updatePositionXY(20);
-            _crs.cursor(true, _joy.posX0, _joy.posY0);
-
-            u8g2.sendBuffer(); // -->
-        }
+        u8g2.drawFrame(x, y, (sizeText * charW) + border + border, 13);
     }
+
+    u8g2.setFontMode(1);
+
+    u8g2.setDrawColor(2);
+    _gfx.print(m_label, x + border, y + 7 /* font H */ + border, 8, charW);
+    u8g2.setDrawColor(1);
+
+    u8g2.setFontMode(1);
 }
 
 
 
+/* Form */
+void Form::showForm(const String &title) const
+{
+    Button fClose;
 
+    while (1)
+    {
+        u8g2.clearBuffer(); // -->
 
+            if (fClose.button2("CLOSE", 205, outerBoundaryForm - 12 + 6, _joy.posX0, _joy.posY0))
+            {
+                break;
+            }
 
+            u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
+            _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 1 + 6, 10, 5);
+
+                for (const auto &element : m_elements)
+                {
+                    element->fShow();
+                }
+
+            // cursor
+            _joy.updatePositionXY(20);
+            _crs.cursor(true, _joy.posX0, _joy.posY0);
+
+        u8g2.sendBuffer(); // <--
+    }
+}
 
 //====================================================
 /* Application */
@@ -1947,11 +1948,10 @@ void _myTablet()
     //_form.form("Hello friends!", "Platform Sozvesdiye\nCreate by Alexksander Savushkin\n01/2025", _form.itself);
 
     Form form1;
-    form1.addText("hello", 5, 5);
-    form1.addText("hello2 hello3\nhello4 hello5 hello6", 5, 50);
+    form1.addText("My text, hello)", 5, 5);
+    form1.addButton("My Button", nullFunction, 5, 20);
 
-    form1.showForm("Test", form1.itself);
-
+    form1.showForm("My Form");
 }
 
 

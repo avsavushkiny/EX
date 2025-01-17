@@ -107,15 +107,18 @@ class fButton : public fElement
 public:
     fButton(const String& label, void (*onClick)(), int x, int y) : m_label(label), m_onClick(onClick), m_x(x), m_y(y) {}
 
-    void fShow() const override {}
+    void fShow() const override;
 
-    void fClick()
+    void fClick() //delete const in fShow
     {
         if (m_onClick != nullptr)
             m_onClick();
     }
 
 private:
+    short const outerBoundaryForm {20};
+    short const innerBoundaryForm {5};
+
     String m_label;
     void (*m_onClick)(void);
     int m_x;
@@ -156,8 +159,6 @@ public:
         }
     }
 
-    enum formLocation {together, itself};
-    
     void addButton(const String& label, void (*onClick)(), int x, int y)
     {
         m_elements.push_back(new fButton(label, onClick, x, y));
@@ -168,7 +169,7 @@ public:
         m_elements.push_back(new fText(text, x, y));
     }
 
-    void showForm(const String& title, formLocation location) const;
+    void showForm(const String& title) const;
 };
 
 
