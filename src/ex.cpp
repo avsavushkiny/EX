@@ -150,7 +150,7 @@ void Graphics::initializationSystem()
     u8g2.begin(); Serial.begin(9600);
     
     /* setting display, contrast */
-    u8g2.setContrast(150); //143//150
+    u8g2.setContrast(145); //143//150
 
     /* setting the resolution of the analog-to-digital converter */
     analogReadResolution(RESOLUTION_ADC);
