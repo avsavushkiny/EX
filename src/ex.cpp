@@ -1845,6 +1845,87 @@ void fButton::fShow() const
     u8g2.setFontMode(1);
 }
 
+/* Text-box */
+void fTextBox::fShow() const
+{
+    short border{5}; short border2{8}; // size border
+    int count{0}; int countChars{0}; int maxChar{0}; // for counting characters
+    int line{1}; // there will always be at least one line of text in the text
+    int numberOfCharacters{0}; // количество символов
+    short charH{10}, charW{5};
+    int ch{0}, ln{0}; int xx{m_x + outerBoundaryForm}, yy{m_y + outerBoundaryForm + 6 /* offset by Y */}; 
+    
+    if (m_borderStyle == noBorder){ /* we don't draw anything */ }
+    if (m_borderStyle == oneLine)
+    {
+        u8g2.drawFrame(xx, yy, m_sizeW, m_sizeH);
+    }
+    if (m_borderStyle == twoLine)
+    {
+        u8g2.drawFrame(xx, yy, m_sizeW, m_sizeH);
+        u8g2.drawFrame(xx - 3, yy - 3, m_sizeW + 6, m_sizeH + 6);
+    }
+    if (m_borderStyle == shadow)
+    {
+        u8g2.drawFrame(xx, yy, m_sizeW, m_sizeH);
+
+        u8g2.drawHLine(xx + 1, yy + m_sizeH, m_sizeW);
+        u8g2.drawHLine(xx + 2, yy + m_sizeH + 1, m_sizeW);
+
+        u8g2.drawVLine(xx + m_sizeW, yy + 1, m_sizeH);
+        u8g2.drawVLine(xx + m_sizeW + 1, yy + 2, m_sizeH);
+    }
+    if (m_borderStyle == shadowNoFrame)
+    {
+        u8g2.drawHLine(xx + 1, yy + m_sizeH, m_sizeW);
+        u8g2.drawHLine(xx + 2, yy + m_sizeH + 1, m_sizeW);
+
+        u8g2.drawVLine(xx + m_sizeW, yy + 1, m_sizeH);
+        u8g2.drawVLine(xx + m_sizeW + 1, yy + 2, m_sizeH);
+    }
+    
+    
+    for (char c : m_text)
+    {
+        numberOfCharacters++;
+    }
+
+    int numberOfCharactersLineFrame = (m_sizeW - border - border) / charW; // количество символов в строчке Фрейма
+    int numberOfLines = numberOfCharacters / numberOfCharactersLineFrame; // количество строк
+    int numberOfLinesFrame = (m_sizeH - border - border) / charH; // количество строчек в Фрейме
+    
+    for (char c : m_text)
+    {
+        u8g2.setFont(u8g2_font_6x10_tr);
+        u8g2.setCursor(xx + border, yy + charH + border);
+        u8g2.print(c);
+
+        // adds dots if frame is full
+        /*if ((ln >= numberOfLinesFrame - 1) && (numberOfCharactersLineFrame == (ch + 3)))
+        {
+            u8g2.print("...");
+        }
+        else u8g2.print(c);*/
+        
+        xx += charW;
+        ch++;
+
+        if (ch >= numberOfCharactersLineFrame)
+        {
+            yy += charH; ch = 0; xx = m_x + outerBoundaryForm; ln++;
+        }
+
+        if (ln >= numberOfLinesFrame)
+        {
+            // draw glyph
+            /*u8g2.setFont(u8g2_font_unifont_t_symbols);
+            u8g2.drawGlyph(x + sizeW - 8, y + sizeH + 2, 0x2198);*/
+
+            u8g2.drawTriangle(xx + m_sizeW, yy + m_sizeH - 8, xx + m_sizeW, yy + m_sizeH, xx + m_sizeW - 8, yy + m_sizeH);
+            break;
+        }
+    }
+}
 
 
 /* Form */
@@ -1950,6 +2031,7 @@ void _myTablet()
     Form form1;
     form1.addText("My text, hello)", 5, 5);
     form1.addButton("My Button", nullFunction, 5, 20);
+    form1.addTextBox("Test text for output in the Form", BorderStyle::oneLine, 100, 30, 5, 40);
 
     form1.showForm("My Form");
 }

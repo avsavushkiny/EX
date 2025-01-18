@@ -143,6 +143,24 @@ private:
     int m_y;
 };
 
+enum BorderStyle {noBorder, oneLine, twoLine, shadow, shadowNoFrame};
+
+class fTextBox : public fElement
+{
+public:
+    fTextBox(const String& text, BorderStyle borderStyle, int sizeW, int sizeH, int x, int y) : m_text(text), m_borderStyle(borderStyle), m_sizeW(sizeW), m_sizeH(sizeH), m_x(x), m_y(y) {}
+
+    void fShow() const override;
+
+private:
+    short const outerBoundaryForm {20};
+    short const innerBoundaryForm {5};
+
+    BorderStyle m_borderStyle;
+    String m_text;
+    int m_x, m_y;
+    int m_sizeW, m_sizeH;
+};
 
 
 class Form
@@ -169,6 +187,11 @@ public:
     void addText(const String& text, int x, int y)
     {
         m_elements.push_back(new fText(text, x, y));
+    }
+
+    void addTextBox(const String& text, BorderStyle borderStyle, int sizeW, int sizeH, int x, int y)
+    {
+        m_elements.push_back(new fTextBox(text, borderStyle, sizeW, sizeH, x, y));
     }
 
     void showForm(const String& title) const;
