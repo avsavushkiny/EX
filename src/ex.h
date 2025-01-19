@@ -96,20 +96,20 @@ namespace
     Dev3
     Form1
 */
-class fElement
+class FormElement
 {
 public:
-    virtual void fShow() const = 0;
+    virtual void Show() const = 0;
 };
 
-class fButton : public fElement
+class FormButton : public FormElement
 {
 public:
-    fButton(const String& label, void (*onClick)(), int x, int y) : m_label(label), m_onClick(onClick), m_x(x), m_y(y) {}
+    FormButton(const String& label, void (*onClick)(), int x, int y) : m_label(label), m_onClick(onClick), m_x(x), m_y(y) {}
 
-    void fShow() const override;
+    void Show() const override;
 
-    void fClick() //delete const in fShow
+    void Click() //delete const in fShow
     {
         if (m_onClick != nullptr)
             m_onClick();
@@ -125,12 +125,12 @@ private:
     int m_y;
 };
 
-class fText : public fElement
+class FormText : public FormElement
 {
 public:
-    fText(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
+    FormText(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
 
-    void fShow() const override;
+    void Show() const override;
 
 private:
     short const outerBoundaryForm {20};
@@ -145,12 +145,29 @@ private:
 
 enum BorderStyle {noBorder, oneLine, twoLine, shadow, shadowNoFrame};
 
-class fTextBox : public fElement
+class FormTextBox : public FormElement
 {
 public:
-    fTextBox(const String& text, BorderStyle borderStyle, int sizeW, int sizeH, int x, int y) : m_text(text), m_borderStyle(borderStyle), m_sizeW(sizeW), m_sizeH(sizeH), m_x(x), m_y(y) {}
+    FormTextBox(const String& text, BorderStyle borderStyle, int sizeW, int sizeH, int x, int y) : m_text(text), m_borderStyle(borderStyle), m_sizeW(sizeW), m_sizeH(sizeH), m_x(x), m_y(y) {}
 
-    void fShow() const override;
+    void Show() const override;
+
+private:
+    short const outerBoundaryForm {20};
+    short const innerBoundaryForm {5};
+
+    BorderStyle m_borderStyle;
+    String m_text;
+    int m_x, m_y;
+    int m_sizeW, m_sizeH;
+};
+
+class FormLabel : public FormElement
+{
+public:
+    FormLabel(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
+
+    void Show() const override;
 
 private:
     short const outerBoundaryForm {20};
@@ -166,14 +183,14 @@ private:
 class Form
 {
 private:
-    std::vector<fElement*> m_elements;
+    std::vector<FormElement*> m_elements;
 
     short const outerBoundaryForm {20};
     short const innerBoundaryForm {5};
 public:
     ~Form()
     {
-        for (fElement* element : m_elements)
+        for (FormElement* element : m_elements)
         {
             delete element;
         }
@@ -181,17 +198,17 @@ public:
 
     void addButton(const String& label, void (*onClick)(), int x, int y)
     {
-        m_elements.push_back(new fButton(label, onClick, x, y));
+        m_elements.push_back(new FormButton(label, onClick, x, y));
     }
 
     void addText(const String& text, int x, int y)
     {
-        m_elements.push_back(new fText(text, x, y));
+        m_elements.push_back(new FormText(text, x, y));
     }
 
     void addTextBox(const String& text, BorderStyle borderStyle, int sizeW, int sizeH, int x, int y)
     {
-        m_elements.push_back(new fTextBox(text, borderStyle, sizeW, sizeH, x, y));
+        m_elements.push_back(new FormTextBox(text, borderStyle, sizeW, sizeH, x, y));
     }
 
     void showForm(const String& title) const;

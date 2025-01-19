@@ -1807,14 +1807,14 @@ int xTray{256}, yTray{159}, borderTray{5};
     Form1
 */
 /* Text */
-void fText::fShow() const
+void FormText::Show() const
 {
     // 6px - offset by Y
     _gfx.print(m_text, outerBoundaryForm + m_x, outerBoundaryForm + 6 + highChar + m_y, 10, 5);
 }
 
 /* Button */
-void fButton::fShow() const
+void FormButton::Show() const
 {
     uint8_t sizeText = m_label.length();
     short border{3};
@@ -1846,11 +1846,11 @@ void fButton::fShow() const
 }
 
 /* Text-box */
-void fTextBox::fShow() const
+void FormTextBox::Show() const
 {
     short border{5}; short border2{8}; // size border
     int count{0}; int countChars{0}; int maxChar{0}; // for counting characters
-    int line{1}; // there will always be at least one line of text in the text
+    short line{1}; // there will always be at least one line of text in the text
     int numberOfCharacters{0}; // количество символов
     short charH{10}, charW{5};
     int ch{0}, ln{0}; int xx{m_x + outerBoundaryForm}, yy{m_y + outerBoundaryForm + 6 /* offset by Y */}; 
@@ -1915,16 +1915,22 @@ void fTextBox::fShow() const
             yy += charH; ch = 0; xx = m_x + outerBoundaryForm; ln++;
         }
 
-        if (ln >= numberOfLinesFrame)
-        {
-            // draw glyph
-            /*u8g2.setFont(u8g2_font_unifont_t_symbols);
-            u8g2.drawGlyph(x + sizeW - 8, y + sizeH + 2, 0x2198);*/
+        // if (ln >= numberOfLinesFrame)
+        // {
+        //     // draw glyph
+        //     /*u8g2.setFont(u8g2_font_unifont_t_symbols);
+        //     u8g2.drawGlyph(x + sizeW - 8, y + sizeH + 2, 0x2198);*/
 
-            u8g2.drawTriangle(xx + m_sizeW, yy + m_sizeH - 8, xx + m_sizeW, yy + m_sizeH, xx + m_sizeW - 8, yy + m_sizeH);
-            break;
-        }
+        //     u8g2.drawTriangle(xx + m_sizeW, yy + m_sizeH - 8, xx + m_sizeW, yy + m_sizeH, xx + m_sizeW - 8, yy + m_sizeH);
+        //     break;
+        // }
     }
+}
+
+/* Label */
+void FormLabel::Show() const
+{
+
 }
 
 
@@ -1947,7 +1953,7 @@ void Form::showForm(const String &title) const
 
                 for (const auto &element : m_elements)
                 {
-                    element->fShow();
+                    element->Show();
                 }
 
             // cursor
@@ -1957,6 +1963,9 @@ void Form::showForm(const String &title) const
         u8g2.sendBuffer(); // <--
     }
 }
+
+
+
 
 //====================================================
 /* Application */
