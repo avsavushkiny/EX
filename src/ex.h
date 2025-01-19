@@ -94,7 +94,7 @@ namespace
 
 /*
     Dev3
-    Form1
+    Form
 */
 class FormElement
 {
@@ -179,7 +179,6 @@ private:
     int m_sizeW, m_sizeH;
 };
 
-
 class Form
 {
 private:
@@ -219,6 +218,139 @@ public:
     void showForm(const String& title) const;
 };
 
+
+
+/*
+    Dev4
+    Form
+*/
+class eElement
+{
+public:
+    virtual ~eElement(){}
+    virtual void show() = 0;
+};
+
+class eButton : eElement
+{
+public:    
+    eButton(const String& label, void (*onClick)(), int x, int y) : m_label(label), m_onClick(onClick), m_x(x), m_y(y) {}
+
+    void setLabel(const String &new_label) const
+    {
+        m_label = new_label;
+    }
+
+    // void show() override;
+
+private:
+    String m_label; 
+    void (*m_onClick)(void);
+    short const outerBoundaryForm{20};
+    int m_x, m_y;
+};
+
+class eText : public eElement
+{
+public:
+    eText(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
+
+    void setText(const String &new_text) const
+    {
+        m_text = new_text;
+    }
+
+    String getText() const
+    {
+        return m_text;
+    }
+
+    // void show() override;
+
+private:
+    String m_text;
+    short const outerBoundaryForm{20};
+    int m_x, m_y;
+};
+
+enum eBorderStyle {noBorder, oneLine, twoLine, shadow, shadowNoFrame};
+class eTextBox : public eElement
+{  
+public:
+    eTextBox(const String& text, BorderStyle borderStyle, int sizeW, int sizeH, int x, int y) : m_text(text), m_borderStyle(borderStyle), m_sizeW(sizeW), m_sizeH(sizeH), m_x(x), m_y(y) {}
+
+    void setText(const String &new_text) const
+    {
+        m_text = new_text;
+    }
+
+    String getText() const
+    {
+        return m_text;
+    }
+
+    // void show() override;
+
+private:
+    eBorderStyle m_borderStyle;
+    String m_text;
+    short const outerBoundaryForm{20};
+    int m_x, m_y;
+    int m_sizeW, m_sizeH;
+};
+
+class eLabel : public eElement
+{
+public:
+    eLabel(const String& text, void (*onClick)(), int x, int y) : m_text(text), m_onClick(onClick), m_x(x), m_y(y) {}
+
+    void setText(const String &new_text) const
+    {
+        m_text = new_text;
+    }
+
+    String getText() const
+    {
+        return m_text;
+    }
+
+    // void show() override;
+
+private:
+    void (*m_onClick)(void);
+    short const outerBoundaryForm{20};
+    String m_text;
+    int m_x, m_y;
+    int m_sizeW, m_sizeH;
+};
+
+class eForm
+{
+public:
+    virtual ~eForm(){}
+
+    void addElement(eElement *element)
+    {
+        elements.push_back(element);
+    }
+
+    virtual void showForm() = 0;
+
+protected:
+    std::vector<eElement*> elements;
+};
+
+class exForm : public eForm
+{
+public:
+    void showForm() override
+    {
+        for (auto element : elements)
+        {
+            element->show();
+        }
+    }
+};
 
 
 
