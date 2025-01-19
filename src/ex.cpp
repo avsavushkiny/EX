@@ -1930,9 +1930,44 @@ void FormTextBox::Show() const
 /* Label */
 void FormLabel::Show() const
 {
+    uint8_t sizeText = m_text.length();
+    uint8_t yy{}, chi{5}, lii{8}; int x{m_x + outerBoundaryForm}, y{m_y + outerBoundaryForm + 6 /* offset by Y */};
 
+    if ((_joy.posX0 >= x && _joy.posX0 <= (x + (sizeText * chi))) && (_joy.posY0 >= y - (lii + 2) && _joy.posY0 <= y + 2))
+    {
+        u8g2.setDrawColor(1);//1
+        u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1);
+
+        if (_joy.pressKeyENTER() == true)
+        {
+            m_onClick();
+        }
+    }
+    else
+    {
+        u8g2.setDrawColor(1);
+    }
+
+    u8g2.setCursor(x + 3, y);
+    u8g2.setFont(u8g2_font_6x10_tr);
+    
+    u8g2.setFontMode(1);
+    u8g2.setDrawColor(2);//2
+    
+    for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
+    {
+        u8g2.setCursor(xx + x, yy + y);
+        u8g2.print(m_text[i]);
+
+        if (m_text[i] == '\n')
+        {
+            yy += lii; // 10
+            xx = -chi; // 6
+        }
+    }
+
+    u8g2.setFontMode(0); //0-activate not-transparent font mode
 }
-
 
 /* Form */
 void Form::showForm(const String &title) const
@@ -2041,6 +2076,7 @@ void _myTablet()
     form1.addText("My text, hello)", 5, 5);
     form1.addButton("My Button", nullFunction, 5, 20);
     form1.addTextBox("Test text for output in the Form", BorderStyle::oneLine, 100, 30, 5, 40);
+    form1.addLabel("Label with link", nullFunction, 5, 85);
 
     form1.showForm("My Form");
 }

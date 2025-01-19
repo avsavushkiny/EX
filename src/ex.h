@@ -165,7 +165,7 @@ private:
 class FormLabel : public FormElement
 {
 public:
-    FormLabel(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
+    FormLabel(const String& text, void (*onClick)(), int x, int y) : m_text(text), m_onClick(onClick), m_x(x), m_y(y) {}
 
     void Show() const override;
 
@@ -173,7 +173,7 @@ private:
     short const outerBoundaryForm {20};
     short const innerBoundaryForm {5};
 
-    BorderStyle m_borderStyle;
+    void (*m_onClick)(void);
     String m_text;
     int m_x, m_y;
     int m_sizeW, m_sizeH;
@@ -209,6 +209,11 @@ public:
     void addTextBox(const String& text, BorderStyle borderStyle, int sizeW, int sizeH, int x, int y)
     {
         m_elements.push_back(new FormTextBox(text, borderStyle, sizeW, sizeH, x, y));
+    }
+
+    void addLabel(const String& text, void (*onClick)(), int x, int y)
+    {
+        m_elements.push_back(new FormLabel(text, onClick, x, y));
     }
 
     void showForm(const String& title) const;
