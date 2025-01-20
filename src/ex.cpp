@@ -67,7 +67,7 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "ntp.apple.com", 10800, 60000);
 
 /* Prototype function */
-void null();
+void nullFunction();
 //vector only
 void addTasksForSystems();
 
@@ -762,6 +762,9 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
   if ((xCursor >= x && xCursor <= (x + 32)) && (yCursor >= y && yCursor <= (y + 32)))
   {
     u8g2.drawFrame(x, y, 32, 32);
+
+    Label labelNameShortcut;
+    labelNameShortcut.label2(name, nullFunction, _joy.posX0 + 5, _joy.posY0);
     
     BUFFER_STRING = name;
     
@@ -929,7 +932,51 @@ bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*
 
     return false;
 }
+/* v200125 */
+bool Label::label2(String text, void (*f)(void), uint8_t x, uint8_t y)
+{
+    uint8_t sizeText = text.length();
+    uint8_t yy{}, lii{8}, chi{5};
 
+    // if ((_joy.posX0 >= x && _joy.posX0 <= (x + (sizeText * chi))) && (_joy.posY0 >= y - (lii + 2) && _joy.posY0 <= y + 2))
+    // {
+        u8g2.setDrawColor(1);
+        u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1);
+
+        BUFFER_STRING = text;
+
+        if (_joy.pressKeyENTER() == true)
+        {
+            f();
+            return true;
+        }
+    // }
+    // else
+    // {
+        // u8g2.setDrawColor(1);
+    // }
+
+    u8g2.setCursor(x + 3, y);
+    u8g2.setFont(u8g2_font_6x10_tr);
+    u8g2.setFontMode(1);
+    u8g2.setDrawColor(2);
+    
+    for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
+    {
+        u8g2.setCursor(xx + x, yy + y);
+        u8g2.print(text[i]);
+
+        if (text[i] == '\n')
+        {
+            yy += lii; // 10
+            xx = -chi; // 6
+        }
+    }
+
+    u8g2.setFontMode(0);
+
+    return false;
+}
 
 /* 
     class
