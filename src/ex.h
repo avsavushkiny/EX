@@ -19,7 +19,6 @@ extern U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2;
 extern const uint8_t gears_bits[];
 extern int H_LCD, W_LCD;
 
-extern void clearCommandTerminal();
 
 class Joystick
 {
