@@ -228,7 +228,7 @@ class eElement
 {
 public:
     virtual ~eElement(){}
-    virtual void show() = 0;
+    virtual void show() const = 0;
 };
 
 class eButton : eElement
@@ -236,12 +236,12 @@ class eButton : eElement
 public:    
     eButton(const String& label, void (*onClick)(), int x, int y) : m_label(label), m_onClick(onClick), m_x(x), m_y(y) {}
 
-    void setLabel(const String &new_label) const
+    void setLabel(const String &new_label)
     {
         m_label = new_label;
     }
 
-    // void show() override;
+    void show() const override;
 
 private:
     String m_label; 
@@ -255,7 +255,7 @@ class eText : public eElement
 public:
     eText(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
 
-    void setText(const String &new_text) const
+    void setText(const String &new_text)
     {
         m_text = new_text;
     }
@@ -265,21 +265,22 @@ public:
         return m_text;
     }
 
-    // void show() override;
+    void show() const override;
 
 private:
     String m_text;
+    short const highChar{10};
     short const outerBoundaryForm{20};
     int m_x, m_y;
 };
 
-enum eBorderStyle {noBorder, oneLine, twoLine, shadow, shadowNoFrame};
+// enum eBorderStyle {noBorder, oneLine, twoLine, shadow, shadowNoFrame};
 class eTextBox : public eElement
 {  
 public:
     eTextBox(const String& text, BorderStyle borderStyle, int sizeW, int sizeH, int x, int y) : m_text(text), m_borderStyle(borderStyle), m_sizeW(sizeW), m_sizeH(sizeH), m_x(x), m_y(y) {}
 
-    void setText(const String &new_text) const
+    void setText(const String &new_text)
     {
         m_text = new_text;
     }
@@ -289,10 +290,10 @@ public:
         return m_text;
     }
 
-    // void show() override;
+    void show() const override;
 
 private:
-    eBorderStyle m_borderStyle;
+    BorderStyle m_borderStyle;
     String m_text;
     short const outerBoundaryForm{20};
     int m_x, m_y;
@@ -304,7 +305,7 @@ class eLabel : public eElement
 public:
     eLabel(const String& text, void (*onClick)(), int x, int y) : m_text(text), m_onClick(onClick), m_x(x), m_y(y) {}
 
-    void setText(const String &new_text) const
+    void setText(const String &new_text)
     {
         m_text = new_text;
     }
@@ -314,7 +315,7 @@ public:
         return m_text;
     }
 
-    // void show() override;
+    void show() const override;
 
 private:
     void (*m_onClick)(void);
@@ -334,7 +335,7 @@ public:
         elements.push_back(element);
     }
 
-    virtual void showForm() = 0;
+    virtual void showForm(const String& title) const = 0;
 
 protected:
     std::vector<eElement*> elements;
@@ -343,13 +344,17 @@ protected:
 class exForm : public eForm
 {
 public:
-    void showForm() override
-    {
-        for (auto element : elements)
-        {
-            element->show();
-        }
-    }
+    // void showForm() const override
+    // {
+    //     for (auto element : elements)
+    //     {
+    //         element->show();
+    //     }
+    // }
+    void showForm(const String& title) const override;
+
+private:
+    short const outerBoundaryForm{20};
 };
 
 
