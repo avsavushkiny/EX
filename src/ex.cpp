@@ -2274,11 +2274,19 @@ void _myForm()
     exForm form2;
 
     eText *text1 = new eText("My text, hello)", 5, 5);
+    eButton *buttons1 = new eButton("My Button", nullFunction, 5, 20);
+    eTextBox *textBox1 = new eTextBox("Test text for output in the Form", BorderStyle::shadow, 100, 30, 5, 40);
+    eLabel *label1 = new eLabel("Label with link", nullFunction, 5, 85);
+    
+    
     form2.addElement(text1);
+    form2.addElement(buttons1);
+    form2.addElement(textBox1);
+    form2.addElement(label1);
 
-    form2.showForm();
+    form2.showForm("My eForm");
 
-    delete text1;
+    delete text1; delete buttons1; delete textBox1; delete label1;
 }
 
 

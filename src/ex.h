@@ -231,7 +231,7 @@ public:
     virtual void show() const = 0;
 };
 
-class eButton : eElement
+class eButton : public eElement
 {
 public:    
     eButton(const String& label, void (*onClick)(), int x, int y) : m_label(label), m_onClick(onClick), m_x(x), m_y(y) {}
