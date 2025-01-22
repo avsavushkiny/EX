@@ -44,8 +44,10 @@ extern int H_LCD, W_LCD;
 extern void _clearCommandTerminal();
 
 /*
-    Dev3
-    Dispatcher tasks
+    Task-dispatcher
+    Dispatcher tasks, vector
+    [01/2025, Alexander Savushkin]
+
 */
 /* Task Settings */
 struct TaskArguments
@@ -89,8 +91,6 @@ namespace
     std::vector<TaskArguments> tasks;     // Vector of main tasks
     std::vector<TaskArguments> tasksTray; // Notification bar task vector
 };
-
-
 
 /*
     Dev3
@@ -218,19 +218,19 @@ public:
     void showForm(const String& title) const;
 };
 
-
-
 /*
-    Dev4
-    Form
+    eForm
+    Visual Form Builder
+    [01/2025, Alexander Savushkin]
 */
+/* Basic interface for all form elements */
 class eElement
 {
 public:
     virtual ~eElement(){}
     virtual void show() const = 0;
 };
-
+/* Button */
 class eButton : public eElement
 {
 public:    
@@ -249,7 +249,7 @@ private:
     short const outerBoundaryForm{20};
     int m_x, m_y;
 };
-
+/* Text multiline */
 class eText : public eElement
 {
 public:
@@ -273,8 +273,7 @@ private:
     short const outerBoundaryForm{20};
     int m_x, m_y;
 };
-
-// enum eBorderStyle {noBorder, oneLine, twoLine, shadow, shadowNoFrame};
+/* Text-box */
 class eTextBox : public eElement
 {  
 public:
@@ -299,7 +298,7 @@ private:
     int m_x, m_y;
     int m_sizeW, m_sizeH;
 };
-
+/* Label to link */
 class eLabel : public eElement
 {
 public:
@@ -324,7 +323,7 @@ private:
     int m_x, m_y;
     int m_sizeW, m_sizeH;
 };
-
+/* Abstract base class eForm */
 class eForm
 {
 public:
@@ -340,7 +339,7 @@ public:
 protected:
     std::vector<eElement*> elements;
 };
-
+/* Implementation of a concrete class exForm */
 class exForm : public eForm
 {
 public:
@@ -357,7 +356,37 @@ private:
     short const outerBoundaryForm{20};
 };
 
+/*
+    Text-buffer
+    Storing a line of text on the stack
+    [01/2025, Alexander Savushkin]
+*/
+/* Base text buffer class */
+class TextBuffer
+{
+private:
+    std::stack<String> buffer;
 
+public:
+    /* put the line on the top of the stack */
+    void add(const String& text)
+    {
+        buffer.push(text);
+    }
+
+    /* extract the top line, display and delete it */
+    String get()
+    {
+        // if the stack is empty, then return an empty line
+        if (buffer.empty()) return "";
+        // pop the top element from the stack
+        String result = buffer.top();
+        // remove the top element from the stack
+        buffer.pop();
+        // return the line
+        return result;
+    }
+};
 
 
 

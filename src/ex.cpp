@@ -36,6 +36,7 @@
 #include <vector>
 #include <functional>
 #include <algorithm>
+#include <stack>
 
 //version Library and Text
 const int8_t VERSION_LIB[] = {0, 0, 3};
