@@ -36,36 +36,28 @@
 #include <vector>
 #include <functional>
 #include <algorithm>
-#include <stack>
 
 //version Library and Text
 const int8_t VERSION_LIB[] = {0, 0, 3};
 
 Graphics _gfx; 
 Timer _delayCursor, _trm0, _trm1, _stop, _timerUpdateClock, _fps; 
-Application _app; 
+ 
 Joystick _joy; 
 Shortcut _shortcutDesktop, _wifi;
 Cursor _crs; 
 PowerSave _pwsDeep; 
 Interface _mess; 
 Button _ok, _no, _collapse, _expand, _close, _ledControl;
-TimeNTP _timentp; Task _task;
+
 Label _labelClock, _labelBattery, _labelWifi, _taskList;
 TextBox _textBox;
 
 TaskDispatcher td;
 
-/* WIFI */
-bool stateWifiSetup = false;
-bool stateWifi = false;
 
 /* LED control */
 bool systemStateLedControl = true; bool flagStateLedControl = false;
-
-/* Time NTP*/
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "ntp.apple.com", 10800, 60000);
 
 /* Prototype function */
 void nullFunction();
@@ -334,6 +326,22 @@ bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
         u8g2.setDrawColor(1);  //0-white 1-black 2-inversion
         u8g2.setBitmapMode(1); //0-non transparent 1-transparent
         u8g2.drawXBMP(xCursor, yCursor, cursor_w, cursor_h, cursor_bits);
+        u8g2.setDrawColor(1);
+        u8g2.setBitmapMode(0);
+        return true;
+    }
+    else
+        return false;
+}
+/* displaying the cursor on the screen */
+bool Cursor::cursor(bool stateCursor)
+{
+    if (stateCursor == true)
+    {
+        u8g2.setDrawColor(1);  //0-white 1-black 2-inversion
+        u8g2.setBitmapMode(1); //0-non transparent 1-transparent
+        _joy.updatePositionXY();
+        u8g2.drawXBMP(_joy.posX0, _joy.posY0, cursor_w, cursor_h, cursor_bits);
         u8g2.setDrawColor(1);
         u8g2.setBitmapMode(0);
         return true;
@@ -1669,7 +1677,6 @@ void PowerSave::sleepDeep(bool state, uint timeUntil)
   }
 }
 
-
 /* 
     class
     Melody
@@ -1835,24 +1842,13 @@ void Melody::song(listMelody num)
     }
 }
 
-
 /* Null function */
 void nullFunction(){}
 
-
-/* Task. Taskbar-area */
-int xTray{256}, yTray{159}, borderTray{5};
-
-
-
-
-
-
-
-
 /*
-    Dev3
     Form
+    Visual Form Builder
+    [01/2025, Alexander Savushkin]
 */
 /* Text */
 void FormText::Show() const
@@ -2013,7 +2009,7 @@ void FormLabel::Show() const
 
     u8g2.setFontMode(0); //0-activate not-transparent font mode
 }
-/* Form */
+/* Form show */
 void Form::showForm(const String &title) const
 {
     Button fClose;
@@ -2043,10 +2039,10 @@ void Form::showForm(const String &title) const
     }
 }
 
-
 /*
-    Dev4
-    Form
+    eForm
+    Visual eForm Builder
+    [01/2025, Alexander Savushkin]
 */
 /* eButton */
 void eButton::show() const
@@ -2239,35 +2235,6 @@ void exForm::showForm(const String& title) const
 
 
 //====================================================
-/* Application */
-/* my tray */
-void _myTray()
-{
-    u8g2.setDrawColor(1);
-    u8g2.drawHLine(0, 150, 256);
-    
-    //u8g2.setDrawColor(2);
-    //u8g2.drawBox(0,150,256,10);
-
-
-    xTray = 256;
-    
-    for (TaskArguments &_ta : tasks)
-    {
-        /*if (_ta.state == 3)
-        {
-            if (_ta.active == true)
-            {
-                //xTray += borderTray;
-                xTray -= borderTray + _ta.widthApp;
-                _ta.f();
-                //xTray -= command.widthApp;
-            }
-        }*/
-    }
-
-    u8g2.setDrawColor(1);
-}
 /* my desctop */
 void _myDesktop()
 {
@@ -2346,10 +2313,7 @@ void _myForm()
 
 
 
-void _myTestApp()
-{
 
-}
 
 
 void _viewTaskList()
@@ -2414,10 +2378,6 @@ void _viewTaskList()
     }*/
 }
 
-void _myTaskManager()
-{
-    
-}
 /* Clear all commands */
 void _clearCommandTerminal()
 {
@@ -2481,44 +2441,14 @@ void _systemRawADC()
     String text = "Coord X: " + (String)_joy.RAW_DATA_X0 + " Coord Y: " + (String)_joy.RAW_DATA_Y0;
     BUFFER_STRING = text; 
 }
-/* Task. clear buffer */
-void _clearBufferString()
-{
-    BUFFER_STRING = "";
-}
 /* Task. Reboot ESP32 */
 void _rebootBoard()
 {
     ESP.restart();
 }
 
-/* Tray */
-/* buffer */
-void _trayBuffer()
-{
-    //width 110px (22 chars)
-    u8g2.setDrawColor(1);
-    _gfx.print(BUFFER_STRING, 5, yTray, 8, 5);
-    _trm0.timer(_clearBufferString, 100); //clear text-buffer
-}
-/* Battery */
-int _t{};
-int dataRawBattery{};
-int _systemUpdateBattery()
-{
-    dataRawBattery = analogRead(PIN_BATTERY);
-    dataRawBattery = map(dataRawBattery, 1890, 2470, 0, 100);
 
-    return dataRawBattery;
-}
-int _systemBattery()
-{
-    if (_t >= 30000) _t = 30000;
-    _timerUpdateClock.timer(_systemUpdateBattery, _t); _t += 10000;
 
-    return dataRawBattery;
-}
-/* LED */
 /* Task. System LED control */
 void _flagLedControl()
 {
@@ -2539,29 +2469,7 @@ void _sustemLedControl()
     if (flagStateLedControl == true) _gfx.controlBacklight(true);
     else _gfx.controlBacklight(false);
 }
-void _trayBattery()
-{
-    //width 10px
-    _labelBattery.label((String)_systemBattery(), "Click to LED on/off", xTray, yTray, _flagLedControl, 8, 5, _joy.posX0, _joy.posY0);
-}
-/* FPS */
-uint8_t _FPS = 0; uint8_t _fpsCounter = 0; long int _fpsTime = millis();
-void _trayFps()
-{
-    //width 10px
-    _gfx.print((String)_FPS, xTray, yTray, 10, 6);
-    // get FPS
-    if ((millis() - _fpsTime) <= 1000)
-    {
-        _fpsCounter++;
-    }
-    else
-    {
-        _fpsTime = millis();
-        _FPS = _fpsCounter;
-        _fpsCounter = 0;
-    }
-}
+
 /* Cursor */
 void _systemCursor()
 {
@@ -2570,10 +2478,10 @@ void _systemCursor()
 }
 
 /*
-    Dev 3
-    Vector + Dispatcher tasks
+    Task-dispatcher
+    Dispatcher tasks, vector
+    [01/2025, Alexander Savushkin]
 */
-
 TaskArguments system0[] //0 systems, 1 desktopTask
 {
     {"systempowersave", _systemPowerSaveBoard, NULL, 0, 0, true},

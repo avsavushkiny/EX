@@ -32,6 +32,7 @@
  */
 
 #include <U8g2lib.h>
+#include <stack>
 
 #ifndef EX_H
 #define EX_H
@@ -47,7 +48,6 @@ extern void _clearCommandTerminal();
     Task-dispatcher
     Dispatcher tasks, vector
     [01/2025, Alexander Savushkin]
-
 */
 /* Task Settings */
 struct TaskArguments
@@ -93,15 +93,17 @@ namespace
 };
 
 /*
-    Dev3
     Form
+    Visual Form Builder
+    [01/2025, Alexander Savushkin]
 */
+/* Basic interface for all form elements */
 class FormElement
 {
 public:
     virtual void Show() const = 0;
 };
-
+/* Button */
 class FormButton : public FormElement
 {
 public:
@@ -124,7 +126,7 @@ private:
     int m_x;
     int m_y;
 };
-
+/* Text */
 class FormText : public FormElement
 {
 public:
@@ -142,9 +144,9 @@ private:
     int m_x;
     int m_y;
 };
-
+/* Border style, text-box */
 enum BorderStyle {noBorder, oneLine, twoLine, shadow, shadowNoFrame};
-
+/* Text-box */
 class FormTextBox : public FormElement
 {
 public:
@@ -161,7 +163,7 @@ private:
     int m_x, m_y;
     int m_sizeW, m_sizeH;
 };
-
+/* Label to link */
 class FormLabel : public FormElement
 {
 public:
@@ -178,7 +180,7 @@ private:
     int m_x, m_y;
     int m_sizeW, m_sizeH;
 };
-
+/* Implementation of a concrete class exForm */
 class Form
 {
 private:
@@ -220,7 +222,7 @@ public:
 
 /*
     eForm
-    Visual Form Builder
+    Visual eForm Builder
     [01/2025, Alexander Savushkin]
 */
 /* Basic interface for all form elements */
@@ -387,7 +389,6 @@ public:
         return result;
     }
 };
-
 
 
 /*
@@ -615,6 +616,7 @@ public:
     /* Cursor. If the stateCursor status is 1 - visible, if 0 - not visible.
        Determine the coordinates of the Cursor to interact with the selected Stick. */
     bool cursor(bool stateCursor, int xCursor, int yCursor);
+    bool cursor(bool stateCursor);
 };
 
 class PowerSave : Joystick
@@ -685,17 +687,6 @@ public:
 
 };
 
-class Application
-{
-    protected:
-    private:
-    public:
-
-    /* Applic */
-    void window(String name, int indexTask, void (*f1)(void), void (*f2)(void));
-    void window(String name, int indexTask, void (*f1)(void));
-};
-
 class Terminal
 {
 private:
@@ -704,22 +695,6 @@ public:
     //void terminal();
     void terminal2(); //vector only
     //void terminal(void(*f)());
-};
-
-class TimeNTP
-{
-private:
-public:
-
-};
-
-class Task
-{
-private:
-public:
-    void taskKill(int indexTask);
-    void taskRun(int indexTask);
-    void task(int indexTask);
 };
 
 #endif
