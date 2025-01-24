@@ -390,6 +390,50 @@ public:
     }
 };
 
+/*
+    Keyboard
+    Keyboard
+    [01/2025, Alexander Savushkin]
+*/
+class Keyboard
+{
+private:
+    int xKeyboard{25}, yKeyboard{100};
+public:
+    String textKeyboard;
+
+    void show();
+};
+
+
+/*
+    Trigger
+    Trigger
+    [01/2025, Alexander Savushkin]
+*/
+class Trigger {
+private:
+    bool m_value;
+
+public:
+    Trigger(bool value1, bool value2)
+    {
+        m_value = value1 && value2;
+    }
+
+    bool getValue() const
+    {
+        return m_value;
+    }
+};
+
+
+
+
+
+
+
+
 
 /*
     Dev1

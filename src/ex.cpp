@@ -29,10 +29,6 @@
 #include "ex.h"
 #include "ex_xbm.h"
 
-#include <WiFi.h>
-#include "NTPClient.h"
-#include <WiFiUdp.h>
-
 #include <vector>
 #include <functional>
 #include <algorithm>
@@ -2232,6 +2228,38 @@ void exForm::showForm(const String& title) const
     }
 }
 
+/*
+    Keyboard
+    Visual keyboard
+    [01/2025, Alexander Savushkin]
+*/
+void Keyboard::show()
+{
+    for (char i = 48; i <= 57; i++)
+    {
+        _gfx.print((String)i, xKeyboard, yKeyboard);
+        xKeyboard += 10;
+    } 
+}
+
+bool stateKeybordShow = false;
+void testKeyboardShow()
+{
+    Keyboard keyboard1;
+    
+    stateKeybordShow = true;
+    
+    if (stateKeybordShow == true)
+    {
+        keyboard1.show();
+    }
+
+    if (_joy.pressKeyEX() == true) stateKeybordShow = false;
+}
+
+
+
+
 
 
 //====================================================
@@ -2277,9 +2305,9 @@ void _myTablet()
 
     Form form1;
     form1.addText("My text, hello)", 5, 5);
-    form1.addButton("My Button", nullFunction, 5, 20);
-    form1.addTextBox("Test text for output in the Form", BorderStyle::oneLine, 100, 30, 5, 40);
-    form1.addLabel("Label with link", nullFunction, 5, 85);
+    form1.addButton("My Button", testKeyboardShow, 5, 20);
+    //form1.addTextBox("Test text for output in the Form", BorderStyle::oneLine, 100, 30, 5, 40);
+    // form1.addLabel("Label with link", nullFunction, 5, 85);
 
     form1.showForm("My Form");
 }
