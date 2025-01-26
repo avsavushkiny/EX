@@ -49,7 +49,7 @@ Button _ok, _no, _collapse, _expand, _close, _ledControl;
 Label _labelClock, _labelBattery, _labelWifi, _taskList;
 TextBox _textBox;
 
-TaskDispatcher td;
+TaskDispatcher td; TextBuffer textBuffer;
 
 
 /* LED control */
@@ -2075,6 +2075,9 @@ void eButton::show() const
 void eText::show() const
 {
     _gfx.print(m_text, outerBoundaryForm + m_x, outerBoundaryForm + 6 /* offset by Y */ + highChar + m_y, 10, 5);
+    
+    if (_joy.pressKeyB())
+    {}
 }
 /* eText-Box */
 void eTextBox::show() const
@@ -2256,6 +2259,13 @@ void testKeyboardShow()
 
     if (_joy.pressKeyEX() == true) stateKeybordShow = false;
 }
+
+
+
+
+
+
+
 
 
 

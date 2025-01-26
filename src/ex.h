@@ -428,6 +428,43 @@ public:
 };
 
 
+/*
+    Action-menu
+    Additional Actions Menu
+    [01/2025, Alexander Savushkin] 270125_0116
+*/
+class FormActionMenuElements
+{
+protected:
+    virtual void show() const = 0;
+};
+
+class FormActionMenuTextBox : FormActionMenuElements
+{
+private:
+    String fam_text;
+public:
+    FormActionMenuTextBox(const String& text) : fam_text(text) {}
+
+    void show() const override {};
+};
+
+class FormActionMenu
+{
+private:
+    std::vector<FormActionMenuElements*> fam_elements;
+public:
+    ~FormActionMenu()
+    {
+        for (FormActionMenuElements* elements : fam_elements)
+        {
+            delete elements;
+        }
+    }
+
+    void showActionMenu(const String& title) const {};
+};
+
 
 
 
