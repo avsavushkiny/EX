@@ -51,6 +51,10 @@ TextBox _textBox;
 
 TaskDispatcher td; TextBuffer textBuffer;
 
+/* Stack exForm */
+std::stack<exForm*> formsStack;
+//exFormsStack formsStack;
+
 
 /* LED control */
 bool systemStateLedControl = true; bool flagStateLedControl = false;
@@ -1673,6 +1677,7 @@ void PowerSave::sleepDeep(bool state, uint timeUntil)
   }
 }
 
+
 /* 
     class
     Melody
@@ -1840,6 +1845,7 @@ void Melody::song(listMelody num)
 
 /* Null function */
 void nullFunction(){}
+
 
 /*
     Form
@@ -2035,6 +2041,7 @@ void Form::showForm(const String &title) const
     }
 }
 
+
 /*
     eForm
     Visual eForm Builder
@@ -2202,17 +2209,17 @@ void eLabel::show() const
     u8g2.setFontMode(0); //0-activate not-transparent font mode
 }
 /* exForm show */
-void exForm::showForm(const String& title) const
+int exForm::showForm(const String& title) const
 {
     Button eClose;
 
-    while (1)
-    {
-        u8g2.clearBuffer(); // -->
+    // while (1)
+    // {
+        // u8g2.clearBuffer(); // -->
 
             if (eClose.button2("CLOSE", 205, outerBoundaryForm - 12 + 6, _joy.posX0, _joy.posY0))
             {
-                break;
+                return 1; // 1 - exit and delete form from stack
             }
 
             u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
@@ -2226,10 +2233,13 @@ void exForm::showForm(const String& title) const
             // cursor
             _joy.updatePositionXY(20);
             _crs.cursor(true, _joy.posX0, _joy.posY0);
+            
+            return 0;   // 0 - the form works
 
-        u8g2.sendBuffer(); // <--
-    }
+        // u8g2.sendBuffer(); // <--
+    // }
 }
+
 
 /*
     Keyboard
@@ -2324,7 +2334,8 @@ void _myTablet()
 
 void _myForm()
 {
-    exForm form2;
+    // exForm form2;
+    exForm* form2 = new exForm();
 
     eText *text1 = new eText("My text, hello)", 5, 5);
     eButton *buttons1 = new eButton("My Button", nullFunction, 5, 20);
@@ -2332,18 +2343,38 @@ void _myForm()
     eLabel *label1 = new eLabel("Label with link", nullFunction, 5, 85);
     
     
-    form2.addElement(text1);
-    form2.addElement(buttons1);
-    form2.addElement(textBox1);
-    form2.addElement(label1);
+    form2->addElement(text1);
+    form2->addElement(buttons1);
+    form2->addElement(textBox1);
+    form2->addElement(label1);
 
-    form2.showForm("My eForm");
+    //form2.showForm("My eForm");
+    formsStack.push(form2);
 
-    delete text1; delete buttons1; delete textBox1; delete label1;
+     //delete text1; //delete buttons1; delete textBox1; delete label1; delete form2;
 }
 
+void _myForm3()
+{
+    // exForm form2;
+    exForm* form3 = new exForm();
 
+    eText *text3 = new eText("My Form3", 5, 5);
+    eButton *buttons3 = new eButton("My Button Form3", nullFunction, 5, 20);
+    eTextBox *textBox3 = new eTextBox("Test text for output in the Form3", BorderStyle::shadow, 100, 30, 5, 40);
+    eLabel *label3 = new eLabel("Label with link, Form3", nullFunction, 5, 85);
+    
+    
+    form3->addElement(text3);
+    form3->addElement(buttons3);
+    form3->addElement(textBox3);
+    form3->addElement(label3);
 
+    //form2.showForm("My eForm");
+    formsStack.push(form3);
+
+     //delete text1; //delete buttons1; delete textBox1; delete label1; delete form2;
+}
 
 
 
@@ -2522,6 +2553,7 @@ TaskArguments system0[] //0 systems, 1 desktopTask
     {"mydesktop", _myDesktop, NULL, 0, 0, true},
     {"myTablet", _myTablet, icon_mytablet_bits, 1, 0, false},
     {"myTablet", _myForm, icon_mypc_bits, 1, 0, false},
+    {"myTablet", _myForm3, icon_mypc_bits, 1, 0, false},
     // [!] Last task
     {"systemcursor", _systemCursor, NULL, 0, 0, true}
 };
@@ -2574,12 +2606,39 @@ bool TaskDispatcher::runTask(const String &taskName)
     return false;
 }
 
+
+void runExFormStack()
+{
+    // while (!formsStack.empty()) // Извлекаем формы из стека
+    // {
+       if (!formsStack.empty())
+       {
+        exForm* currentForm = formsStack.top();
+        
+
+        int result = currentForm->showForm("Form from Stack"); // Вызываем метод showForm и получаем результат
+
+        if (result == 1) {
+            formsStack.pop();
+            delete currentForm; // Освобождаем память, если результат равен 1
+
+            delay(250);
+        }
+       } 
+
+       _gfx.print((String)formsStack.size(), 100, 10);
+
+    // } 
+}
+
+
 void runTasksCore()
 {
     for (TaskArguments &t : tasks)
     {
         if (t.activ)
         {
+            runExFormStack();
             t.f();
         }
     }

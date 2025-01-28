@@ -336,7 +336,7 @@ public:
         elements.push_back(element);
     }
 
-    virtual void showForm(const String& title) const = 0;
+    virtual int showForm(const String& title) const = 0;
 
 protected:
     std::vector<eElement*> elements;
@@ -352,11 +352,87 @@ public:
     //         element->show();
     //     }
     // }
-    void showForm(const String& title) const override;
+    int showForm(const String& title) const override;
 
 private:
     short const outerBoundaryForm{20};
 };
+
+
+/*
+    eFormStack
+    Stack of eForm objects
+    [01/2025, Alexander Savushkin] 270125_2336
+*/
+/* Class for controlling the glass forms */
+class exFormsStack
+{
+public:
+    // Add the form to the stack
+    void push(exForm* form)
+    {
+        stack.push(form);
+    }
+
+    // Extract the upper form from the stack
+    exForm* pop()
+    {
+        if (!stack.empty())
+        {
+            exForm* top = stack.top();
+            stack.pop();
+            return top;
+        }
+        return nullptr;
+    }
+
+    // The number of forms in the stack
+    size_t size() const
+    {
+        return stack.size();
+    }
+
+    // Check, is it empty?
+    bool empty() const
+    {
+        return stack.empty();
+    }
+
+    /* example of use
+
+    std::stack<exForm*> formsStack;
+
+    exForm* form1 = new exForm(); // Создаем несколько экземпляров классов exForm
+    exForm* form2 = new exForm();
+    exForm* form3 = new exForm();
+
+    formsStack.push(form1); // Добавляем формы в стек
+    formsStack.push(form2);
+    formsStack.push(form3);
+
+    std::cout << "Количество форм в стеке: " << formsStack.size() << std::endl;
+
+    while (!formsStack.empty()) // Извлекаем формы из стека
+    {
+        exForm* currentForm = formsStack.top();
+        formsStack.pop();
+
+        int result = currentForm->showForm("Форма"); // Вызываем метод showForm и получаем результат
+
+        if (result == 1) {
+            delete currentForm; // Освобождаем память, если результат равен 1
+        }
+    }
+
+    */
+
+private:
+    // Stack of forms
+    std::stack<exForm*> stack;
+};
+
+
+
 
 /*
     Text-buffer
@@ -393,7 +469,7 @@ public:
 /*
     Keyboard
     Keyboard
-    [01/2025, Alexander Savushkin]
+    [01/2025, Alexander Savushkin] 270125_0116
 */
 class Keyboard
 {
@@ -409,7 +485,7 @@ public:
 /*
     Trigger
     Trigger
-    [01/2025, Alexander Savushkin]
+    [01/2025, Alexander Savushkin] 270125_0116
 */
 class Trigger {
 private:
