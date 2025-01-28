@@ -232,8 +232,26 @@ public:
     virtual ~eElement(){}
     virtual void show() const = 0;
 };
+/**/
+class setUpForm
+{
+public:
+    void set(int wF, int hF, int xF, int yF, short oBF)
+    {
+        widthForm = wF;
+        heightForm = hF;
+        xForm = xF;
+        yForm = yF;
+        outerBoundaryForm = oBF;
+    }
+
+protected:
+    int widthForm{256}, heightForm{147}; // size eForm
+    int xForm{0}, yForm{0};              // position eForm
+    short outerBoundaryForm{20};         // boundary
+};
 /* Button */
-class eButton : public eElement
+class eButton : public eElement, setUpForm
 {
 public:    
     eButton(const String& label, void (*onClick)(), int x, int y) : m_label(label), m_onClick(onClick), m_x(x), m_y(y) {}
@@ -248,11 +266,10 @@ public:
 private:
     String m_label; 
     void (*m_onClick)(void);
-    short const outerBoundaryForm{20};
     int m_x, m_y;
 };
 /* Text multiline */
-class eText : public eElement
+class eText : public eElement, setUpForm
 {
 public:
     eText(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
@@ -272,11 +289,10 @@ public:
 private:
     String m_text;
     short const highChar{10};
-    short const outerBoundaryForm{20};
     int m_x, m_y;
 };
 /* Text-box */
-class eTextBox : public eElement
+class eTextBox : public eElement, setUpForm
 {  
 public:
     eTextBox(const String& text, BorderStyle borderStyle, int sizeW, int sizeH, int x, int y) : m_text(text), m_borderStyle(borderStyle), m_sizeW(sizeW), m_sizeH(sizeH), m_x(x), m_y(y) {}
@@ -296,12 +312,11 @@ public:
 private:
     BorderStyle m_borderStyle;
     String m_text;
-    short const outerBoundaryForm{20};
     int m_x, m_y;
     int m_sizeW, m_sizeH;
 };
 /* Label to link */
-class eLabel : public eElement
+class eLabel : public eElement, setUpForm
 {
 public:
     eLabel(const String& text, void (*onClick)(), int x, int y) : m_text(text), m_onClick(onClick), m_x(x), m_y(y) {}
@@ -320,7 +335,6 @@ public:
 
 private:
     void (*m_onClick)(void);
-    short const outerBoundaryForm{20};
     String m_text;
     int m_x, m_y;
     int m_sizeW, m_sizeH;
@@ -336,26 +350,22 @@ public:
         elements.push_back(element);
     }
 
-    virtual int showForm(const String& title) const = 0;
+    virtual int showForm() const = 0;
 
 protected:
     std::vector<eElement*> elements;
 };
 /* Implementation of a concrete class exForm */
-class exForm : public eForm
+enum EFORMSHOWMODE { FULLSCREEN, MAXIMIZED, NORMAL };
+class exForm : public eForm, setUpForm
 {
 public:
-    // void showForm() const override
-    // {
-    //     for (auto element : elements)
-    //     {
-    //         element->show();
-    //     }
-    // }
-    int showForm(const String& title) const override;
+    int showForm() const override;
 
+    String title = "Title form";
+    EFORMSHOWMODE eFormShowMode;
 private:
-    short const outerBoundaryForm{20};
+    short outerBoundaryForm{20};
 };
 
 

@@ -772,10 +772,10 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
   {
     u8g2.drawFrame(x, y, 32, 32);
 
-    Label labelNameShortcut;
-    labelNameShortcut.label2(name, nullFunction, _joy.posX0 + 5, _joy.posY0);
+    // Label labelNameShortcut;
+    // labelNameShortcut.label2(name, nullFunction, _joy.posX0 + 5, _joy.posY0);
     
-    BUFFER_STRING = name;
+    // BUFFER_STRING = name;
     
     if (Joystick::pressKeyENTER() == true)
     {
@@ -2209,37 +2209,44 @@ void eLabel::show() const
     u8g2.setFontMode(0); //0-activate not-transparent font mode
 }
 /* exForm show */
-int exForm::showForm(const String& title) const
+int exForm::showForm() const
 {
-    Button eClose;
+    Button closeForm;
 
-    // while (1)
-    // {
-        // u8g2.clearBuffer(); // -->
+    if (eFormShowMode == FULLSCREEN)
+    {
+        if (closeForm.button2("CLOSE", 225, 0, _joy.posX0, _joy.posY0))
+        {
+            return 1; // 1 - exit and delete form from stack
+        }
+    }
 
-            if (eClose.button2("CLOSE", 205, outerBoundaryForm - 12 + 6, _joy.posX0, _joy.posY0))
-            {
-                return 1; // 1 - exit and delete form from stack
-            }
+    if (eFormShowMode == NORMAL)
+    {
 
-            u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
-            _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 1 + 6, 10, 5);
+        if (closeForm.button2("CLOSE", 205, outerBoundaryForm - 12 + 6, _joy.posX0, _joy.posY0))
+        {
+            return 1; // 1 - exit and delete form from stack
+        }
+    }
 
-                for (auto element : elements)
-                {
-                    element->show();
-                }
 
-            // cursor
-            _joy.updatePositionXY(20);
-            _crs.cursor(true, _joy.posX0, _joy.posY0);
-            
-            return 0;   // 0 - the form works
 
-        // u8g2.sendBuffer(); // <--
-    // }
+
+    u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
+    _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 1 + 6, 10, 5);
+
+    for (auto element : elements)
+    {
+        element->show();
+    }
+
+    // cursor
+    _joy.updatePositionXY(20);
+    _crs.cursor(true, _joy.posX0, _joy.posY0);
+
+    return 0; // 0 - the form works
 }
-
 
 /*
     Keyboard
@@ -2342,16 +2349,14 @@ void _myForm()
     eTextBox *textBox1 = new eTextBox("Test text for output in the Form", BorderStyle::shadow, 100, 30, 5, 40);
     eLabel *label1 = new eLabel("Label with link", nullFunction, 5, 85);
     
-    
     form2->addElement(text1);
     form2->addElement(buttons1);
     form2->addElement(textBox1);
     form2->addElement(label1);
 
-    //form2.showForm("My eForm");
-    formsStack.push(form2);
+    form2->eFormShowMode = FULLSCREEN;
 
-     //delete text1; //delete buttons1; delete textBox1; delete label1; delete form2;
+    formsStack.push(form2);
 }
 
 void _myForm3()
@@ -2365,15 +2370,15 @@ void _myForm3()
     eLabel *label3 = new eLabel("Label with link, Form3", nullFunction, 5, 85);
     
     
+    form3->title = "Form 3";
+    form3->eFormShowMode = NORMAL;
+
     form3->addElement(text3);
     form3->addElement(buttons3);
     form3->addElement(textBox3);
     form3->addElement(label3);
 
-    //form2.showForm("My eForm");
     formsStack.push(form3);
-
-     //delete text1; //delete buttons1; delete textBox1; delete label1; delete form2;
 }
 
 
@@ -2609,26 +2614,22 @@ bool TaskDispatcher::runTask(const String &taskName)
 
 void runExFormStack()
 {
-    // while (!formsStack.empty()) // Извлекаем формы из стека
-    // {
-       if (!formsStack.empty())
-       {
-        exForm* currentForm = formsStack.top();
-        
+    if (!formsStack.empty())
+    {
+        exForm *currentForm = formsStack.top();
 
-        int result = currentForm->showForm("Form from Stack"); // Вызываем метод showForm и получаем результат
+        int result = currentForm->showForm();
 
-        if (result == 1) {
+        if (result == 1)
+        {
             formsStack.pop();
-            delete currentForm; // Освобождаем память, если результат равен 1
+            delete currentForm;
 
             delay(250);
         }
-       } 
+    }
 
-       _gfx.print((String)formsStack.size(), 100, 10);
-
-    // } 
+    _gfx.print((String)formsStack.size(), 100, 10);
 }
 
 
