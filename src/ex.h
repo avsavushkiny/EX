@@ -230,28 +230,16 @@ class eElement
 {
 public:
     virtual ~eElement(){}
+    /* чистая функция для вывода элемента */
     virtual void show() const = 0;
-};
-/**/
-class setUpForm
-{
-public:
-    void set(int wF, int hF, int xF, int yF, short oBF)
-    {
-        widthForm = wF;
-        heightForm = hF;
-        xForm = xF;
-        yForm = yF;
-        outerBoundaryForm = oBF;
-    }
 
-protected:
-    int widthForm{256}, heightForm{147}; // size eForm
-    int xForm{0}, yForm{0};              // position eForm
-    short outerBoundaryForm{20};         // boundary
+    /* чистая функция для установки позиции элемента */
+    virtual void setPosition(int x, int y) = 0;
+    int m_x{0}, m_y{0};
 };
+
 /* Button */
-class eButton : public eElement, setUpForm
+class eButton : public eElement
 {
 public:    
     eButton(const String& label, void (*onClick)(), int x, int y) : m_label(label), m_onClick(onClick), m_x(x), m_y(y) {}
@@ -263,13 +251,21 @@ public:
 
     void show() const override;
 
+    void setPosition(int x, int y) override
+    {
+        this->xForm = x;
+        this->yForm = y;
+    }
+
 private:
     String m_label; 
     void (*m_onClick)(void);
-    int m_x, m_y;
+    int xForm, yForm;
+    short outerBoundaryForm{20};
+    int m_x{0}, m_y{0};
 };
 /* Text multiline */
-class eText : public eElement, setUpForm
+class eText : public eElement
 {
 public:
     eText(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
@@ -286,13 +282,21 @@ public:
 
     void show() const override;
 
+    void setPosition(int x, int y) override
+    {
+        this->xForm = x;
+        this->yForm = y;
+    }
+
 private:
     String m_text;
     short const highChar{10};
-    int m_x, m_y;
+    int xForm, yForm;
+    short outerBoundaryForm{20};
+    int m_x{0}, m_y{0};
 };
 /* Text-box */
-class eTextBox : public eElement, setUpForm
+class eTextBox : public eElement
 {  
 public:
     eTextBox(const String& text, BorderStyle borderStyle, int sizeW, int sizeH, int x, int y) : m_text(text), m_borderStyle(borderStyle), m_sizeW(sizeW), m_sizeH(sizeH), m_x(x), m_y(y) {}
@@ -309,14 +313,22 @@ public:
 
     void show() const override;
 
+    void setPosition(int x, int y) override
+    {
+        this->xForm = x;
+        this->yForm = y;
+    }
+
 private:
     BorderStyle m_borderStyle;
     String m_text;
-    int m_x, m_y;
+    int xForm, yForm;
+    short outerBoundaryForm{20};
+    int m_x{0}, m_y{0};
     int m_sizeW, m_sizeH;
 };
 /* Label to link */
-class eLabel : public eElement, setUpForm
+class eLabel : public eElement
 {
 public:
     eLabel(const String& text, void (*onClick)(), int x, int y) : m_text(text), m_onClick(onClick), m_x(x), m_y(y) {}
@@ -333,12 +345,38 @@ public:
 
     void show() const override;
 
+    void setPosition(int x, int y) override
+    {
+        this->xForm = x;
+        this->yForm = y;
+    }
+
 private:
     void (*m_onClick)(void);
     String m_text;
-    int m_x, m_y;
+    int xForm, yForm;
+    short outerBoundaryForm{20};
+    int m_x{0}, m_y{0};
     int m_sizeW, m_sizeH;
 };
+
+/*  */
+class eDesktop : eElement
+{
+public:
+    eDesktop() {}
+    void show() const override;
+    void setPosition(int x, int y) override
+    {
+        this->xForm = x;
+        this->yForm = y;
+    }
+private:
+    int xForm, yForm;
+};
+
+
+
 /* Abstract base class eForm */
 class eForm
 {
@@ -355,9 +393,10 @@ public:
 protected:
     std::vector<eElement*> elements;
 };
+
 /* Implementation of a concrete class exForm */
 enum EFORMSHOWMODE { FULLSCREEN, MAXIMIZED, NORMAL };
-class exForm : public eForm, setUpForm
+class exForm : public eForm
 {
 public:
     int showForm() const override;
@@ -365,6 +404,7 @@ public:
     String title = "Title form";
     EFORMSHOWMODE eFormShowMode;
 private:
+    int xForm, yForm;
     short outerBoundaryForm{20};
 };
 

@@ -106,6 +106,13 @@ const int8_t PIN_BUZZER  = 26;       // gp
 const int8_t PIN_BATTERY = 39;       // gp
 
 
+void error()
+{
+    u8g2.clearBuffer(); // -->
+    u8g2.drawStr(10, 0, "Error");
+    u8g2.sendBuffer();  // <-- 
+}
+
 /* 
     class
     Graphics
@@ -2208,10 +2215,68 @@ void eLabel::show() const
 
     u8g2.setFontMode(0); //0-activate not-transparent font mode
 }
+
+void eDesktop::show() const
+{
+    uint8_t border{4};
+    uint8_t xx{border};
+    uint8_t yy{15};
+
+    uint8_t countTask{1};
+
+    for (TaskArguments &t : tasks)
+    {
+        if ((t.activ == false) && (t.bitMap != NULL) && (t.type == 1))
+        {
+            _shortcutDesktop.shortcut(t.name, t.bitMap, xx, yy, t.f, _joy.posX0, _joy.posY0);
+            countTask++;
+
+            xx += (32 + border);
+
+            if (countTask > 7)
+            {
+                xx = 4;
+                yy += (32 + border);
+                countTask = 0;
+            }
+        }
+        /*else
+        {
+            Form form1;
+            form1.form("Notice", "There are no tasks to output to the desktop.", form1.itself);
+        }*/
+    }
+}
+
 /* exForm show */
 int exForm::showForm() const
 {
     Button closeForm;
+
+    switch (eFormShowMode)
+    {
+    case FULLSCREEN:
+        // Для полноэкранного режима устанавливаем координаты относительно экрана
+        for (const auto &element : elements)
+        {
+            element->setPosition(element->m_x, element->m_y);
+        }
+        break;
+    case MAXIMIZED:
+        // Для максимизированного режима устанавливаем координаты относительно окна
+        for (const auto &element : elements)
+        {
+            element->setPosition(element->m_x, element->m_y);
+        }
+        break;
+    case NORMAL:
+        // Для нормального режима оставляем координаты без изменений
+        for (const auto &element : elements)
+        {
+            element->setPosition(element->m_x + 20, element->m_y + 20);
+        }
+        break;
+    }
 
     if (eFormShowMode == FULLSCREEN)
     {
@@ -2219,6 +2284,22 @@ int exForm::showForm() const
         {
             return 1; // 1 - exit and delete form from stack
         }
+
+        u8g2.drawFrame(0, 12 /* height button - 1 */, 256, 147); // x, y, w, h
+        _gfx.print(10, title, 5, 10, 10, 5); // size Font, text, x, y, lii, chi
+
+    }
+
+    if (eFormShowMode == MAXIMIZED)
+    {
+        if (closeForm.button2("CLOSE", 225, 0, _joy.posX0, _joy.posY0))
+        {
+            return 1; // 1 - exit and delete form from stack
+        }
+
+        u8g2.drawFrame(0, 12 /* height button - 1 */, 256, 137 /* 137 - 10px tray*/); // x, y, w, h
+        _gfx.print(10, title, 5, 10, 10, 5); // size Font, text, x, y, lii, chi
+
     }
 
     if (eFormShowMode == NORMAL)
@@ -2228,13 +2309,11 @@ int exForm::showForm() const
         {
             return 1; // 1 - exit and delete form from stack
         }
+
+        u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
+        _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 1 + 6, 10, 5);
     }
 
-
-
-
-    u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
-    _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 1 + 6, 10, 5);
 
     for (auto element : elements)
     {
@@ -2291,38 +2370,24 @@ void testKeyboardShow()
 
 //====================================================
 /* my desctop */
+bool stateShowDesktop = false;
 void _myDesktop()
 {
-    uint8_t border{4};
-    uint8_t xx{border};
-    uint8_t yy{15}; 
-
-    uint8_t countTask{1};
-    
-    for (TaskArguments &t : tasks)
+    if (stateShowDesktop == false)
     {
-        if ((t.activ == false) && (t.bitMap != NULL) && (t.type == 1))
-        {
-            _shortcutDesktop.shortcut(t.name, t.bitMap, xx, yy, t.f, _joy.posX0, _joy.posY0);
-            countTask++;
+        exForm *form0 = new exForm();
 
-            xx += (32 + border);
+        eDesktop *destop0 = new eDesktop();
 
-            if (countTask > 7) 
-            {
-                xx = 4; yy += (32 + border); countTask = 0;
-            }
-        }
-        /*else
-        {
-            Form form1;
-            form1.form("Notice", "There are no tasks to output to the desktop.", form1.itself);
-        }*/
+        form0->title = "Desktop";
+        form0->eFormShowMode = FULLSCREEN;
+
+        formsStack.push(form0); stateShowDesktop = true;
     }
-    
-    _gfx.print("My Desktop", 5, 8, 8, 5);
 
-    u8g2.drawHLine(0, 10, 256);
+    // _gfx.print("My Desktop", 5, 8, 8, 5);
+
+    // u8g2.drawHLine(0, 10, 256);
 }
 /* Task. Stack, task, command */ 
 void _myTablet()
