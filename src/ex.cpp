@@ -731,7 +731,7 @@ bool Button::button2(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t
 
   u8g2.setFontMode(1);
 
-  u8g2.setDrawColor(2);
+  u8g2.setDrawColor(2); //2
   _gfx.print(text, x + border, y + 7 /* font H */ + border, 8, charW);
   u8g2.setDrawColor(1);
   
@@ -772,17 +772,11 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
   u8g2.setDrawColor(1);
   u8g2.setBitmapMode(0);
   u8g2.drawXBMP(x, y, 32, 32, bitMap);
-  //u8g2.drawXBMP(x, y + 24, 8, 8, icon_bits);
   u8g2.drawXBMP(x, y + 21, 11, 11, shortcut_bits);
 
   if ((xCursor >= x && xCursor <= (x + 32)) && (yCursor >= y && yCursor <= (y + 32)))
   {
     u8g2.drawFrame(x, y, 32, 32);
-
-    // Label labelNameShortcut;
-    // labelNameShortcut.label2(name, nullFunction, _joy.posX0 + 5, _joy.posY0);
-    
-    // BUFFER_STRING = name;
     
     if (Joystick::pressKeyENTER() == true)
     {
@@ -797,6 +791,8 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
   }
 
   return false;
+
+
 }
 /* displaying a shortcut to a task-function */
 bool Shortcut::shortcutFrame(String name, uint8_t w, uint8_t h, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
@@ -2224,8 +2220,6 @@ void eDesktop::show() const
 
     uint8_t countTask{1};
 
-    _gfx.print("test", 50, 50, 8, 5);
-
     for (TaskArguments &t : tasks)
     {
         if ((t.activ == false) && (t.bitMap != NULL) && (t.type == 1))
@@ -2316,18 +2310,18 @@ int exForm::showForm() const
         _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 1 + 6, 10, 5);
     }
 
-
     for (auto element : elements)
     {
         element->show();
     }
 
-    // cursor
-    // _joy.updatePositionXY(20);
-    // _crs.cursor(true, _joy.posX0, _joy.posY0);
-
     return 0; // 0 - the form works
 }
+
+
+
+
+
 
 /*
     Keyboard
@@ -2364,28 +2358,26 @@ void testKeyboardShow()
 
 
 
-
-
-
-
-
-
 //====================================================
 /* my desctop */
 void _myDesktop()
 {
-        // exForm* form0 = new exForm();
+        exForm* form0 = new exForm();
 
-        // eDesktop *desktop0 = new eDesktop();
+        eDesktop *desktop0 = new eDesktop();
 
-        // form0->title = "Desktop";
-        // form0->eFormShowMode = FULLSCREEN;
+        form0->title = "Desktop";
+        form0->eFormShowMode = FULLSCREEN;
 
-        // formsStack.push(form0);
+        form0->addElement(desktop0);
+        
+        formsStack.push(form0);
 
-        // td.removeTaskIndex(100);
+        td.removeTaskIndex(100);
 
     // _gfx.print("My Desktop", 5, 8, 8, 5);
+
+
 
     // u8g2.drawHLine(0, 10, 256);
 }
@@ -2706,7 +2698,7 @@ void runExFormStack()
         }
     }
 
-    _gfx.print((String)formsStack.size(), 100, 10);
+    // _gfx.print((String)formsStack.size(), 100, 10);
 }
 
 

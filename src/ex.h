@@ -373,6 +373,7 @@ public:
         this->xForm = x;
         this->yForm = y;
     }
+
 private:
     int xForm, yForm;
 };
