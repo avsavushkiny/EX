@@ -2224,6 +2224,8 @@ void eDesktop::show() const
 
     uint8_t countTask{1};
 
+    _gfx.print("test", 50, 50, 8, 5);
+
     for (TaskArguments &t : tasks)
     {
         if ((t.activ == false) && (t.bitMap != NULL) && (t.type == 1))
@@ -2321,8 +2323,8 @@ int exForm::showForm() const
     }
 
     // cursor
-    _joy.updatePositionXY(20);
-    _crs.cursor(true, _joy.posX0, _joy.posY0);
+    // _joy.updatePositionXY(20);
+    // _crs.cursor(true, _joy.posX0, _joy.posY0);
 
     return 0; // 0 - the form works
 }
@@ -2370,20 +2372,18 @@ void testKeyboardShow()
 
 //====================================================
 /* my desctop */
-bool stateShowDesktop = false;
 void _myDesktop()
 {
-    if (stateShowDesktop == false)
-    {
-        exForm *form0 = new exForm();
+        // exForm* form0 = new exForm();
 
-        eDesktop *destop0 = new eDesktop();
+        // eDesktop *desktop0 = new eDesktop();
 
-        form0->title = "Desktop";
-        form0->eFormShowMode = FULLSCREEN;
+        // form0->title = "Desktop";
+        // form0->eFormShowMode = FULLSCREEN;
 
-        formsStack.push(form0); stateShowDesktop = true;
-    }
+        // formsStack.push(form0);
+
+        // td.removeTaskIndex(100);
 
     // _gfx.print("My Desktop", 5, 8, 8, 5);
 
@@ -2619,13 +2619,13 @@ void _systemCursor()
 */
 TaskArguments system0[] //0 systems, 1 desktopTask
 {
-    {"systempowersave", _systemPowerSaveBoard, NULL, 0, 0, true},
-    {"mydesktop", _myDesktop, NULL, 0, 0, true},
+    {"powersave", _systemPowerSaveBoard, NULL, 0, 0, true},
+    {"desktop", _myDesktop, NULL, 0, 100, true},
     {"myTablet", _myTablet, icon_mytablet_bits, 1, 0, false},
     {"myTablet", _myForm, icon_mypc_bits, 1, 0, false},
     {"myTablet", _myForm3, icon_mypc_bits, 1, 0, false},
     // [!] Last task
-    {"systemcursor", _systemCursor, NULL, 0, 0, true}
+    {"cursor", _systemCursor, NULL, 0, 0, true}
 };
 
 int TaskDispatcher::sizeTasks()
@@ -2658,7 +2658,19 @@ bool TaskDispatcher::removeTask(const String &taskName)
     {
         if ((t.activ) && (t.name == taskName))
         {
-            t.activ == false; return true;
+            t.activ = false; return true;
+        }
+    }
+    return false;
+}
+
+bool TaskDispatcher::removeTaskIndex(const int index)
+{
+    for (TaskArguments &t : tasks)
+    {
+        if ((t.activ) && (t.index == index))
+        {
+            t.activ = false; return true;
         }
     }
     return false;

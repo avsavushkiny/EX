@@ -78,6 +78,8 @@ public:
     bool removeTaskVector(const String &taskName);
     // Make the Task inactive
     bool removeTask(const String &taskName);
+    // Make the Task inactive
+    bool removeTaskIndex(const int index);
     // Make the Task active
     bool runTask(const String &taskName);
     // Running all tasks from Vector
@@ -361,7 +363,7 @@ private:
 };
 
 /*  */
-class eDesktop : eElement
+class eDesktop : public eElement
 {
 public:
     eDesktop() {}
