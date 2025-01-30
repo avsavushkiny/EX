@@ -106,12 +106,6 @@ const int8_t PIN_BUZZER  = 26;       // gp
 const int8_t PIN_BATTERY = 39;       // gp
 
 
-void error()
-{
-    u8g2.clearBuffer(); // -->
-    u8g2.drawStr(10, 0, "Error");
-    u8g2.sendBuffer();  // <-- 
-}
 
 /* 
     class
@@ -209,9 +203,9 @@ void Graphics::render(void (*f)(), int timeDelay)
 /* data render (full frame) no time delay */
 void Graphics::render(void (*f)())
 {
-      u8g2.clearBuffer();
-      f();
-      u8g2.sendBuffer();
+    u8g2.clearBuffer();
+    f();
+    u8g2.sendBuffer();
 }
 /* data render two function (full frame) */
 void Graphics::render(void (*f1)(), void (*f2)())
@@ -332,9 +326,12 @@ bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
     {
         u8g2.setDrawColor(1);  //0-white 1-black 2-inversion
         u8g2.setBitmapMode(1); //0-non transparent 1-transparent
+
         u8g2.drawXBMP(xCursor, yCursor, cursor_w, cursor_h, cursor_bits);
+        
         u8g2.setDrawColor(1);
         u8g2.setBitmapMode(0);
+        u8g2.setColorIndex(1);
         return true;
     }
     else
@@ -712,9 +709,18 @@ bool Button::button2(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t
 {
   uint8_t sizeText = text.length(); short border{3}; short charW{5};
 
+    u8g2.setDrawColor(1); // 0-white,  1-black, 2-XOR
+    u8g2.setBitmapMode(0);// 0-off, 1-on Transporent mode
+    u8g2.setColorIndex(1);// 0-off px, 1-on px
+
   if ((xCursor >= x && xCursor <= (x + (sizeText * charW) + border + border)) && (yCursor >= y && yCursor <= y + 13))
   {
-    u8g2.drawBox(x, y, (sizeText * charW) + border + border, 13);
+    u8g2.setColorIndex(1); // включаем пиксели
+    u8g2.drawBox(x, y, (sizeText * charW) + border + border, 13); // рисуем черный бокс
+    u8g2.setColorIndex(0); // отключаем птксели
+    _gfx.print(text, x + border, y + 7 /* font H */ + border, 8, charW); // выводим тест
+    u8g2.setColorIndex(1); // включаем пиксели
+
 
     if (Joystick::pressKeyENTER() == true)
     {
@@ -723,19 +729,11 @@ bool Button::button2(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t
   }
   else
   {
-    u8g2.drawFrame(x, y, (sizeText * charW) + border + border, 13);
+    u8g2.setColorIndex(1); // включаем пиксели
+    u8g2.drawFrame(x, y, (sizeText * charW) + border + border, 13); // рисуем прозрачный фрейм
+    _gfx.print(text, x + border, y + 7 /* font H */ + border, 8, charW); // выводим тест
+
   }
-
-  //u8g2.setCursor(x + border, y + 7 /* font H */ + border);
-  //u8g2.setFont(u8g2_font_6x10_tr);
-
-  u8g2.setFontMode(1);
-
-  u8g2.setDrawColor(2); //2
-  _gfx.print(text, x + border, y + 7 /* font H */ + border, 8, charW);
-  u8g2.setDrawColor(1);
-  
-  u8g2.setFontMode(1);
   
   return false;
 }
@@ -2211,7 +2209,7 @@ void eLabel::show() const
 
     u8g2.setFontMode(0); //0-activate not-transparent font mode
 }
-
+/* desktop */
 void eDesktop::show() const
 {
     uint8_t border{4};
@@ -2243,7 +2241,6 @@ void eDesktop::show() const
         }*/
     }
 }
-
 /* exForm show */
 int exForm::showForm() const
 {
@@ -2357,30 +2354,24 @@ void testKeyboardShow()
 
 
 
-
 //====================================================
 /* my desctop */
 void _myDesktop()
 {
-        exForm* form0 = new exForm();
+    exForm *form0 = new exForm();
 
-        eDesktop *desktop0 = new eDesktop();
+    eDesktop *desktop0 = new eDesktop();
 
-        form0->title = "Desktop";
-        form0->eFormShowMode = FULLSCREEN;
+    form0->title = "Desktop";
+    form0->eFormShowMode = FULLSCREEN;
 
-        form0->addElement(desktop0);
-        
-        formsStack.push(form0);
+    form0->addElement(desktop0);
 
-        td.removeTaskIndex(100);
+    formsStack.push(form0);
 
-    // _gfx.print("My Desktop", 5, 8, 8, 5);
-
-
-
-    // u8g2.drawHLine(0, 10, 256);
+    td.removeTaskIndex(100);
 }
+
 /* Task. Stack, task, command */ 
 void _myTablet()
 {
