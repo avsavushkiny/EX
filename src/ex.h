@@ -50,12 +50,19 @@ extern void _clearCommandTerminal();
     [01/2025, Alexander Savushkin]
 */
 /* Task Settings */
+enum TaskType
+{
+    SYSTEM,
+    DESKTOP,
+    USER
+};
+/* Task Settings */
 struct TaskArguments
 {
     String name;           // Short task name
     void (*f)(void);       // Pointer to task function
     const uint8_t *bitMap; // Pointer to xbmp image
-    int type;              // Task type, 0 - system, 1 - desktop
+    TaskType type;         // Task type, 0 - system, 1 - desktop
     int index;             // Task index
     bool activ;            // Task Status
 };
@@ -93,6 +100,7 @@ namespace
     std::vector<TaskArguments> tasks;     // Vector of main tasks
     std::vector<TaskArguments> tasksTray; // Notification bar task vector
 };
+
 
 /*
     Form
@@ -222,6 +230,7 @@ public:
     void showForm(const String& title) const;
 };
 
+
 /*
     eForm
     Visual eForm Builder
@@ -239,7 +248,6 @@ public:
     virtual void setPosition(int x, int y) = 0;
     int m_x{0}, m_y{0};
 };
-
 /* Button */
 class eButton : public eElement
 {
@@ -361,8 +369,7 @@ private:
     int m_x{0}, m_y{0};
     int m_sizeW, m_sizeH;
 };
-
-/*  */
+/* Desktop */
 class eDesktop : public eElement
 {
 public:
@@ -377,9 +384,24 @@ public:
 private:
     int xForm, yForm;
 };
-
-
-
+/* Graphics */
+class eGraphics : public eElement
+{
+public:
+    eGraphics(void (*func)()) : showFunc(func) {}
+    void show() const override
+    {
+        showFunc();
+    }
+    void setPosition(int x, int y) override
+    {
+        this->xForm = x;
+        this->yForm = y;
+    }
+private:
+    int xForm, yForm;
+    void (*showFunc)();
+};
 /* Abstract base class eForm */
 class eForm
 {
@@ -396,7 +418,6 @@ public:
 protected:
     std::vector<eElement*> elements;
 };
-
 /* Implementation of a concrete class exForm */
 enum EFORMSHOWMODE { FULLSCREEN, MAXIMIZED, NORMAL };
 class exForm : public eForm
@@ -780,7 +801,6 @@ public:
     /* A shortcut on the desktop to launch the void-function.
        Define an icon-image with a resolution of 32x32 pixels + name */
     bool shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor);
-    
     bool shortcutFrame(String name, uint8_t w, uint8_t h, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor);
 
 };

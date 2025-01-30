@@ -721,7 +721,6 @@ bool Button::button2(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t
     _gfx.print(text, x + border, y + 7 /* font H */ + border, 8, charW); // выводим тест
     u8g2.setColorIndex(1); // включаем пиксели
 
-
     if (Joystick::pressKeyENTER() == true)
     {
       return true;
@@ -732,7 +731,6 @@ bool Button::button2(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t
     u8g2.setColorIndex(1); // включаем пиксели
     u8g2.drawFrame(x, y, (sizeText * charW) + border + border, 13); // рисуем прозрачный фрейм
     _gfx.print(text, x + border, y + 7 /* font H */ + border, 8, charW); // выводим тест
-
   }
   
   return false;
@@ -789,9 +787,9 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
   }
 
   return false;
-
-
 }
+
+
 /* displaying a shortcut to a task-function */
 bool Shortcut::shortcutFrame(String name, uint8_t w, uint8_t h, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
 {
@@ -1979,7 +1977,7 @@ void FormLabel::Show() const
 
     if ((_joy.posX0 >= x && _joy.posX0 <= (x + (sizeText * chi))) && (_joy.posY0 >= y - (lii + 2) && _joy.posY0 <= y + 2))
     {
-        u8g2.setDrawColor(1);//1
+
         u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1);
 
         if (_joy.pressKeyENTER() == true)
@@ -2057,10 +2055,19 @@ void eButton::show() const
 
     int x{m_x + outerBoundaryForm}, y{m_y + outerBoundaryForm + 6 /* offset by Y */};
 
+    u8g2.setDrawColor(1); // 0-white,  1-black, 2-XOR
+    u8g2.setBitmapMode(0);// 0-off, 1-on Transporent mode
+    u8g2.setColorIndex(1);// 0-off px, 1-on px
 
     if ((_joy.posX0 >= x && _joy.posX0 <= (x + (sizeText * charW) + border + border)) && (_joy.posY0 >= y && _joy.posY0 <= y + 13))
     {
-        u8g2.drawBox(x, y, (sizeText * charW) + border + border, 13);
+
+        u8g2.setColorIndex(1);                                               // включаем пиксели
+        u8g2.drawBox(x, y, (sizeText * charW) + border + border, 13);        // рисуем черный бокс
+        u8g2.setColorIndex(0);                                               // отключаем птксели
+        _gfx.print(m_label, x + border, y + 7 /* font H */ + border, 8, charW); // выводим тест
+        u8g2.setColorIndex(1);                                               // включаем пиксели
+
         if (_joy.pressKeyENTER() == true)
         {
             m_onClick(); 
@@ -2068,16 +2075,10 @@ void eButton::show() const
     }
     else
     {
-        u8g2.drawFrame(x, y, (sizeText * charW) + border + border, 13);
+        u8g2.setColorIndex(1);                                               // включаем пиксели
+        u8g2.drawFrame(x, y, (sizeText * charW) + border + border, 13);      // рисуем прозрачный фрейм
+        _gfx.print(m_label, x + border, y + 7 /* font H */ + border, 8, charW); // выводим тест
     }
-
-    u8g2.setFontMode(1);
-
-    u8g2.setDrawColor(2);
-    _gfx.print(m_label, x + border, y + 7 /* font H */ + border, 8, charW);
-    u8g2.setDrawColor(1);
-
-    u8g2.setFontMode(1);
 }
 /* eText */
 void eText::show() const
@@ -2176,8 +2177,27 @@ void eLabel::show() const
 
     if ((_joy.posX0 >= x && _joy.posX0 <= (x + (sizeText * chi))) && (_joy.posY0 >= y - (lii + 2) && _joy.posY0 <= y + 2))
     {
-        u8g2.setDrawColor(1);//1
-        u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1);
+
+        u8g2.setColorIndex(1);                                         // включаем пиксели
+        u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1); // рисуем черный бокс
+        u8g2.setColorIndex(0);                                         // отключаем пиксели
+
+        u8g2.setCursor(x + 3, y);
+        u8g2.setFont(u8g2_font_6x10_tr);
+
+        for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
+        {
+            u8g2.setCursor(xx + x, yy + y);
+            u8g2.print(m_text[i]);
+
+            if (m_text[i] == '\n')
+            {
+                yy += lii; // 10
+                xx = -chi; // 6
+            }
+        }
+        u8g2.setColorIndex(1);                                          // включаем пиксели
+
 
         if (_joy.pressKeyENTER() == true)
         {
@@ -2186,42 +2206,38 @@ void eLabel::show() const
     }
     else
     {
-        u8g2.setDrawColor(1);
-    }
+        u8g2.setColorIndex(1);                                          // включаем пиксели
 
-    u8g2.setCursor(x + 3, y);
-    u8g2.setFont(u8g2_font_6x10_tr);
-    
-    u8g2.setFontMode(1);
-    u8g2.setDrawColor(2);//2
-    
-    for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
-    {
-        u8g2.setCursor(xx + x, yy + y);
-        u8g2.print(m_text[i]);
+        u8g2.setCursor(x + 3, y);
+        u8g2.setFont(u8g2_font_6x10_tr);
 
-        if (m_text[i] == '\n')
+        for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
         {
-            yy += lii; // 10
-            xx = -chi; // 6
+            u8g2.setCursor(xx + x, yy + y);
+            u8g2.print(m_text[i]);
+
+            if (m_text[i] == '\n')
+            {
+                yy += lii; // 10
+                xx = -chi; // 6
+            }
         }
     }
-
-    u8g2.setFontMode(0); //0-activate not-transparent font mode
 }
 /* desktop */
 void eDesktop::show() const
 {
     uint8_t border{4};
     uint8_t xx{border};
-    uint8_t yy{15};
+    uint8_t yy{16};
 
     uint8_t countTask{1};
 
     for (TaskArguments &t : tasks)
     {
-        if ((t.activ == false) && (t.bitMap != NULL) && (t.type == 1))
+        if ((t.activ == false) && (t.bitMap != NULL) && (t.type == DESKTOP))
         {
+            // _shortcutDesktop.shortcut(t.name, t.bitMap, xx, yy, t.f, _joy.posX0, _joy.posY0);
             _shortcutDesktop.shortcut(t.name, t.bitMap, xx, yy, t.f, _joy.posX0, _joy.posY0);
             countTask++;
 
@@ -2234,11 +2250,10 @@ void eDesktop::show() const
                 countTask = 0;
             }
         }
-        /*else
+        else
         {
-            Form form1;
-            form1.form("Notice", "There are no tasks to output to the desktop.", form1.itself);
-        }*/
+            // _gfx.print("There are no tasks to output\nto the desktop.", 5, 17);
+        }
     }
 }
 /* exForm show */
@@ -2278,6 +2293,7 @@ int exForm::showForm() const
             return 1; // 1 - exit and delete form from stack
         }
 
+        u8g2.setColorIndex(1); // вкл пиксели
         u8g2.drawFrame(0, 12 /* height button - 1 */, 256, 147); // x, y, w, h
         _gfx.print(10, title, 5, 10, 10, 5); // size Font, text, x, y, lii, chi
 
@@ -2290,6 +2306,7 @@ int exForm::showForm() const
             return 1; // 1 - exit and delete form from stack
         }
 
+        u8g2.setColorIndex(1); // вкл пиксели
         u8g2.drawFrame(0, 12 /* height button - 1 */, 256, 137 /* 137 - 10px tray*/); // x, y, w, h
         _gfx.print(10, title, 5, 10, 10, 5); // size Font, text, x, y, lii, chi
 
@@ -2303,10 +2320,12 @@ int exForm::showForm() const
             return 1; // 1 - exit and delete form from stack
         }
 
+        u8g2.setColorIndex(1); // вкл пиксели
         u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
         _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 1 + 6, 10, 5);
     }
 
+    // выводим все элементы на дисплей
     for (auto element : elements)
     {
         element->show();
@@ -2351,8 +2370,22 @@ void testKeyboardShow()
 
 
 
+void _graphicsTest()
+{
+    _gfx.print("Test other graphics function", 50, 50);
+}
 
+void _myGraphicsTest()
+{
+    exForm *formGraphicsTest = new exForm;                  // [0] создали форму
+    eGraphics *graphicsTest = new eGraphics(_graphicsTest); // [1] создали элемент формы
 
+    formGraphicsTest->title = "Graphics test";    // [2] назвали форму
+    formGraphicsTest->eFormShowMode = FULLSCREEN; // [3]
+    formGraphicsTest->addElement(graphicsTest);   // [4] добавили эелемент в контейнер
+
+    formsStack.push(formGraphicsTest); // [5] добавили элемент в стэк форм
+}
 
 //====================================================
 /* my desctop */
@@ -2415,9 +2448,8 @@ void _myForm3()
     eText *text3 = new eText("My Form3", 5, 5);
     eButton *buttons3 = new eButton("My Button Form3", nullFunction, 5, 20);
     eTextBox *textBox3 = new eTextBox("Test text for output in the Form3", BorderStyle::shadow, 100, 30, 5, 40);
-    eLabel *label3 = new eLabel("Label with link, Form3", nullFunction, 5, 85);
-    
-    
+    eLabel *label3 = new eLabel("Label with link, Form3", nullFunction, 5, 85);   
+
     form3->title = "Form 3";
     form3->eFormShowMode = NORMAL;
 
@@ -2595,6 +2627,7 @@ void _systemCursor()
     _crs.cursor(true, _joy.posX0, _joy.posY0);
 }
 
+Icon icon;
 /*
     Task-dispatcher
     Dispatcher tasks, vector
@@ -2602,13 +2635,14 @@ void _systemCursor()
 */
 TaskArguments system0[] //0 systems, 1 desktopTask
 {
-    {"powersave", _systemPowerSaveBoard, NULL, 0, 0, true},
-    {"desktop", _myDesktop, NULL, 0, 100, true},
-    {"myTablet", _myTablet, icon_mytablet_bits, 1, 0, false},
-    {"myTablet", _myForm, icon_mypc_bits, 1, 0, false},
-    {"myTablet", _myForm3, icon_mypc_bits, 1, 0, false},
+    {"powersave", _systemPowerSaveBoard, NULL, SYSTEM, 0, true},
+    {"desktop", _myDesktop, NULL, SYSTEM, 100, true},
+    {"myTablet", _myTablet, icon.MyConsole, DESKTOP, 0, false},
+    {"myTablet", _myForm, icon.MyNullApp, DESKTOP, 0, false},
+    {"myTablet", _myForm3, icon.MyNullApp, DESKTOP, 0, false},
+    {"myTablet", _myGraphicsTest, icon.MyNullApp, DESKTOP, 0, false},
     // [!] Last task
-    {"cursor", _systemCursor, NULL, 0, 0, true}
+    {"cursor", _systemCursor, NULL, SYSTEM, 0, true}
 };
 
 int TaskDispatcher::sizeTasks()
