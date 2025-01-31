@@ -2053,19 +2053,19 @@ void eButton::show() const
     short border{3};
     short charW{5};
 
-    int x{m_x + outerBoundaryForm}, y{m_y + outerBoundaryForm + 6 /* offset by Y */};
+    // int x{m_x}, y{m_y + 6 /* offset by Y */};
 
     u8g2.setDrawColor(1); // 0-white,  1-black, 2-XOR
     u8g2.setBitmapMode(0);// 0-off, 1-on Transporent mode
     u8g2.setColorIndex(1);// 0-off px, 1-on px
 
-    if ((_joy.posX0 >= x && _joy.posX0 <= (x + (sizeText * charW) + border + border)) && (_joy.posY0 >= y && _joy.posY0 <= y + 13))
+    if ((_joy.posX0 >= xForm && _joy.posX0 <= (xForm + (sizeText * charW) + border + border)) && (_joy.posY0 >= yForm && _joy.posY0 <= yForm + 13))
     {
 
         u8g2.setColorIndex(1);                                               // включаем пиксели
-        u8g2.drawBox(x, y, (sizeText * charW) + border + border, 13);        // рисуем черный бокс
+        u8g2.drawBox(xForm, yForm, (sizeText * charW) + border + border, 13);    // рисуем черный бокс
         u8g2.setColorIndex(0);                                               // отключаем птксели
-        _gfx.print(m_label, x + border, y + 7 /* font H */ + border, 8, charW); // выводим тест
+        _gfx.print(m_label, xForm + border, yForm + 7 /* font H */ + border, 8, charW); // выводим тест
         u8g2.setColorIndex(1);                                               // включаем пиксели
 
         if (_joy.pressKeyENTER() == true)
@@ -2075,18 +2075,15 @@ void eButton::show() const
     }
     else
     {
-        u8g2.setColorIndex(1);                                               // включаем пиксели
-        u8g2.drawFrame(x, y, (sizeText * charW) + border + border, 13);      // рисуем прозрачный фрейм
-        _gfx.print(m_label, x + border, y + 7 /* font H */ + border, 8, charW); // выводим тест
+        u8g2.setColorIndex(1);                                                  // включаем пиксели
+        u8g2.drawFrame(xForm, yForm, (sizeText * charW) + border + border, 13);     // рисуем прозрачный фрейм
+        _gfx.print(m_label, xForm + border, yForm + 7 /* font H */ + border, 8, charW); // выводим тест
     }
 }
 /* eText */
 void eText::show() const
 {
-    _gfx.print(m_text, outerBoundaryForm + m_x, outerBoundaryForm + 6 /* offset by Y */ + highChar + m_y, 10, 5);
-    
-    if (_joy.pressKeyB())
-    {}
+    _gfx.print(m_text, xForm, yForm + highChar, 10, 5);
 }
 /* eText-Box */
 void eTextBox::show() const
@@ -2096,7 +2093,7 @@ void eTextBox::show() const
     short line{1}; // there will always be at least one line of text in the text
     int numberOfCharacters{0}; // количество символов
     short charH{10}, charW{5};
-    int ch{0}, ln{0}; int xx{m_x + outerBoundaryForm}, yy{m_y + outerBoundaryForm + 6 /* offset by Y */}; 
+    int ch{0}, ln{0}; int xx{xForm}, yy{yForm}; 
     
     if (m_borderStyle == noBorder){ /* we don't draw anything */ }
     if (m_borderStyle == oneLine)
@@ -2155,7 +2152,7 @@ void eTextBox::show() const
 
         if (ch >= numberOfCharactersLineFrame)
         {
-            yy += charH; ch = 0; xx = m_x + outerBoundaryForm; ln++;
+            yy += charH; ch = 0; xx = xForm; ln++;
         }
 
         // if (ln >= numberOfLinesFrame)
@@ -2173,7 +2170,7 @@ void eTextBox::show() const
 void eLabel::show() const
 {
     uint8_t sizeText = m_text.length();
-    uint8_t yy{}, chi{5}, lii{8}; int x{m_x + outerBoundaryForm}, y{m_y + outerBoundaryForm + 6 /* offset by Y */};
+    uint8_t yy{}, chi{5}, lii{8}; int x{xForm + 1}, y{yForm + 8};
 
     if ((_joy.posX0 >= x && _joy.posX0 <= (x + (sizeText * chi))) && (_joy.posY0 >= y - (lii + 2) && _joy.posY0 <= y + 2))
     {
@@ -2267,21 +2264,21 @@ int exForm::showForm() const
         // Для полноэкранного режима устанавливаем координаты относительно экрана
         for (const auto &element : elements)
         {
-            element->setPosition(element->m_x, element->m_y);
+            element->setPosition(element->m_x, element->m_y + 12);
         }
         break;
     case MAXIMIZED:
         // Для максимизированного режима устанавливаем координаты относительно окна
         for (const auto &element : elements)
         {
-            element->setPosition(element->m_x, element->m_y);
+            element->setPosition(element->m_x, element->m_y + 12);
         }
         break;
     case NORMAL:
         // Для нормального режима оставляем координаты без изменений
         for (const auto &element : elements)
         {
-            element->setPosition(element->m_x + 20, element->m_y + 20);
+            element->setPosition(element->m_x + 20, element->m_y + 26);
         }
         break;
     }
@@ -2381,7 +2378,7 @@ void _myGraphicsTest()
     eGraphics *graphicsTest = new eGraphics(_graphicsTest); // [1] создали элемент формы
 
     formGraphicsTest->title = "Graphics test";    // [2] назвали форму
-    formGraphicsTest->eFormShowMode = FULLSCREEN; // [3]
+    formGraphicsTest->eFormShowMode = FULLSCREEN; // [3] определили режим формы
     formGraphicsTest->addElement(graphicsTest);   // [4] добавили эелемент в контейнер
 
     formsStack.push(formGraphicsTest); // [5] добавили элемент в стэк форм
@@ -2422,7 +2419,6 @@ void _myTablet()
 
 void _myForm()
 {
-    // exForm form2;
     exForm* form2 = new exForm();
 
     eText *text1 = new eText("My text, hello)", 5, 5);
@@ -2442,7 +2438,6 @@ void _myForm()
 
 void _myForm3()
 {
-    // exForm form2;
     exForm* form3 = new exForm();
 
     eText *text3 = new eText("My Form3", 5, 5);

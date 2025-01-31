@@ -263,8 +263,8 @@ public:
 
     void setPosition(int x, int y) override
     {
-        this->xForm = x;
-        this->yForm = y;
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
     }
 
 private:
@@ -294,8 +294,8 @@ public:
 
     void setPosition(int x, int y) override
     {
-        this->xForm = x;
-        this->yForm = y;
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
     }
 
 private:
@@ -325,8 +325,8 @@ public:
 
     void setPosition(int x, int y) override
     {
-        this->xForm = x;
-        this->yForm = y;
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
     }
 
 private:
@@ -357,8 +357,8 @@ public:
 
     void setPosition(int x, int y) override
     {
-        this->xForm = x;
-        this->yForm = y;
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
     }
 
 private:
