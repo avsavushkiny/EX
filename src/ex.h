@@ -389,6 +389,7 @@ class eGraphics : public eElement
 {
 public:
     eGraphics(void (*func)()) : showFunc(func) {}
+
     void show() const override
     {
         showFunc();
@@ -406,7 +407,13 @@ private:
 class eForm
 {
 public:
-    virtual ~eForm(){}
+    virtual ~eForm()
+    {
+        for (auto element : elements)
+        {
+            delete element;
+        }
+    }
 
     void addElement(eElement *element)
     {

@@ -144,7 +144,7 @@ void Graphics::initializationSystem()
     u8g2.begin(); Serial.begin(9600);
     
     /* setting display, contrast */
-    u8g2.setContrast(145); //143//150
+    u8g2.setContrast(143); //143//150
 
     /* setting the resolution of the analog-to-digital converter */
     analogReadResolution(RESOLUTION_ADC);
@@ -2367,15 +2367,38 @@ void testKeyboardShow()
 
 
 
-void _graphicsTest()
+void _graphicsTestChess()
 {
-    _gfx.print("Test other graphics function", 50, 50);
+    int w{4}, h{4};
+
+    for (int y = 12; y < 160; y += h)
+    {
+        for (int x = 0; x < 256; x += w)
+        {
+            if ((x / w + y / h) % 2 == 0)
+            {
+                u8g2.drawBox(x, y, w, h);
+            }
+        }
+    }
 }
+
+
+void _graphicsTestRain()
+{ 
+    for (int x = 0; x < 256; x += 2)
+    {
+        int y = random(12, 160);
+        int h = random(160 - y);
+        u8g2.drawVLine(x, y, h); 
+    }
+}
+
 
 void _myGraphicsTest()
 {
     exForm *formGraphicsTest = new exForm;                  // [0] создали форму
-    eGraphics *graphicsTest = new eGraphics(_graphicsTest); // [1] создали элемент формы
+    eGraphics *graphicsTest = new eGraphics(_graphicsTestRain); // [1] создали элемент формы
 
     formGraphicsTest->title = "Graphics test";    // [2] назвали форму
     formGraphicsTest->eFormShowMode = FULLSCREEN; // [3] определили режим формы
@@ -2635,7 +2658,7 @@ TaskArguments system0[] //0 systems, 1 desktopTask
     {"myTablet", _myTablet, icon.MyConsole, DESKTOP, 0, false},
     {"myTablet", _myForm, icon.MyNullApp, DESKTOP, 0, false},
     {"myTablet", _myForm3, icon.MyNullApp, DESKTOP, 0, false},
-    {"myTablet", _myGraphicsTest, icon.MyNullApp, DESKTOP, 0, false},
+    {"graphics", _myGraphicsTest, icon.MyGfx, DESKTOP, 0, false},
     // [!] Last task
     {"cursor", _systemCursor, NULL, SYSTEM, 0, true}
 };
