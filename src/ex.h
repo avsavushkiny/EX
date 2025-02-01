@@ -369,6 +369,22 @@ private:
     int m_x{0}, m_y{0};
     int m_sizeW, m_sizeH;
 };
+/* List box */
+class eListBox : public eElement
+{
+public:
+    eListBox(const std::vector<TaskArguments>& t) {}
+
+    void show () const override;
+    void setPosition(int x, int y) override
+    {
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
+    }
+private:
+    int xForm, yForm;
+};
+
 /* Desktop */
 class eDesktop : public eElement
 {

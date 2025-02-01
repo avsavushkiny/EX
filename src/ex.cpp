@@ -2221,6 +2221,11 @@ void eLabel::show() const
         }
     }
 }
+/* List box */
+void eListBox::show() const
+{
+    
+}
 /* desktop */
 void eDesktop::show() const
 {
