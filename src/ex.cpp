@@ -895,100 +895,65 @@ bool Label::label(String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t li
     return false;
 }
 /* text object as a link, sends the description to the output buffer */
-bool Label::label(String text, String description, uint8_t x, uint8_t y, void (*f)(void), uint8_t lii, uint8_t chi, int xCursor, int yCursor)
+void Label::label(String text, void (*f)(void), uint8_t xLabel, uint8_t yLabel)
 {
     uint8_t sizeText = text.length();
-    uint8_t yy{};
+    uint8_t yy{}, chi{5}, lii{8}; int x{xLabel + 1}, y{yLabel + 8};
 
-    if ((xCursor >= x && xCursor <= (x + (sizeText * chi))) && (yCursor >= y - (lii + 2) && yCursor <= y + 2))
+    if ((_joy.posX0 >= x && _joy.posX0 <= (x + (sizeText * chi))) && (_joy.posY0 >= y - (lii + 2) && _joy.posY0 <= y + 2))
     {
-        u8g2.setDrawColor(1);//1
-        u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1);
 
-        BUFFER_STRING = description;
+        u8g2.setColorIndex(1);                                         // включаем пиксели
+        u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1); // рисуем черный бокс
+        u8g2.setColorIndex(0);                                         // отключаем пиксели
 
-        if (Joystick::pressKeyENTER() == true)
+        u8g2.setCursor(x + 3, y);
+        u8g2.setFont(u8g2_font_6x10_tr);
+
+        for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
         {
-            f();
-            return true;
+            u8g2.setCursor(xx + x, yy + y);
+            u8g2.print(text[i]);
+
+            if (text[i] == '\n')
+            {
+                yy += lii; // 10
+                xx = -chi; // 6
+            }
+        }
+        u8g2.setColorIndex(1);                                          // включаем пиксели
+
+
+        if (_joy.pressKeyENTER() == true)
+        {
+            _gfx.waitDisplay();
+            f(); 
         }
     }
     else
     {
-        u8g2.setDrawColor(1);
-    }
+        u8g2.setColorIndex(1);                                          // включаем пиксели
 
-    u8g2.setCursor(x + 3, y);
-    u8g2.setFont(u8g2_font_6x10_tr);
-    
-    u8g2.setFontMode(1);
-    u8g2.setDrawColor(2);//2
-    
-    for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
-    {
-        u8g2.setCursor(xx + x, yy + y);
-        u8g2.print(text[i]);
+        u8g2.setCursor(x + 3, y);
+        u8g2.setFont(u8g2_font_6x10_tr);
 
-        if (text[i] == '\n')
+        for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
         {
-            yy += lii; // 10
-            xx = -chi; // 6
+            u8g2.setCursor(xx + x, yy + y);
+            u8g2.print(text[i]);
+
+            if (text[i] == '\n')
+            {
+                yy += lii; // 10
+                xx = -chi; // 6
+            }
         }
-    }
-
-    u8g2.setFontMode(0); //0-activate not-transparent font mode
-
-    return false;
-}
-/* v200125 */
-bool Label::label2(String text, void (*f)(void), uint8_t x, uint8_t y)
-{
-    uint8_t sizeText = text.length();
-    uint8_t yy{}, lii{8}, chi{5};
-
-    // if ((_joy.posX0 >= x && _joy.posX0 <= (x + (sizeText * chi))) && (_joy.posY0 >= y - (lii + 2) && _joy.posY0 <= y + 2))
-    // {
-        u8g2.setDrawColor(1);
-        u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1);
-
-        BUFFER_STRING = text;
-
-        if (_joy.pressKeyENTER() == true)
-        {
-            f();
-            return true;
-        }
-    // }
-    // else
-    // {
-        // u8g2.setDrawColor(1);
-    // }
-
-    u8g2.setCursor(x + 3, y);
-    u8g2.setFont(u8g2_font_6x10_tr);
-    u8g2.setFontMode(1);
-    u8g2.setDrawColor(2);
-    
-    for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
-    {
-        u8g2.setCursor(xx + x, yy + y);
-        u8g2.print(text[i]);
-
-        if (text[i] == '\n')
-        {
-            yy += lii; // 10
-            xx = -chi; // 6
-        }
-    }
-
-    u8g2.setFontMode(0);
-
-    return false;
+    }    
 }
 
 /* 
-    class
-    TextBox
+     class
+     TextBox
 */
 /* dynamic Frame */
 void TextBox::textBox(String str, objectLocation location, objectBoundary boundary, short charH, short charW, int x, int y)
@@ -2221,11 +2186,6 @@ void eLabel::show() const
         }
     }
 }
-/* List box */
-void eListBox::show() const
-{
-    
-}
 /* desktop */
 void eDesktop::show() const
 {
@@ -2263,6 +2223,8 @@ int exForm::showForm() const
 {
     Button closeForm;
 
+    int sizeStack = formsStack.size();
+
     switch (eFormShowMode)
     {
     case FULLSCREEN:
@@ -2296,9 +2258,21 @@ int exForm::showForm() const
         }
 
         u8g2.setColorIndex(1); // вкл пиксели
-        u8g2.drawFrame(0, 12 /* height button - 1 */, 256, 147); // x, y, w, h
+        u8g2.drawFrame(0, 12 /* height button (13px) - 1 */, 256, 147); // x, y, w, h
         _gfx.print(10, title, 5, 10, 10, 5); // size Font, text, x, y, lii, chi
-
+        
+        uint8_t xSizeStack{};
+        
+        if (sizeStack <= 9)
+        {
+            xSizeStack = 205;
+        }
+        if ((sizeStack >= 10) && (sizeStack <= 99))
+        {
+            xSizeStack = 200;
+        }
+        
+        _gfx.print(10, "[" + (String)sizeStack + "]", xSizeStack, 10, 10, 5);
     }
 
     if (eFormShowMode == MAXIMIZED)
@@ -2311,7 +2285,19 @@ int exForm::showForm() const
         u8g2.setColorIndex(1); // вкл пиксели
         u8g2.drawFrame(0, 12 /* height button - 1 */, 256, 137 /* 137 - 10px tray*/); // x, y, w, h
         _gfx.print(10, title, 5, 10, 10, 5); // size Font, text, x, y, lii, chi
-
+       
+        uint8_t xSizeStack{};
+        
+        if (sizeStack <= 9)
+        {
+            xSizeStack = 205;
+        }
+        if ((sizeStack >= 10) && (sizeStack <= 99))
+        {
+            xSizeStack = 200;
+        }
+       
+       _gfx.print(10, "[" + (String)sizeStack + "]", xSizeStack, 10, 10, 5);
     }
 
     if (eFormShowMode == NORMAL)
@@ -2325,6 +2311,19 @@ int exForm::showForm() const
         u8g2.setColorIndex(1); // вкл пиксели
         u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
         _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 1 + 6, 10, 5);
+        
+        uint8_t xSizeStack{};
+        
+        if (sizeStack <= 9)
+        {
+            xSizeStack = 185;
+        }
+        if ((sizeStack >= 10) && (sizeStack <= 99))
+        {
+            xSizeStack = 180;
+        }
+
+        _gfx.print(10, "[" + (String)sizeStack + "]", xSizeStack, outerBoundaryForm - 6 + 10, 10, 5);
     }
 
     // выводим все элементы на дисплей
@@ -2372,6 +2371,9 @@ void testKeyboardShow()
 
 
 
+
+//-------------------------
+
 void _graphicsTestChess()
 {
     int w{4}, h{4};
@@ -2390,7 +2392,7 @@ void _graphicsTestChess()
 
 
 void _graphicsTestRain()
-{ 
+{   
     for (int x = 0; x < 256; x += 2)
     {
         int y = random(12, 160);
@@ -2402,7 +2404,7 @@ void _graphicsTestRain()
 
 void _myGraphicsTest()
 {
-    exForm *formGraphicsTest = new exForm;                  // [0] создали форму
+    exForm *formGraphicsTest = new exForm;                      // [0] создали форму
     eGraphics *graphicsTest = new eGraphics(_graphicsTestRain); // [1] создали элемент формы
 
     formGraphicsTest->title = "Graphics test";    // [2] назвали форму
@@ -2484,30 +2486,23 @@ void _myForm3()
     formsStack.push(form3);
 }
 
-
-
-
-
-
-void _viewTaskList()
+void _myDispatcherFunction()
 {
-    /*int xx{5}, yy{30};
+    int xx{5}, yy{23};
 
-    u8g2.setFontMode(1);
-    u8g2.setDrawColor(2);
+    u8g2.setDrawColor(1); // 0-white,  1-black, 2-XOR
+    u8g2.setColorIndex(1);// 0-off px, 1-on px
 
-    _gfx.print("Active tasks:", 5, 20, 8, 5);
+    // _gfx.print("Active tasks:", xx + 5, yy + 10, 8, 5);
 
-    for (TaskArguments &_ta : tasks)
+    for (auto &_ta : tasks)
     { 
-        if (_ta.active == true)
+        if (_ta.activ == true)
         {
-            String _Text = _ta.text;
+            String _Text = _ta.name;
             uint8_t sizeText = _Text.length();
 
-            _numberIndexTask = _ta.indexTask;
-
-            _taskList.label(_Text, _ta.name, xx, yy, _dialogueChangingStatusTask, 8, 5, _joy.posX0, _joy.posY0);
+            _gfx.print(_ta.name, xx, yy, 8, 5);
             
             if ((xx + (sizeText * 5) + 5) <= 240) //256 - 5 - 5
             {
@@ -2523,20 +2518,20 @@ void _viewTaskList()
 
     xx = 5;
     
-    _gfx.print("Inactive tasks:", 5, (yy+20), 8, 5);
+    // _gfx.print("Inactive tasks:", xx + 5, (yy + 10), 8, 5);
 
-    yy += 30;
+    yy += 20;
     
-    for (TaskArguments &_ta : tasks)
+    for (auto &_ta : tasks)
     { 
-        if (_ta.active == false)
+        if (_ta.activ == false)
         {
-            String _Text = _ta.text;
+            String _Text = _ta.name;
             uint8_t sizeText = _Text.length();
-
-            _numberIndexTask = _ta.indexTask;
             
-            _taskList.label(_Text, _ta.name, xx, yy, _dialogueChangingStatusTask, 8, 5, _joy.posX0, _joy.posY0);
+            Label labelTask;
+            labelTask.label(_ta.name, _ta.f, xx, yy);
+            // _gfx.print(_ta.name, xx, yy, 8, 5);
             
             if ((xx + (sizeText * 5) + 5) <= 240) //256 - 5 - 5
             {
@@ -2548,8 +2543,23 @@ void _viewTaskList()
                 xx = 5; yy += 10;
             }
         }
-    }*/
+    }
 }
+void _myDispatcher()
+{
+    exForm *formMyDispatcher = new exForm;
+    eGraphics *myDispatcher = new eGraphics(_myDispatcherFunction);
+
+    formMyDispatcher->title = "My Dispatcher task";
+    formMyDispatcher->eFormShowMode = FULLSCREEN;
+    formMyDispatcher->addElement(myDispatcher);
+
+    formsStack.push(formMyDispatcher);
+}
+
+
+
+
 
 /* Clear all commands */
 void _clearCommandTerminal()
@@ -2660,10 +2670,11 @@ TaskArguments system0[] //0 systems, 1 desktopTask
 {
     {"powersave", _systemPowerSaveBoard, NULL, SYSTEM, 0, true},
     {"desktop", _myDesktop, NULL, SYSTEM, 100, true},
-    {"myTablet", _myTablet, icon.MyConsole, DESKTOP, 0, false},
-    {"myTablet", _myForm, icon.MyNullApp, DESKTOP, 0, false},
-    {"myTablet", _myForm3, icon.MyNullApp, DESKTOP, 0, false},
+    {"form1", _myTablet, icon.MyConsole, DESKTOP, 0, false},
+    {"form2", _myForm, icon.MyNullApp, DESKTOP, 0, false},
+    {"form3", _myForm3, icon.MyNullApp, DESKTOP, 0, false},
     {"graphics", _myGraphicsTest, icon.MyGfx, DESKTOP, 0, false},
+    {"dispatcher", _myDispatcher, icon.MyTaskManager, DESKTOP, 0, false},
     // [!] Last task
     {"cursor", _systemCursor, NULL, SYSTEM, 0, true}
 };

@@ -373,20 +373,23 @@ private:
 class eListBox : public eElement
 {
 public:
-    eListBox(const std::vector<TaskArguments>& t, BorderStyle lisborderStyle, int sizeW, int sizeH, int x, int y);
+    template<typename T>
+    eListBox(std::vector<T>& t, int x, int y) : m_x(x), m_y(y) {}
 
-    void show () const override;
+    void show() const override
+    {
+    }
+
     void setPosition(int x, int y) override
     {
         this->xForm = x + m_x;
         this->yForm = y + m_y;
     }
+
 private:
-    BorderStyle listBox_borderStyle;
-    int xForm, yForm;
-    int m_x{0}, m_y{0};
-    int m_sizeW, m_sizeH;
+    int xForm, yForm, m_x, m_y;
 };
+
 
 /* Desktop */
 class eDesktop : public eElement
@@ -835,10 +838,10 @@ class Label : Joystick
 {
 private:
 public:
-    /* Label */
+    /* ? */
     bool label(String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t lii, uint8_t chi, int xCursor, int yCursor);
-    bool label(String text, String description, uint8_t x, uint8_t y, void (*f)(void), uint8_t lii, uint8_t chi, int xCursor, int yCursor);
-    bool label2(String text, void (*f)(void), uint8_t x, uint8_t y);
+    /* 010225 */
+    void label(String text, void (*f)(void), uint8_t x, uint8_t y);
 };
 
 class TextBox
