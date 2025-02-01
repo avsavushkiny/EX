@@ -373,7 +373,7 @@ private:
 class eListBox : public eElement
 {
 public:
-    eListBox(const std::vector<TaskArguments>& t) {}
+    eListBox(const std::vector<TaskArguments>& t, BorderStyle lisborderStyle, int sizeW, int sizeH, int x, int y);
 
     void show () const override;
     void setPosition(int x, int y) override
@@ -382,7 +382,10 @@ public:
         this->yForm = y + m_y;
     }
 private:
+    BorderStyle listBox_borderStyle;
     int xForm, yForm;
+    int m_x{0}, m_y{0};
+    int m_sizeW, m_sizeH;
 };
 
 /* Desktop */
