@@ -62,7 +62,7 @@ struct TaskArguments
     String name;           // Short task name
     void (*f)(void);       // Pointer to task function
     const uint8_t *bitMap; // Pointer to xbmp image
-    TaskType type;         // Task type, 0 - system, 1 - desktop
+    TaskType type;         // Task type, 0 - system, 1 - desktop, 3 - user
     int index;             // Task index
     bool activ;            // Task Status
 };
@@ -389,8 +389,6 @@ public:
 private:
     int xForm, yForm, m_x, m_y;
 };
-
-
 /* Desktop */
 class eDesktop : public eElement
 {

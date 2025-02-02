@@ -2666,7 +2666,7 @@ Icon icon;
     Dispatcher tasks, vector
     [01/2025, Alexander Savushkin]
 */
-TaskArguments system0[] //0 systems, 1 desktopTask
+TaskArguments system0[] //0 systems, 1 desktop, 2 user
 {
     {"powersave", _systemPowerSaveBoard, NULL, SYSTEM, 0, true},
     {"desktop", _myDesktop, NULL, SYSTEM, 100, true},
@@ -2748,6 +2748,10 @@ void runExFormStack()
 
         int result = currentForm->showForm();
 
+        /*
+        The form's "Close" button returns 1
+        */
+
         if (result == 1)
         {
             formsStack.pop();
@@ -2756,10 +2760,7 @@ void runExFormStack()
             delay(250);
         }
     }
-
-    // _gfx.print((String)formsStack.size(), 100, 10);
 }
-
 
 void runTasksCore()
 {
