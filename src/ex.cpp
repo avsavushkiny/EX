@@ -769,10 +769,14 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
   u8g2.setBitmapMode(0);
   u8g2.drawXBMP(x, y, 32, 32, bitMap);
   u8g2.drawXBMP(x, y + 21, 11, 11, shortcut_bits);
+  
+  TextBox textBoxNameTask;
 
   if ((xCursor >= x && xCursor <= (x + 32)) && (yCursor >= y && yCursor <= (y + 32)))
   {
     u8g2.drawFrame(x, y, 32, 32);
+
+    textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 32);
     
     if (Joystick::pressKeyENTER() == true)
     {
@@ -783,7 +787,7 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
   }
   else
   {
-    
+    textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 32);
   }
 
   return false;
@@ -1174,7 +1178,44 @@ void TextBox::textBox(String str, objectBoundary boundary, int sizeH, int sizeW,
     //_gfx.print((String)numberOfLines, 0, 30);
     //_gfx.print((String)numberOfLinesFrame, 0, 40);
 }
+/* no Frame */
+void TextBox::textBox(String str, int sizeH, int sizeW, short charH, short charW, int x, int y)
+{
+    short border{0}; short border2{0}; // size border
+    int count{0}; int countChars{0}; int maxChar{0}; // for counting characters
+    int line{1}; // there will always be at least one line of text in the text
+    int numberOfCharacters{0}; // количество символов
+    int ch{0}, ln{0}; int xx{x}, yy{y};  
+    
+    for (char c : str)
+    {
+        numberOfCharacters++;
+    }
 
+    int numberOfCharactersLineFrame = (sizeW - border - border) / charW; // количество символов в строчке Фрейма
+    int numberOfLines = numberOfCharacters / numberOfCharactersLineFrame; // количество строк
+    int numberOfLinesFrame = (sizeH - border - border) / charH; // количество строчек в Фрейме
+    
+    for (char c : str)
+    {
+        u8g2.setFont(u8g2_font_6x10_tr);
+        u8g2.setCursor(xx + border, yy + charH + border);
+        u8g2.print(c);
+        
+        xx += charW;
+        ch++;
+
+        if (ch >= numberOfCharactersLineFrame)
+        {
+            yy += charH; ch = 0; xx = x; ln++;
+        }
+
+        if (ln >= numberOfLinesFrame)
+        {
+            break;
+        }
+    }
+}
 
 
 
@@ -2050,7 +2091,7 @@ void eText::show() const
 {
     _gfx.print(m_text, xForm, yForm + highChar, 10, 5);
 }
-/* eText-Box */
+/* eTextbox */
 void eTextBox::show() const
 {
     short border{5}; short border2{8}; // size border
@@ -2131,8 +2172,31 @@ void eTextBox::show() const
         // }
     }
 }
-/* eLabel with a link */
+/* eLabel */
 void eLabel::show() const
+{
+    uint8_t sizeText = m_text.length();
+    uint8_t chi{5}, lii{8};
+    int x{xForm}, y{yForm};
+
+    u8g2.setColorIndex(1); // включаем пиксели
+
+    u8g2.setCursor(x, y);
+    u8g2.setFont(u8g2_font_6x10_tr);
+
+    for (int i = 0; i < sizeText; i++)
+    {
+        u8g2.setCursor(x, y);
+        u8g2.print(m_text[i]); x += chi;
+
+        if (m_text[i] == '\n')
+        {
+            x = xForm; y += lii;
+        }
+    }
+}
+/* eLabel with a link */
+void eLinkLabel::show() const
 {
     uint8_t sizeText = m_text.length();
     uint8_t yy{}, chi{5}, lii{8}; int x{xForm + 1}, y{yForm + 8};
@@ -2186,6 +2250,12 @@ void eLabel::show() const
         }
     }
 }
+/* Horizontal line */
+void eLine::show() const
+{
+    u8g2.drawHLine(xForm, yForm, wForm);
+}
+
 /* desktop */
 void eDesktop::show() const
 {
@@ -2199,8 +2269,8 @@ void eDesktop::show() const
     {
         if ((t.activ == false) && (t.bitMap != NULL) && (t.type == DESKTOP))
         {
-            // _shortcutDesktop.shortcut(t.name, t.bitMap, xx, yy, t.f, _joy.posX0, _joy.posY0);
             _shortcutDesktop.shortcut(t.name, t.bitMap, xx, yy, t.f, _joy.posX0, _joy.posY0);
+
             countTask++;
 
             xx += (32 + border);
@@ -2208,7 +2278,7 @@ void eDesktop::show() const
             if (countTask > 7)
             {
                 xx = 4;
-                yy += (32 + border);
+                yy += (32 + border + 16);
                 countTask = 0;
             }
         }
@@ -2231,21 +2301,21 @@ int exForm::showForm() const
         // Для полноэкранного режима устанавливаем координаты относительно экрана
         for (const auto &element : elements)
         {
-            element->setPosition(element->m_x, element->m_y + 12);
+            element->setPosition(element->m_x, element->m_y + 12, element->m_w + 256, element->m_h);
         }
         break;
     case MAXIMIZED:
         // Для максимизированного режима устанавливаем координаты относительно окна
         for (const auto &element : elements)
         {
-            element->setPosition(element->m_x, element->m_y + 12);
+            element->setPosition(element->m_x, element->m_y + 12, element->m_w + 256, element->m_h);
         }
         break;
     case NORMAL:
         // Для нормального режима оставляем координаты без изменений
         for (const auto &element : elements)
         {
-            element->setPosition(element->m_x + 20, element->m_y + 26);
+            element->setPosition(element->m_x + 20, element->m_y + 26, element->m_w + 216, element->m_h + 120);
         }
         break;
     }
@@ -2374,7 +2444,7 @@ void testKeyboardShow()
 
 //-------------------------
 
-void _graphicsTestChess()
+void _graphicsTest2()
 {
     int w{4}, h{4};
 
@@ -2390,8 +2460,7 @@ void _graphicsTestChess()
     }
 }
 
-
-void _graphicsTestRain()
+void _graphicsTest1()
 {   
     for (int x = 0; x < 256; x += 2)
     {
@@ -2401,18 +2470,31 @@ void _graphicsTestRain()
     }
 }
 
-
-void _myGraphicsTest()
+void _myGraphicsTest1()
 {
-    exForm *formGraphicsTest = new exForm;                      // [0] создали форму
-    eGraphics *graphicsTest = new eGraphics(_graphicsTestRain); // [1] создали элемент формы
+    exForm *formGraphicsTest1 = new exForm;                   // [0] создали форму
+    eGraphics *graphicsTest1 = new eGraphics(_graphicsTest1); // [1] создали элемент формы
 
-    formGraphicsTest->title = "Graphics test";    // [2] назвали форму
-    formGraphicsTest->eFormShowMode = FULLSCREEN; // [3] определили режим формы
-    formGraphicsTest->addElement(graphicsTest);   // [4] добавили эелемент в контейнер
+    formGraphicsTest1->title = "Graphics test";    // [2] назвали форму
+    formGraphicsTest1->eFormShowMode = FULLSCREEN; // [3] определили режим формы
+    formGraphicsTest1->addElement(graphicsTest1);  // [4] добавили эелемент в контейнер
 
-    formsStack.push(formGraphicsTest); // [5] добавили элемент в стэк форм
+    formsStack.push(formGraphicsTest1); // [5] добавили элемент в стэк форм
 }
+
+void _myGraphicsTest2()
+{
+    exForm *formGraphicsTest2 = new exForm;                   // [0] создали форму
+    eGraphics *graphicsTest2 = new eGraphics(_graphicsTest2); // [1] создали элемент формы
+
+    formGraphicsTest2->title = "Graphics test 2";  // [2] назвали форму
+    formGraphicsTest2->eFormShowMode = FULLSCREEN; // [3] определили режим формы
+    formGraphicsTest2->addElement(graphicsTest2);  // [4] добавили эелемент в контейнер
+
+    formsStack.push(formGraphicsTest2); // [5] добавили элемент в стэк форм
+}
+
+
 
 //====================================================
 /* my desctop */
@@ -2454,12 +2536,14 @@ void _myForm()
     eText *text1 = new eText("My text, hello)", 5, 5);
     eButton *buttons1 = new eButton("My Button", nullFunction, 5, 20);
     eTextBox *textBox1 = new eTextBox("Test text for output in the Form", BorderStyle::shadow, 100, 30, 5, 40);
-    eLabel *label1 = new eLabel("Label with link", nullFunction, 5, 85);
+    eLinkLabel *label1 = new eLinkLabel("Label with link", nullFunction, 5, 85);
+    eLine *Line2 = new eLine(0, 72);
     
     form2->addElement(text1);
     form2->addElement(buttons1);
     form2->addElement(textBox1);
     form2->addElement(label1);
+    form2->addElement(Line2);
 
     form2->eFormShowMode = FULLSCREEN;
 
@@ -2473,7 +2557,9 @@ void _myForm3()
     eText *text3 = new eText("My Form3", 5, 5);
     eButton *buttons3 = new eButton("My Button Form3", nullFunction, 5, 20);
     eTextBox *textBox3 = new eTextBox("Test text for output in the Form3", BorderStyle::shadow, 100, 30, 5, 40);
-    eLabel *label3 = new eLabel("Label with link, Form3", nullFunction, 5, 85);   
+    eLinkLabel *llabel3 = new eLinkLabel("Label with link, Form3", nullFunction, 5, 75);
+    eLabel *label3 = new eLabel("Settings", 5, 95);
+    eLine *Line3 = new eLine(0, 100); 
 
     form3->title = "Form 3";
     form3->eFormShowMode = NORMAL;
@@ -2481,7 +2567,9 @@ void _myForm3()
     form3->addElement(text3);
     form3->addElement(buttons3);
     form3->addElement(textBox3);
+    form3->addElement(llabel3);
     form3->addElement(label3);
+    form3->addElement(Line3);
 
     formsStack.push(form3);
 }
@@ -2670,10 +2758,11 @@ TaskArguments system0[] //0 systems, 1 desktop, 2 user
 {
     {"powersave", _systemPowerSaveBoard, NULL, SYSTEM, 0, true},
     {"desktop", _myDesktop, NULL, SYSTEM, 100, true},
-    {"form1", _myTablet, icon.MyConsole, DESKTOP, 0, false},
+    {"form1", _myTablet, icon.MyNullApp, DESKTOP, 0, false},
     {"form2", _myForm, icon.MyNullApp, DESKTOP, 0, false},
     {"form3", _myForm3, icon.MyNullApp, DESKTOP, 0, false},
-    {"graphics", _myGraphicsTest, icon.MyGfx, DESKTOP, 0, false},
+    {"graphics 1", _myGraphicsTest1, icon.MyGfx, DESKTOP, 0, false},
+    {"graphics 2", _myGraphicsTest2, icon.MyGfx, DESKTOP, 0, false},
     {"dispatcher", _myDispatcher, icon.MyTaskManager, DESKTOP, 0, false},
     // [!] Last task
     {"cursor", _systemCursor, NULL, SYSTEM, 0, true}

@@ -245,8 +245,8 @@ public:
     virtual void show() const = 0;
 
     /* чистая функция для установки позиции элемента */
-    virtual void setPosition(int x, int y) = 0;
-    int m_x{0}, m_y{0};
+    virtual void setPosition(int x, int y, int w, int h) = 0;
+    int m_x{0}, m_y{0}, m_w{0}, m_h{0};
 };
 /* Button */
 class eButton : public eElement
@@ -261,16 +261,18 @@ public:
 
     void show() const override;
 
-    void setPosition(int x, int y) override
+    void setPosition(int x, int y, int w, int h) override
     {
         this->xForm = x + m_x;
         this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
     }
 
 private:
     String m_label; 
     void (*m_onClick)(void);
-    int xForm, yForm;
+    int xForm, yForm, wForm, hForm;
     short outerBoundaryForm{20};
     int m_x{0}, m_y{0};
 };
@@ -292,20 +294,22 @@ public:
 
     void show() const override;
 
-    void setPosition(int x, int y) override
+    void setPosition(int x, int y, int w, int h) override
     {
         this->xForm = x + m_x;
         this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
     }
 
 private:
     String m_text;
     short const highChar{10};
-    int xForm, yForm;
+    int xForm, yForm, wForm, hForm;
     short outerBoundaryForm{20};
     int m_x{0}, m_y{0};
 };
-/* Text-box */
+/* Textbox */
 class eTextBox : public eElement
 {  
 public:
@@ -323,25 +327,27 @@ public:
 
     void show() const override;
 
-    void setPosition(int x, int y) override
+    void setPosition(int x, int y, int w, int h) override
     {
         this->xForm = x + m_x;
         this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
     }
 
 private:
     BorderStyle m_borderStyle;
     String m_text;
-    int xForm, yForm;
+    int xForm, yForm, wForm, hForm;
     short outerBoundaryForm{20};
     int m_x{0}, m_y{0};
     int m_sizeW, m_sizeH;
 };
-/* Label to link */
+/* Label */
 class eLabel : public eElement
 {
 public:
-    eLabel(const String& text, void (*onClick)(), int x, int y) : m_text(text), m_onClick(onClick), m_x(x), m_y(y) {}
+    eLabel(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
 
     void setText(const String &new_text)
     {
@@ -355,21 +361,74 @@ public:
 
     void show() const override;
 
-    void setPosition(int x, int y) override
+    void setPosition(int x, int y, int w, int h) override
     {
         this->xForm = x + m_x;
         this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
+    }
+
+private:
+    String m_text;
+    int xForm, yForm, wForm, hForm;
+    int m_x{0}, m_y{0};
+};
+/* Label to link */
+class eLinkLabel : public eElement
+{
+public:
+    eLinkLabel(const String& text, void (*onClick)(), int x, int y) : m_text(text), m_onClick(onClick), m_x(x), m_y(y) {}
+
+    void setText(const String &new_text)
+    {
+        m_text = new_text;
+    }
+
+    String getText() const
+    {
+        return m_text;
+    }
+
+    void show() const override;
+
+    void setPosition(int x, int y, int w, int h) override
+    {
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
     }
 
 private:
     void (*m_onClick)(void);
     String m_text;
-    int xForm, yForm;
-    short outerBoundaryForm{20};
+    int xForm, yForm, wForm, hForm;
     int m_x{0}, m_y{0};
     int m_sizeW, m_sizeH;
 };
-/* List box */
+/* Horizontal line */
+class eLine : public eElement
+{
+public:
+    eLine(int x, int y) : m_x(x), m_y(y) {}
+    
+    void show() const override;
+
+    void setPosition(int x, int y, int w, int h) override
+    {
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
+    }
+private:
+    // String m_title;
+    int xForm, yForm, wForm, hForm;
+    int m_x{0}, m_y{0}, m_w{0};
+};
+
+/* [!] List box */
 class eListBox : public eElement
 {
 public:
@@ -380,14 +439,16 @@ public:
     {
     }
 
-    void setPosition(int x, int y) override
+    void setPosition(int x, int y, int w, int h) override
     {
         this->xForm = x + m_x;
         this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
     }
 
 private:
-    int xForm, yForm, m_x, m_y;
+    int xForm, yForm, wForm, hForm, m_x, m_y;
 };
 /* Desktop */
 class eDesktop : public eElement
@@ -395,14 +456,16 @@ class eDesktop : public eElement
 public:
     eDesktop() {}
     void show() const override;
-    void setPosition(int x, int y) override
+    void setPosition(int x, int y, int w, int h) override
     {
         this->xForm = x;
         this->yForm = y;
+        this->wForm = w;
+        this->hForm = h;
     }
 
 private:
-    int xForm, yForm;
+    int xForm, yForm, wForm, hForm;
 };
 /* Graphics */
 class eGraphics : public eElement
@@ -414,13 +477,16 @@ public:
     {
         showFunc();
     }
-    void setPosition(int x, int y) override
+    
+    void setPosition(int x, int y, int w, int h) override
     {
         this->xForm = x;
         this->yForm = y;
+        this->wForm = w;
+        this->hForm = h;
     }
 private:
-    int xForm, yForm;
+    int xForm, yForm, wForm, hForm;
     void (*showFunc)();
 };
 /* Abstract base class eForm */
@@ -854,6 +920,7 @@ public:
     /* Text-box */
     void textBox(String str, objectLocation location, objectBoundary boundary, short charH, short charW, int x, int y);
     void textBox(String str, objectBoundary boundary, int sizeH, int sizeW, short charH, short charW, int x, int y);
+    void textBox(String str, int sizeH, int sizeW, short charH, short charW, int x, int y);
 };
 
 class Form0
