@@ -34,7 +34,7 @@
 #include <algorithm>
 
 //version Library and Text
-const int8_t VERSION_LIB[] = {0, 0, 3};
+const int8_t VERSION_LIB[] = {0, 1, 4};
 
 Graphics _gfx; 
 Timer _delayCursor, _trm0, _trm1, _stop, _timerUpdateClock, _fps; 
@@ -2380,7 +2380,7 @@ int exForm::showForm() const
 
         u8g2.setColorIndex(1); // вкл пиксели
         u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
-        _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 1 + 6, 10, 5);
+        _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 2 + 6, 10, 5);
         
         uint8_t xSizeStack{};
         
@@ -2513,6 +2513,24 @@ void _myDesktop()
 
     td.removeTaskIndex(100);
 }
+/* OS startup message */
+void _myOSstartupForm()
+{
+    exForm *formMyOSstartup = new exForm;
+    eText *textMessage = new eText("I don't understand why you did this,\nbut oh well.\n\nTo launch Desktop - click on\nthe button below, good luck :))", 5, 5);
+    eLine *line = new eLine(0, 97);
+    eButton *button = new eButton("Run Desktop", _myDesktop, 5, 102);
+
+    formMyOSstartup->title = "OS startup";
+    formMyOSstartup->eFormShowMode = NORMAL;
+
+    formMyOSstartup->addElement(textMessage);
+    formMyOSstartup->addElement(line);
+    formMyOSstartup->addElement(button);
+
+    formsStack.push(formMyOSstartup);
+}
+
 
 /* Task. Stack, task, command */ 
 void _myTablet()
@@ -2644,6 +2662,8 @@ void _myDispatcher()
 
     formsStack.push(formMyDispatcher);
 }
+
+
 
 
 
@@ -2849,6 +2869,7 @@ void runExFormStack()
             delay(250);
         }
     }
+    if (formsStack.empty()) _myOSstartupForm();
 }
 
 void runTasksCore()
