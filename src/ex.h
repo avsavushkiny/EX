@@ -101,141 +101,12 @@ namespace
     std::vector<TaskArguments> tasksTray; // Notification bar task vector
 };
 
-
-/*
-    Form
-    Visual Form Builder
-    [01/2025, Alexander Savushkin]
-*/
-/* Basic interface for all form elements */
-class FormElement
-{
-public:
-    virtual void Show() const = 0;
-};
-/* Button */
-class FormButton : public FormElement
-{
-public:
-    FormButton(const String& label, void (*onClick)(), int x, int y) : m_label(label), m_onClick(onClick), m_x(x), m_y(y) {}
-
-    void Show() const override;
-
-    void Click() //delete const in fShow
-    {
-        if (m_onClick != nullptr)
-            m_onClick();
-    }
-
-private:
-    short const outerBoundaryForm {20};
-    short const innerBoundaryForm {5};
-
-    String m_label;
-    void (*m_onClick)(void);
-    int m_x;
-    int m_y;
-};
-/* Text */
-class FormText : public FormElement
-{
-public:
-    FormText(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
-
-    void Show() const override;
-
-private:
-    short const outerBoundaryForm {20};
-    short const innerBoundaryForm {5};
-
-    short const highChar {10};
-
-    String m_text;
-    int m_x;
-    int m_y;
-};
-/* Border style, text-box */
-enum BorderStyle {noBorder, oneLine, twoLine, shadow, shadowNoFrame};
-/* Text-box */
-class FormTextBox : public FormElement
-{
-public:
-    FormTextBox(const String& text, BorderStyle borderStyle, int sizeW, int sizeH, int x, int y) : m_text(text), m_borderStyle(borderStyle), m_sizeW(sizeW), m_sizeH(sizeH), m_x(x), m_y(y) {}
-
-    void Show() const override;
-
-private:
-    short const outerBoundaryForm {20};
-    short const innerBoundaryForm {5};
-
-    BorderStyle m_borderStyle;
-    String m_text;
-    int m_x, m_y;
-    int m_sizeW, m_sizeH;
-};
-/* Label to link */
-class FormLabel : public FormElement
-{
-public:
-    FormLabel(const String& text, void (*onClick)(), int x, int y) : m_text(text), m_onClick(onClick), m_x(x), m_y(y) {}
-
-    void Show() const override;
-
-private:
-    short const outerBoundaryForm {20};
-    short const innerBoundaryForm {5};
-
-    void (*m_onClick)(void);
-    String m_text;
-    int m_x, m_y;
-    int m_sizeW, m_sizeH;
-};
-/* Implementation of a concrete class exForm */
-class Form
-{
-private:
-    std::vector<FormElement*> m_elements;
-
-    short const outerBoundaryForm {20};
-    short const innerBoundaryForm {5};
-public:
-    ~Form()
-    {
-        for (FormElement* element : m_elements)
-        {
-            delete element;
-        }
-    }
-
-    void addButton(const String& label, void (*onClick)(), int x, int y)
-    {
-        m_elements.push_back(new FormButton(label, onClick, x, y));
-    }
-
-    void addText(const String& text, int x, int y)
-    {
-        m_elements.push_back(new FormText(text, x, y));
-    }
-
-    void addTextBox(const String& text, BorderStyle borderStyle, int sizeW, int sizeH, int x, int y)
-    {
-        m_elements.push_back(new FormTextBox(text, borderStyle, sizeW, sizeH, x, y));
-    }
-
-    void addLabel(const String& text, void (*onClick)(), int x, int y)
-    {
-        m_elements.push_back(new FormLabel(text, onClick, x, y));
-    }
-
-    void showForm(const String& title) const;
-};
-
-
 /*
     eForm
     Visual eForm Builder
     [01/2025, Alexander Savushkin]
 */
+enum BorderStyle {noBorder, oneLine, twoLine, shadow, shadowNoFrame};
 /* Basic interface for all form elements */
 class eElement
 {
@@ -427,6 +298,76 @@ private:
     int xForm, yForm, wForm, hForm;
     int m_x{0}, m_y{0}, m_w{0};
 };
+
+
+// Класс VirtualKeyboard, наследующийся от eElement
+class eVirtualKeyboard : public eElement
+{
+public:
+    eVirtualKeyboard(int x, int y) : m_x(x), m_y(y) {}
+
+    void show() const override;
+    // {
+    //     // Отображаем клавиатуру
+    //     // Все что ввели через кнопку бросаем в m_input
+    //     // Отображаем полученный ввод
+    // }
+
+    void setPosition(int x, int y, int w, int h) override
+    {
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
+    }
+
+    void setInput(const String &new_text)
+    {
+        m_input = new_text;
+    }
+
+    String getInput()
+    {
+        return m_input;
+    }
+
+private:
+    String m_input;
+    int xForm, yForm, wForm, hForm;
+    int m_x, m_y;
+};
+
+// Класс InputBox, наследующийся от eElement
+class eInputBox : public eElement
+{
+public:
+    eInputBox(int x, int y) : m_x(x), m_y(y) {}
+
+    void show() const override
+    {
+        // Вызываем виртуальную клавиатуру для получения ввода
+        // VirtualKeyboard vk(m_x, m_y);
+        // vk.show();
+        // m_input = vk.getInput();
+        // Отображаем полученный ввод
+    }
+
+    void setPosition(int x, int y, int w, int h) override
+    {
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
+    }
+
+private:
+    String m_input;
+    int xForm, yForm, wForm, hForm;
+    int m_x, m_y;
+};
+
+
+
 
 /* [!] List box */
 class eListBox : public eElement
@@ -633,20 +574,6 @@ public:
     }
 };
 
-/*
-    Keyboard
-    Keyboard
-    [01/2025, Alexander Savushkin] 270125_0116
-*/
-class Keyboard
-{
-private:
-    int xKeyboard{25}, yKeyboard{100};
-public:
-    String textKeyboard;
-
-    void show();
-};
 
 
 /*

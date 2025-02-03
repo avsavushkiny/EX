@@ -1866,202 +1866,6 @@ void Melody::song(listMelody num)
 /* Null function */
 void nullFunction(){}
 
-
-/*
-    Form
-    Visual Form Builder
-    [01/2025, Alexander Savushkin]
-*/
-/* Text */
-void FormText::Show() const
-{
-    // 6px - offset by Y
-    _gfx.print(m_text, outerBoundaryForm + m_x, outerBoundaryForm + 6 + highChar + m_y, 10, 5);
-}
-/* Button */
-void FormButton::Show() const
-{
-    uint8_t sizeText = m_label.length();
-    short border{3};
-    short charW{5};
-
-    int x{m_x + outerBoundaryForm}, y{m_y + outerBoundaryForm + 6 /* offset by Y */};
-
-
-    if ((_joy.posX0 >= x && _joy.posX0 <= (x + (sizeText * charW) + border + border)) && (_joy.posY0 >= y && _joy.posY0 <= y + 13))
-    {
-        u8g2.drawBox(x, y, (sizeText * charW) + border + border, 13);
-        if (_joy.pressKeyENTER() == true)
-        {
-            m_onClick(); 
-        }
-    }
-    else
-    {
-        u8g2.drawFrame(x, y, (sizeText * charW) + border + border, 13);
-    }
-
-    u8g2.setFontMode(1);
-
-    u8g2.setDrawColor(2);
-    _gfx.print(m_label, x + border, y + 7 /* font H */ + border, 8, charW);
-    u8g2.setDrawColor(1);
-
-    u8g2.setFontMode(1);
-}
-/* Text-box */
-void FormTextBox::Show() const
-{
-    short border{5}; short border2{8}; // size border
-    int count{0}; int countChars{0}; int maxChar{0}; // for counting characters
-    short line{1}; // there will always be at least one line of text in the text
-    int numberOfCharacters{0}; // количество символов
-    short charH{10}, charW{5};
-    int ch{0}, ln{0}; int xx{m_x + outerBoundaryForm}, yy{m_y + outerBoundaryForm + 6 /* offset by Y */}; 
-    
-    if (m_borderStyle == noBorder){ /* we don't draw anything */ }
-    if (m_borderStyle == oneLine)
-    {
-        u8g2.drawFrame(xx, yy, m_sizeW, m_sizeH);
-    }
-    if (m_borderStyle == twoLine)
-    {
-        u8g2.drawFrame(xx, yy, m_sizeW, m_sizeH);
-        u8g2.drawFrame(xx - 3, yy - 3, m_sizeW + 6, m_sizeH + 6);
-    }
-    if (m_borderStyle == shadow)
-    {
-        u8g2.drawFrame(xx, yy, m_sizeW, m_sizeH);
-
-        u8g2.drawHLine(xx + 1, yy + m_sizeH, m_sizeW);
-        u8g2.drawHLine(xx + 2, yy + m_sizeH + 1, m_sizeW);
-
-        u8g2.drawVLine(xx + m_sizeW, yy + 1, m_sizeH);
-        u8g2.drawVLine(xx + m_sizeW + 1, yy + 2, m_sizeH);
-    }
-    if (m_borderStyle == shadowNoFrame)
-    {
-        u8g2.drawHLine(xx + 1, yy + m_sizeH, m_sizeW);
-        u8g2.drawHLine(xx + 2, yy + m_sizeH + 1, m_sizeW);
-
-        u8g2.drawVLine(xx + m_sizeW, yy + 1, m_sizeH);
-        u8g2.drawVLine(xx + m_sizeW + 1, yy + 2, m_sizeH);
-    }
-    
-    
-    for (char c : m_text)
-    {
-        numberOfCharacters++;
-    }
-
-    int numberOfCharactersLineFrame = (m_sizeW - border - border) / charW; // количество символов в строчке Фрейма
-    int numberOfLines = numberOfCharacters / numberOfCharactersLineFrame; // количество строк
-    int numberOfLinesFrame = (m_sizeH - border - border) / charH; // количество строчек в Фрейме
-    
-    for (char c : m_text)
-    {
-        u8g2.setFont(u8g2_font_6x10_tr);
-        u8g2.setCursor(xx + border, yy + charH + border);
-        u8g2.print(c);
-
-        // adds dots if frame is full
-        /*if ((ln >= numberOfLinesFrame - 1) && (numberOfCharactersLineFrame == (ch + 3)))
-        {
-            u8g2.print("...");
-        }
-        else u8g2.print(c);*/
-        
-        xx += charW;
-        ch++;
-
-        if (ch >= numberOfCharactersLineFrame)
-        {
-            yy += charH; ch = 0; xx = m_x + outerBoundaryForm; ln++;
-        }
-
-        // if (ln >= numberOfLinesFrame)
-        // {
-        //     // draw glyph
-        //     /*u8g2.setFont(u8g2_font_unifont_t_symbols);
-        //     u8g2.drawGlyph(x + sizeW - 8, y + sizeH + 2, 0x2198);*/
-
-        //     u8g2.drawTriangle(xx + m_sizeW, yy + m_sizeH - 8, xx + m_sizeW, yy + m_sizeH, xx + m_sizeW - 8, yy + m_sizeH);
-        //     break;
-        // }
-    }
-}
-/* Label */
-void FormLabel::Show() const
-{
-    uint8_t sizeText = m_text.length();
-    uint8_t yy{}, chi{5}, lii{8}; int x{m_x + outerBoundaryForm}, y{m_y + outerBoundaryForm + 6 /* offset by Y */};
-
-    if ((_joy.posX0 >= x && _joy.posX0 <= (x + (sizeText * chi))) && (_joy.posY0 >= y - (lii + 2) && _joy.posY0 <= y + 2))
-    {
-
-        u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1);
-
-        if (_joy.pressKeyENTER() == true)
-        {
-            m_onClick();
-        }
-    }
-    else
-    {
-        u8g2.setDrawColor(1);
-    }
-
-    u8g2.setCursor(x + 3, y);
-    u8g2.setFont(u8g2_font_6x10_tr);
-    
-    u8g2.setFontMode(1);
-    u8g2.setDrawColor(2);//2
-    
-    for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
-    {
-        u8g2.setCursor(xx + x, yy + y);
-        u8g2.print(m_text[i]);
-
-        if (m_text[i] == '\n')
-        {
-            yy += lii; // 10
-            xx = -chi; // 6
-        }
-    }
-
-    u8g2.setFontMode(0); //0-activate not-transparent font mode
-}
-/* Form show */
-void Form::showForm(const String &title) const
-{
-    Button fClose;
-
-    while (1)
-    {
-        u8g2.clearBuffer(); // -->
-
-            if (fClose.button2("CLOSE", 205, outerBoundaryForm - 12 + 6, _joy.posX0, _joy.posY0))
-            {
-                break;
-            }
-
-            u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
-            _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 1 + 6, 10, 5);
-
-                for (const auto &element : m_elements)
-                {
-                    element->Show();
-                }
-
-            // cursor
-            _joy.updatePositionXY(20);
-            _crs.cursor(true, _joy.posX0, _joy.posY0);
-
-        u8g2.sendBuffer(); // <--
-    }
-}
-
-
 /*
     eForm
     Visual eForm Builder
@@ -2271,6 +2075,12 @@ void eLine::show() const
     u8g2.drawHLine(xForm, yForm, wForm);
 }
 
+void eVirtualKeyboard::show() const
+{
+    TextBuffer tb; tb.add("m_input");
+}
+
+
 /* desktop */
 void eDesktop::show() const
 {
@@ -2343,7 +2153,7 @@ int exForm::showForm() const
         }
 
         u8g2.setColorIndex(1); // вкл пиксели
-        u8g2.drawFrame(0, 12 /* height button (13px) - 1 */, 256, 147); // x, y, w, h
+        u8g2.drawFrame(0, 12 /* height button (13px) - 1 */, 256, 148); // x, y, w, h
         _gfx.print(10, title, 5, 10, 10, 5); // size Font, text, x, y, lii, chi
         
         uint8_t xSizeStack{};
@@ -2420,39 +2230,6 @@ int exForm::showForm() const
     return 0; // 0 - the form works
 }
 
-
-
-
-
-
-/*
-    Keyboard
-    Visual keyboard
-    [01/2025, Alexander Savushkin]
-*/
-void Keyboard::show()
-{
-    for (char i = 48; i <= 57; i++)
-    {
-        _gfx.print((String)i, xKeyboard, yKeyboard);
-        xKeyboard += 10;
-    } 
-}
-
-bool stateKeybordShow = false;
-void testKeyboardShow()
-{
-    Keyboard keyboard1;
-    
-    stateKeybordShow = true;
-    
-    if (stateKeybordShow == true)
-    {
-        keyboard1.show();
-    }
-
-    if (_joy.pressKeyEX() == true) stateKeybordShow = false;
-}
 
 
 
@@ -2548,21 +2325,17 @@ void _myOSstartupForm()
 
 
 /* Task. Stack, task, command */ 
-void _myTablet()
+void _myForm1()
 {
-    //Form0 _form;
-    //_form.form("Hello friends!", "Platform Sozvesdiye\nCreate by Alexksander Savushkin\n01/2025", _form.itself);
+    exForm *form1 = new exForm();
 
-    Form form1;
-    form1.addText("My text, hello)", 5, 5);
-    form1.addButton("My Button", testKeyboardShow, 5, 20);
-    //form1.addTextBox("Test text for output in the Form", BorderStyle::oneLine, 100, 30, 5, 40);
-    // form1.addLabel("Label with link", nullFunction, 5, 85);
+    form1->title = "Form 1";
+    form1->eFormShowMode = NORMAL;
 
-    form1.showForm("My Form");
+    formsStack.push(form1);
 }
 
-void _myForm()
+void _myForm2()
 {
     exForm* form2 = new exForm();
 
@@ -2800,8 +2573,8 @@ TaskArguments system0[] //0 systems, 1 desktop, 2 user
     {"powersave", _systemPowerSaveBoard, NULL, SYSTEM, 0, true},
     {"fps", _myFps, NULL, SYSTEM, 0, false},
     {"desktop", _myDesktop, NULL, SYSTEM, 100, true},
-    {"form1", _myTablet, icon.MyNullApp, DESKTOP, 0, false},
-    {"form2", _myForm, icon.MyNullApp, DESKTOP, 0, false},
+    {"form1", _myForm1, icon.MyNullApp, DESKTOP, 0, false},
+    {"form2", _myForm2, icon.MyNullApp, DESKTOP, 0, false},
     {"form3", _myForm3, icon.MyNullApp, DESKTOP, 0, false},
     {"graphics 1", _myGraphicsTest1, icon.MyGfx, DESKTOP, 0, false},
     {"graphics 2", _myGraphicsTest2, icon.MyGfx, DESKTOP, 0, false},
