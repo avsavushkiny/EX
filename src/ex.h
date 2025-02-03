@@ -806,13 +806,12 @@ public:
 
 class Graphics
 {
-protected:
 private:
+    uint8_t _FPS = 0; uint8_t _fpsCounter = 0; long int _fpsTime = millis();
     int image_width{}, image_height{};
 public:
     /* Turn on the backlight of the LCD screen. 1 enabled, 0 disabled. */
     bool controlBacklight(bool state);
-
     /* Initial display setting. Sets Contrast to 0, analog DC at 12, sets port 8 to 1 */
     void initializationSystem();
     /* We send the void-function to the display buffer for output. 
@@ -840,6 +839,8 @@ public:
     bool winkPrint(void (*f)(String, int, int), String text, int x, int y, /*delay*/ int interval);
     /* Wait display */
     bool waitDisplay();
+    /* Рассчет кадров/сек */
+    int calculateFPS();
 };
 
 class Timer

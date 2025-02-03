@@ -5,6 +5,8 @@ Terminal trm;
 
 TaskDispatcher dispatcher;
 
+
+
 void setup()
 {  
     gfx.initializationSystem();

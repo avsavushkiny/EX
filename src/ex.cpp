@@ -313,7 +313,22 @@ bool Graphics::waitDisplay()
     delay(150);
     u8g2.sendBuffer(); return true;
 }
-
+/* Calculate FPS */
+int Graphics::calculateFPS()
+{
+    // get FPS
+    if ((millis() - _fpsTime) <= 1000)
+    {
+        _fpsCounter++;
+    }
+    else
+    {
+        _fpsTime = millis();
+        _FPS = _fpsCounter;
+        _fpsCounter = 0;
+    }
+    return _FPS;
+}
 
 /* 
     class
@@ -2737,7 +2752,13 @@ void _rebootBoard()
 {
     ESP.restart();
 }
-
+/* FPS */
+void _myFps()
+{
+    int fps = _gfx.calculateFPS();
+    u8g2.setCursor(241, 135);
+    u8g2.print(fps);
+}
 
 
 /* Task. System LED control */
@@ -2777,6 +2798,7 @@ Icon icon;
 TaskArguments system0[] //0 systems, 1 desktop, 2 user
 {
     {"powersave", _systemPowerSaveBoard, NULL, SYSTEM, 0, true},
+    {"fps", _myFps, NULL, SYSTEM, 0, false},
     {"desktop", _myDesktop, NULL, SYSTEM, 100, true},
     {"form1", _myTablet, icon.MyNullApp, DESKTOP, 0, false},
     {"form2", _myForm, icon.MyNullApp, DESKTOP, 0, false},
