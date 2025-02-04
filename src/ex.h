@@ -113,7 +113,7 @@ class eElement
 public:
     virtual ~eElement(){}
     /* чистая функция для вывода элемента */
-    virtual void show() const = 0;
+    virtual void show() = 0;
 
     /* чистая функция для установки позиции элемента */
     virtual void setPosition(int x, int y, int w, int h) = 0;
@@ -130,7 +130,7 @@ public:
         m_label = new_label;
     }
 
-    void show() const override;
+    void show() override;
 
     void setPosition(int x, int y, int w, int h) override
     {
@@ -163,7 +163,7 @@ public:
         return m_text;
     }
 
-    void show() const override;
+    void show() override;
 
     void setPosition(int x, int y, int w, int h) override
     {
@@ -196,7 +196,7 @@ public:
         return m_text;
     }
 
-    void show() const override;
+    void show() override;
 
     void setPosition(int x, int y, int w, int h) override
     {
@@ -230,7 +230,7 @@ public:
         return m_text;
     }
 
-    void show() const override;
+    void show() override;
 
     void setPosition(int x, int y, int w, int h) override
     {
@@ -261,7 +261,7 @@ public:
         return m_text;
     }
 
-    void show() const override;
+    void show() override;
 
     void setPosition(int x, int y, int w, int h) override
     {
@@ -284,7 +284,7 @@ class eLine : public eElement
 public:
     eLine(int x, int y) : m_x(x), m_y(y) {}
     
-    void show() const override;
+    void show() override;
 
     void setPosition(int x, int y, int w, int h) override
     {
@@ -306,7 +306,7 @@ class eVirtualKeyboard : public eElement
 public:
     eVirtualKeyboard(int x, int y) : m_x(x), m_y(y) {}
 
-    void show() const override;
+    void show() override;
     // {
     //     // Отображаем клавиатуру
     //     // Все что ввели через кнопку бросаем в m_input
@@ -343,7 +343,7 @@ class eInputBox : public eElement
 public:
     eInputBox(int x, int y) : m_x(x), m_y(y) {}
 
-    void show() const override
+    void show() override
     {
         // Вызываем виртуальную клавиатуру для получения ввода
         // VirtualKeyboard vk(m_x, m_y);
@@ -366,9 +366,6 @@ private:
     int m_x, m_y;
 };
 
-
-
-
 /* [!] List box */
 class eListBox : public eElement
 {
@@ -376,7 +373,7 @@ public:
     template<typename T>
     eListBox(std::vector<T>& t, int x, int y) : m_x(x), m_y(y) {}
 
-    void show() const override
+    void show() override
     {
     }
 
@@ -391,12 +388,14 @@ public:
 private:
     int xForm, yForm, wForm, hForm, m_x, m_y;
 };
+
+
 /* Desktop */
 class eDesktop : public eElement
 {
 public:
     eDesktop() {}
-    void show() const override;
+    void show() override;
     void setPosition(int x, int y, int w, int h) override
     {
         this->xForm = x;
@@ -414,11 +413,10 @@ class eGraphics : public eElement
 public:
     eGraphics(void (*func)()) : showFunc(func) {}
 
-    void show() const override
+    void show() override
     {
         showFunc();
     }
-    
     void setPosition(int x, int y, int w, int h) override
     {
         this->xForm = x;
@@ -447,7 +445,7 @@ public:
         elements.push_back(element);
     }
 
-    virtual int showForm() const = 0;
+    virtual int showForm() = 0;
 
 protected:
     std::vector<eElement*> elements;
@@ -457,7 +455,7 @@ enum EFORMSHOWMODE { FULLSCREEN, MAXIMIZED, NORMAL };
 class exForm : public eForm
 {
 public:
-    int showForm() const override;
+    int showForm() override;
 
     String title = "Title form";
     EFORMSHOWMODE eFormShowMode;
@@ -542,6 +540,10 @@ private:
 
 
 
+
+
+
+
 /*
     Text-buffer
     Storing a line of text on the stack
@@ -573,9 +575,6 @@ public:
         return result;
     }
 };
-
-
-
 /*
     Trigger
     Trigger
@@ -596,8 +595,6 @@ public:
         return m_value;
     }
 };
-
-
 /*
     Action-menu
     Additional Actions Menu
@@ -849,16 +846,6 @@ public:
     void textBox(String str, objectLocation location, objectBoundary boundary, short charH, short charW, int x, int y);
     void textBox(String str, objectBoundary boundary, int sizeH, int sizeW, short charH, short charW, int x, int y);
     void textBox(String str, int sizeH, int sizeW, short charH, short charW, int x, int y);
-};
-
-class Form0
-{
-private:
-    short outerBoundaryForm {20};
-    short innerBoundaryForm {5};
-public:
-    enum objectLocationForm {together, itself};
-    void form(String title, String text, objectLocationForm location);
 };
 
 class Cursor

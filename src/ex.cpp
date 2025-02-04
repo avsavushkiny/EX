@@ -60,7 +60,7 @@ std::stack<exForm*> formsStack;
 bool systemStateLedControl = true; bool flagStateLedControl = false;
 
 /* Prototype function */
-void nullFunction();
+void nullFunction(); void _rebootBoard();
 //vector only
 void addTasksForSystems();
 
@@ -1233,38 +1233,6 @@ void TextBox::textBox(String str, int sizeH, int sizeW, short charH, short charW
 }
 
 
-
-/* 
-    class
-    Form
-*/
-/* форма вывода сообщения */
-void Form0::form(String title, String text, objectLocationForm location)
-{
-    TextBox _textBoxForm; Button _closeForm;
-
-    while (1)
-    {
-        u8g2.clearBuffer(); // -->
-
-        if (_closeForm.button2("CLOSE", 205, outerBoundaryForm - 12 + 6, _joy.posX0, _joy.posY0))
-        {
-            break;
-        }
-
-        u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120);
-
-        _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 1 + 6, 10, 5);
-        _textBoxForm.textBox(text, _textBoxForm.noBorder, 100, 196, 10, 5, outerBoundaryForm + innerBoundaryForm, outerBoundaryForm + innerBoundaryForm + 6);
-
-        // cursor
-        _joy.updatePositionXY(20);
-        _crs.cursor(true, _joy.posX0, _joy.posY0);
-        
-        u8g2.sendBuffer(); // <--
-    }
-}
-
 /* 
     class
     Joystic and Key
@@ -1872,7 +1840,7 @@ void nullFunction(){}
     [01/2025, Alexander Savushkin]
 */
 /* eButton */
-void eButton::show() const
+void eButton::show()
 {
     uint8_t sizeText = m_label.length();
     short border{3};
@@ -1906,12 +1874,12 @@ void eButton::show() const
     }
 }
 /* eText */
-void eText::show() const
+void eText::show()
 {
     _gfx.print(m_text, xForm, yForm + highChar, 10, 5);
 }
 /* eTextbox */
-void eTextBox::show() const
+void eTextBox::show()
 {
     short border{5}; short border2{8}; // size border
     int count{0}; int countChars{0}; int maxChar{0}; // for counting characters
@@ -1975,6 +1943,11 @@ void eTextBox::show() const
         xx += charW;
         ch++;
 
+        if (c == '\n')
+        {
+            yy += charH; ch = 0; xx = xForm; ln++;
+        }
+
         if (ch >= numberOfCharactersLineFrame)
         {
             yy += charH; ch = 0; xx = xForm; ln++;
@@ -1992,7 +1965,7 @@ void eTextBox::show() const
     }
 }
 /* eLabel */
-void eLabel::show() const
+void eLabel::show()
 {
     uint8_t sizeText = m_text.length();
     uint8_t chi{5}, lii{8};
@@ -2015,7 +1988,7 @@ void eLabel::show() const
     }
 }
 /* eLabel with a link */
-void eLinkLabel::show() const
+void eLinkLabel::show()
 {
     uint8_t sizeText = m_text.length();
     uint8_t yy{}, chi{5}, lii{8}; int x{xForm + 1}, y{yForm + 8};
@@ -2070,19 +2043,22 @@ void eLinkLabel::show() const
     }
 }
 /* Horizontal line */
-void eLine::show() const
+void eLine::show()
 {
     u8g2.drawHLine(xForm, yForm, wForm);
 }
 
-void eVirtualKeyboard::show() const
+void eVirtualKeyboard::show()
 {
-    TextBuffer tb; tb.add("m_input");
+    // 
+    
+    // Отображаем клавиатуру
+    // Все что ввели через кнопку бросаем в m_input
+    // Отображаем полученный ввод
 }
 
-
 /* desktop */
-void eDesktop::show() const
+void eDesktop::show()
 {
     uint8_t border{4};
     uint8_t xx{border};
@@ -2114,7 +2090,7 @@ void eDesktop::show() const
     }
 }
 /* exForm show */
-int exForm::showForm() const
+int exForm::showForm()
 {
     Button closeForm;
 
@@ -2306,12 +2282,32 @@ void _myDesktop()
     td.removeTaskIndex(100);
 }
 /* OS startup message */
+void _info()
+{
+    exForm *formInfoSystems = new exForm();
+
+    String text1 = "Founder of the platform and\nchief developer: Aleksander SAVUSHKIN\n\n";
+    String text2 = "Github: @avsavushkiny, GitVerse: @avsavushkin\n\n";
+    String text3 = "Developers: Sergey KSENOFONTOV, Michail SAMOYLOV,Aleksander MICHEEV, Ekaterina SYATKINA\n\n";
+    String text4 = "Phone: +7 (953) 034 4001\nE-mail: aeondc@gmail.com\n\nSozvezdiye platform\nRussia, Saransk, 2023-2025";
+
+    eTextBox *textBoxInfo = new eTextBox(text1 + text2 + text3 + text4, BorderStyle::noBorder, 256, 150, 0, 0);
+
+    formInfoSystems->title = "Information";
+    formInfoSystems->eFormShowMode = FULLSCREEN;
+    formInfoSystems->addElement(textBoxInfo);
+
+    formsStack.push(formInfoSystems);
+}
+
 void _myOSstartupForm()
 {
     exForm *formMyOSstartup = new exForm;
     eText *textMessage = new eText("I don't understand why you did this,\nbut oh well.\n\nTo launch Desktop - click on\nthe button below, good luck :))", 5, 5);
     eLine *line = new eLine(0, 97);
     eButton *button = new eButton("Run Desktop", _myDesktop, 5, 102);
+    eButton *buttonReboot = new eButton("Reboot", _rebootBoard, 71, 102);
+    eButton *buttonInfo = new eButton("Info", _info, 112, 102);
 
     formMyOSstartup->title = "OS startup";
     formMyOSstartup->eFormShowMode = NORMAL;
@@ -2319,6 +2315,8 @@ void _myOSstartupForm()
     formMyOSstartup->addElement(textMessage);
     formMyOSstartup->addElement(line);
     formMyOSstartup->addElement(button);
+    formMyOSstartup->addElement(buttonReboot);
+    formMyOSstartup->addElement(buttonInfo);
 
     formsStack.push(formMyOSstartup);
 }
