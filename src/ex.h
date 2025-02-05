@@ -300,6 +300,7 @@ private:
 };
 
 
+
 // Класс VirtualKeyboard, наследующийся от eElement
 class eVirtualKeyboard : public eElement
 {
@@ -336,7 +337,6 @@ private:
     int xForm, yForm, wForm, hForm;
     int m_x, m_y;
 };
-
 // Класс InputBox, наследующийся от eElement
 class eInputBox : public eElement
 {
@@ -365,7 +365,6 @@ private:
     int xForm, yForm, wForm, hForm;
     int m_x, m_y;
 };
-
 /* [!] List box */
 class eListBox : public eElement
 {
@@ -389,7 +388,31 @@ private:
     int xForm, yForm, wForm, hForm, m_x, m_y;
 };
 
+/* Picture xbmp */
+class ePicture : public eElement
+{
+public:
+    ePicture(const uint8_t *bitmap, int x, int y, int w, int h) : m_bitmap(bitmap), m_x(x), m_y(y), m_w(w), m_h(h) {}
 
+    void show() override
+    {
+        u8g2.drawXBMP(xForm, yForm, wForm, hForm, m_bitmap);
+    }
+
+    void setPosition(int x, int y, int w, int h) override
+    {
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
+        this->wForm = w + m_w;
+        this->hForm = h + m_h;
+    }
+
+private:
+
+    int m_x, m_y, m_w, m_h;
+    int xForm, yForm, wForm, hForm;
+    const uint8_t *m_bitmap;
+};
 /* Desktop */
 class eDesktop : public eElement
 {

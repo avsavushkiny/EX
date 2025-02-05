@@ -2113,21 +2113,21 @@ int exForm::showForm()
         // Для полноэкранного режима устанавливаем координаты относительно экрана
         for (const auto &element : elements)
         {
-            element->setPosition(element->m_x, element->m_y + 12, element->m_w + 256, element->m_h);
+            element->setPosition(element->m_x, element->m_y + 12, element->m_w, element->m_h);
         }
         break;
     case MAXIMIZED:
         // Для максимизированного режима устанавливаем координаты относительно окна
         for (const auto &element : elements)
         {
-            element->setPosition(element->m_x, element->m_y + 12, element->m_w + 256, element->m_h);
+            element->setPosition(element->m_x, element->m_y + 12, element->m_w, element->m_h);
         }
         break;
     case NORMAL:
         // Для нормального режима оставляем координаты без изменений
         for (const auto &element : elements)
         {
-            element->setPosition(element->m_x + 20, element->m_y + 26, element->m_w + 216, element->m_h + 120);
+            element->setPosition(element->m_x + 20, element->m_y + 26, element->m_w, element->m_h);
         }
         break;
     }
@@ -2247,7 +2247,7 @@ void _myGraphicsTest1()
 
 //2
 void _graphicsTest2(int xG, int yG, int wG, int hG)
-{
+{ 
     int w{4}, h{4};
 
     for (int y = yG; y < 160; y += h)
@@ -2264,7 +2264,7 @@ void _graphicsTest2(int xG, int yG, int wG, int hG)
 void _myGraphicsTest2()
 {
     exForm *formGraphicsTest2 = new exForm;                   // [0] создали форму
-    eGraphics *graphicsTest2 = new eGraphics(_graphicsTest2, 0, 0, 128, 147); // [1] создали элемент формы
+    eGraphics *graphicsTest2 = new eGraphics(_graphicsTest2, 0, 0, 256, 147); // [1] создали элемент формы
 
     formGraphicsTest2->title = "Graphics test 2";  // [2] назвали форму
     formGraphicsTest2->eFormShowMode = FULLSCREEN; // [3] определили режим формы
@@ -2275,20 +2275,20 @@ void _myGraphicsTest2()
 
 //3
 Timer timerTest3;
-const int numPoints = 5;
+const int numPoints = 12;
 int points[numPoints][2];
 void randomPoints()
 {
     // generate random points
     for (int i = 0; i < numPoints; i++)
     {
-        points[i][0] = random(20, 236);
-        points[i][1] = random(20, 140);
+        points[i][0] = random(10, 246);
+        points[i][1] = random(20, 150);
     }
 }
 void _graphicsTest3(int xG, int yG, int wG, int hG)
 {
-    timerTest3.timer(randomPoints, 1000);
+    timerTest3.timer(randomPoints, 3000);
     // draw points
     for (int i = 0; i < numPoints; i++)
     {
@@ -2315,7 +2315,6 @@ void _myGraphicsTest3()
 
     formsStack.push(formGraphicsTest3);
 }
-
 
 
 //====================================================
@@ -2346,10 +2345,12 @@ void _info()
     String text4 = "Phone: +7 (953) 034 4001\nE-mail: aeondc@gmail.com\n\nSozvezdiye platform\nRussia, Saransk, 2023-2025";
 
     eTextBox *textBoxInfo = new eTextBox(text1 + text2 + text3 + text4, BorderStyle::noBorder, 256, 150, 0, 0);
+    ePicture *pic1 = new ePicture(gigachat_bits, 160, 100, gigachat_w, gigachat_h);
 
     formInfoSystems->title = "Information";
     formInfoSystems->eFormShowMode = FULLSCREEN;
     formInfoSystems->addElement(textBoxInfo);
+    formInfoSystems->addElement(pic1);
 
     formsStack.push(formInfoSystems);
 }
@@ -2612,6 +2613,14 @@ void _systemCursor()
 {
     _joy.updatePositionXY(20);
     _crs.cursor(true, _joy.posX0, _joy.posY0);
+
+    if ((_joy.pressKeyEX() == true) && (_joy.pressKeyENTER() == true))
+    {
+        u8g2.setCursor(_joy.posX0 + 10, _joy.posY0 + 10);
+        u8g2.print(_joy.posX0);
+        u8g2.setCursor(_joy.posX0 + 10, _joy.posY0 + 20);
+        u8g2.print(_joy.posY0);
+    }
 }
 
 Icon icon;
