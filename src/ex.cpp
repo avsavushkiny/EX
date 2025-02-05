@@ -1589,6 +1589,17 @@ void Timer::timer(int (*f)(void), int interval)
         f();
     }
 }
+/* return value */
+bool Timer::timer(int interval)
+{
+    unsigned long currTime = millis();
+    if (currTime - prevTime >= interval)
+    {
+        prevTime = currTime;
+        return 1;
+    }
+    return 0;
+}
 /* ---> remove support */
 void Timer::stopwatch(void (*f)(void), int interval)
 {
@@ -2210,9 +2221,32 @@ int exForm::showForm()
 
 
 
-//-------------------------
+//====================================================
 
-void _graphicsTest2()
+//1
+void _graphicsTest1(int xG, int yG, int wG, int hG)
+{   
+    for (int x = 0; x < 256; x += 2)
+    {
+        int y = random(12, 160);
+        int h = random(160 - y);
+        u8g2.drawVLine(x, y, h); 
+    }
+}
+void _myGraphicsTest1()
+{
+    exForm *formGraphicsTest1 = new exForm;                   // [0] создали форму
+    eGraphics *graphicsTest1 = new eGraphics(_graphicsTest1, 0, 0, 256, 147); // [1] создали элемент формы
+
+    formGraphicsTest1->title = "Graphics test";    // [2] назвали форму
+    formGraphicsTest1->eFormShowMode = FULLSCREEN; // [3] определили режим формы
+    formGraphicsTest1->addElement(graphicsTest1);  // [4] добавили эелемент в контейнер
+
+    formsStack.push(formGraphicsTest1); // [5] добавили элемент в стэк форм
+}
+
+//2
+void _graphicsTest2(int xG, int yG, int wG, int hG)
 {
     int w{4}, h{4};
 
@@ -2227,39 +2261,59 @@ void _graphicsTest2()
         }
     }
 }
-
-void _graphicsTest1()
-{   
-    for (int x = 0; x < 256; x += 2)
-    {
-        int y = random(12, 160);
-        int h = random(160 - y);
-        u8g2.drawVLine(x, y, h); 
-    }
-}
-
-void _myGraphicsTest1()
-{
-    exForm *formGraphicsTest1 = new exForm;                   // [0] создали форму
-    eGraphics *graphicsTest1 = new eGraphics(_graphicsTest1); // [1] создали элемент формы
-
-    formGraphicsTest1->title = "Graphics test";    // [2] назвали форму
-    formGraphicsTest1->eFormShowMode = FULLSCREEN; // [3] определили режим формы
-    formGraphicsTest1->addElement(graphicsTest1);  // [4] добавили эелемент в контейнер
-
-    formsStack.push(formGraphicsTest1); // [5] добавили элемент в стэк форм
-}
-
 void _myGraphicsTest2()
 {
     exForm *formGraphicsTest2 = new exForm;                   // [0] создали форму
-    eGraphics *graphicsTest2 = new eGraphics(_graphicsTest2); // [1] создали элемент формы
+    eGraphics *graphicsTest2 = new eGraphics(_graphicsTest2, 0, 0, 256, 147); // [1] создали элемент формы
 
     formGraphicsTest2->title = "Graphics test 2";  // [2] назвали форму
     formGraphicsTest2->eFormShowMode = FULLSCREEN; // [3] определили режим формы
     formGraphicsTest2->addElement(graphicsTest2);  // [4] добавили эелемент в контейнер
 
     formsStack.push(formGraphicsTest2); // [5] добавили элемент в стэк форм
+}
+
+//3
+Timer timerTest3;
+const int numPoints = 5;
+int points[numPoints][2];
+void randomPoints()
+{
+    // generate random points
+    for (int i = 0; i < numPoints; i++)
+    {
+        points[i][0] = random(20, 236);
+        points[i][1] = random(20, 140);
+    }
+}
+void _graphicsTest3(int xG, int yG, int wG, int hG)
+{
+    timerTest3.timer(randomPoints, 1000);
+    // draw points
+    for (int i = 0; i < numPoints; i++)
+    {
+        u8g2.drawPixel(points[i][0], points[i][1]);
+    }
+
+    // draw lines
+    for (int i = 0; i < numPoints; i++)
+    {
+        for (int j = i + 1; j < numPoints; j++)
+        {
+            u8g2.drawLine(points[i][0], points[i][1], points[j][0], points[j][1]);
+        }
+    }
+}
+void _myGraphicsTest3()
+{
+    exForm *formGraphicsTest3 = new exForm;
+    eGraphics *graphicsTest3 = new eGraphics(_graphicsTest3, 0, 0, 256, 147);
+
+    formGraphicsTest3->title = "Graphics test 3";
+    formGraphicsTest3->eFormShowMode = FULLSCREEN;
+    formGraphicsTest3->addElement(graphicsTest3);
+
+    formsStack.push(formGraphicsTest3);
 }
 
 
@@ -2378,7 +2432,7 @@ void _myForm3()
     formsStack.push(form3);
 }
 
-void _myDispatcherFunction()
+void _myDispatcherFunction(int xG, int yG, int wG, int hG)
 {
     int xx{5}, yy{23};
 
@@ -2440,7 +2494,7 @@ void _myDispatcherFunction()
 void _myDispatcher()
 {
     exForm *formMyDispatcher = new exForm;
-    eGraphics *myDispatcher = new eGraphics(_myDispatcherFunction);
+    eGraphics *myDispatcher = new eGraphics(_myDispatcherFunction, 0, 0, 256, 147);
 
     formMyDispatcher->title = "My Dispatcher task";
     formMyDispatcher->eFormShowMode = FULLSCREEN;
@@ -2577,6 +2631,7 @@ TaskArguments system0[] //0 systems, 1 desktop, 2 user
     {"graphics 1", _myGraphicsTest1, icon.MyGfx, DESKTOP, 0, false},
     {"graphics 2", _myGraphicsTest2, icon.MyGfx, DESKTOP, 0, false},
     {"dispatcher", _myDispatcher, icon.MyTaskManager, DESKTOP, 0, false},
+    {"graphics 3", _myGraphicsTest3, icon.MyGfx, DESKTOP, 0, false},
     // [!] Last task
     {"cursor", _systemCursor, NULL, SYSTEM, 0, true}
 };

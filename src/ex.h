@@ -411,22 +411,24 @@ private:
 class eGraphics : public eElement
 {
 public:
-    eGraphics(void (*func)()) : showFunc(func) {}
+    // eGraphics(void (*func)()) : showFunc(func) {}
+    eGraphics(void (*func)(int, int, int, int), int x, int y, int w, int h) : showFunc(func), m_x(x), m_y(y), m_w(w), m_h(h) {}
 
     void show() override
     {
-        showFunc();
+        showFunc(xForm, yForm, wForm, hForm);
     }
     void setPosition(int x, int y, int w, int h) override
     {
-        this->xForm = x;
-        this->yForm = y;
-        this->wForm = w;
-        this->hForm = h;
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
+        this->wForm = w + m_w;
+        this->hForm = h + m_h;
     }
 private:
+    int m_x, m_y, m_w, m_h;
     int xForm, yForm, wForm, hForm;
-    void (*showFunc)();
+    void (*showFunc)(int, int, int, int);
 };
 /* Abstract base class eForm */
 class eForm
@@ -775,6 +777,7 @@ private:
 public:
     /* Starting a void-function on a interval-timer. */
     void timer(void (*f)(void), int interval);
+    bool timer(int interval);
     void timer(int (*f)(void), int interval);
     void stopwatch(void (*f)(void), int interval);
 };
