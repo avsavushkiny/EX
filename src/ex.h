@@ -418,6 +418,7 @@ public:
     {
         showFunc(xForm, yForm, wForm, hForm);
     }
+
     void setPosition(int x, int y, int w, int h) override
     {
         this->xForm = x + m_x;

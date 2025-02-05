@@ -2250,9 +2250,9 @@ void _graphicsTest2(int xG, int yG, int wG, int hG)
 {
     int w{4}, h{4};
 
-    for (int y = 12; y < 160; y += h)
+    for (int y = yG; y < 160; y += h)
     {
-        for (int x = 0; x < 256; x += w)
+        for (int x = xG; x < wG; x += w)
         {
             if ((x / w + y / h) % 2 == 0)
             {
@@ -2264,7 +2264,7 @@ void _graphicsTest2(int xG, int yG, int wG, int hG)
 void _myGraphicsTest2()
 {
     exForm *formGraphicsTest2 = new exForm;                   // [0] создали форму
-    eGraphics *graphicsTest2 = new eGraphics(_graphicsTest2, 0, 0, 256, 147); // [1] создали элемент формы
+    eGraphics *graphicsTest2 = new eGraphics(_graphicsTest2, 0, 0, 128, 147); // [1] создали элемент формы
 
     formGraphicsTest2->title = "Graphics test 2";  // [2] назвали форму
     formGraphicsTest2->eFormShowMode = FULLSCREEN; // [3] определили режим формы
@@ -2494,7 +2494,7 @@ void _myDispatcherFunction(int xG, int yG, int wG, int hG)
 void _myDispatcher()
 {
     exForm *formMyDispatcher = new exForm;
-    eGraphics *myDispatcher = new eGraphics(_myDispatcherFunction, 0, 0, 256, 147);
+    eGraphics *myDispatcher = new eGraphics(_myDispatcherFunction, 0, 0, 256, 160);
 
     formMyDispatcher->title = "My Dispatcher task";
     formMyDispatcher->eFormShowMode = FULLSCREEN;
