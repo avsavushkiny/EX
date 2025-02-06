@@ -2506,7 +2506,10 @@ void _myDispatcher()
 
 
 
-
+// exForm myForm;
+// myForm.addElement(new eCheckbox(true, "Option 1", 50, 100));
+// myForm.addElement(new eInputBox(150, 200));
+// myForm.showForm();
 
 
 

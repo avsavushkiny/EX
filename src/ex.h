@@ -299,6 +299,87 @@ private:
     int m_x{0}, m_y{0}, m_w{0};
 };
 
+/* ! Checkbox */
+class eCheckbox : public eElement
+{
+public:
+    eCheckbox(bool checked, const String& text, int x, int y) : m_checked(checked), m_text(text), m_x(x), m_y(y) {}
+
+    bool isChecked() const
+    {
+        return m_checked;
+    }
+
+    void setChecked(bool checked)
+    {
+        m_checked = checked;
+    }
+
+    void setText(const String& new_text)
+    {
+        m_text = new_text;
+    }
+
+    String getText() const
+    {
+        return m_text;
+    }
+
+    void show() override 
+    {
+        // если checked
+    };
+
+    void setPosition(int x, int y, int w, int h) override
+    {
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
+    }
+
+private:
+    bool m_checked;
+    String m_text;
+    int xForm, yForm, wForm, hForm;
+    int m_x{0}, m_y{0};
+};
+
+/* ! Input Box */
+class eInputBox : public eElement
+{
+public:
+    eInputBox(int x, int y) : m_x(x), m_y(y) {}
+
+    void show() override
+    {
+        // Вызовите метод отображения текста
+        // и обработайте ввод пользователя
+    }
+
+    void setPosition(int x, int y, int w, int h) override
+    {
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
+    }
+
+    void setText(const String& new_text)
+    {
+        m_text = new_text;
+    }
+
+    String getText() const
+    {
+        return m_text;
+    }
+
+private:
+    String m_text;
+    int xForm, yForm, wForm, hForm;
+    int m_x, m_y;
+};
 
 
 // Класс VirtualKeyboard, наследующийся от eElement
@@ -338,7 +419,7 @@ private:
     int m_x, m_y;
 };
 // Класс InputBox, наследующийся от eElement
-class eInputBox : public eElement
+class eInputBox2 : public eElement
 {
 public:
     eInputBox(int x, int y) : m_x(x), m_y(y) {}
@@ -387,6 +468,7 @@ public:
 private:
     int xForm, yForm, wForm, hForm, m_x, m_y;
 };
+
 
 /* Picture xbmp */
 class ePicture : public eElement
@@ -569,6 +651,32 @@ private:
 
 
 
+/*
+    Relay
+    Changing the state of a variable
+    [02/2025, Alexander Savushkin]
+*/
+class Relay
+{
+private:
+    bool m_value;
+
+public:
+    Relay(bool value)
+    {
+        m_value = value;
+    }
+
+    void setValue(bool value)
+    {
+        m_value = value;
+    }
+
+    bool getValue() const
+    {
+        return m_value;
+    }
+};
 
 /*
     Text-buffer
