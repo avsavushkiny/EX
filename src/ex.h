@@ -296,7 +296,7 @@ public:
 private:
     // String m_title;
     int xForm, yForm, wForm, hForm;
-    int m_x, m_y, m_w{256}, m_h{120};
+    int m_x, m_y, m_w{256}, m_h{160};
 };
 
 /* ! Checkbox */
@@ -380,7 +380,6 @@ private:
     int xForm, yForm, wForm, hForm;
     int m_x, m_y;
 };
-
 
 // Класс VirtualKeyboard, наследующийся от eElement
 class eVirtualKeyboard : public eElement
