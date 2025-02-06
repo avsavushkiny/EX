@@ -290,13 +290,13 @@ public:
     {
         this->xForm = x + m_x;
         this->yForm = y + m_y;
-        this->wForm = w;
-        this->hForm = h;
+        this->wForm = w + m_w;
+        this->hForm = h + m_h;
     }
 private:
     // String m_title;
     int xForm, yForm, wForm, hForm;
-    int m_x{0}, m_y{0}, m_w{0};
+    int m_x, m_y, m_w{256}, m_h{120};
 };
 
 /* ! Checkbox */
@@ -346,10 +346,10 @@ private:
 };
 
 /* ! Input Box */
-class eInputBox : public eElement
+class eInputbox : public eElement
 {
 public:
-    eInputBox(int x, int y) : m_x(x), m_y(y) {}
+    eInputbox(int x, int y) : m_x(x), m_y(y) {}
 
     void show() override
     {
@@ -418,34 +418,7 @@ private:
     int xForm, yForm, wForm, hForm;
     int m_x, m_y;
 };
-// Класс InputBox, наследующийся от eElement
-class eInputBox2 : public eElement
-{
-public:
-    eInputBox(int x, int y) : m_x(x), m_y(y) {}
 
-    void show() override
-    {
-        // Вызываем виртуальную клавиатуру для получения ввода
-        // VirtualKeyboard vk(m_x, m_y);
-        // vk.show();
-        // m_input = vk.getInput();
-        // Отображаем полученный ввод
-    }
-
-    void setPosition(int x, int y, int w, int h) override
-    {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
-        this->wForm = w;
-        this->hForm = h;
-    }
-
-private:
-    String m_input;
-    int xForm, yForm, wForm, hForm;
-    int m_x, m_y;
-};
 /* [!] List box */
 class eListBox : public eElement
 {
@@ -478,15 +451,15 @@ public:
 
     void show() override
     {
-        u8g2.drawXBMP(xForm, yForm, wForm, hForm, m_bitmap);
+        u8g2.drawXBMP(xForm, yForm, m_w, m_h, m_bitmap);
     }
 
     void setPosition(int x, int y, int w, int h) override
     {
         this->xForm = x + m_x;
         this->yForm = y + m_y;
-        this->wForm = w + m_w;
-        this->hForm = h + m_h;
+        this->wForm = 0;
+        this->hForm = 0;
     }
 
 private:

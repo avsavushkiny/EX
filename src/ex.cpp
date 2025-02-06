@@ -2056,6 +2056,9 @@ void eLinkLabel::show()
 /* Horizontal line */
 void eLine::show()
 {
+    u8g2.setDrawColor(1); // 0-white,  1-black, 2-XOR
+    u8g2.setBitmapMode(0);// 0-off, 1-on Transporent mode
+    u8g2.setColorIndex(1);// 0-off px, 1-on px
     u8g2.drawHLine(xForm, yForm, wForm);
 }
 
@@ -2127,7 +2130,7 @@ int exForm::showForm()
         // Для нормального режима оставляем координаты без изменений
         for (const auto &element : elements)
         {
-            element->setPosition(element->m_x + 20, element->m_y + 26, element->m_w, element->m_h);
+            element->setPosition(element->m_x + 20, element->m_y + 26, element->m_w - 40, element->m_h);
         }
         break;
     }
@@ -2318,7 +2321,7 @@ void _myGraphicsTest3()
 
 
 //====================================================
-/* my desctop */
+/* Desktop */
 void _myDesktop()
 {
     exForm *form0 = new exForm();
@@ -2331,10 +2334,9 @@ void _myDesktop()
     form0->addElement(desktop0);
 
     formsStack.push(form0);
-
     td.removeTaskIndex(100);
 }
-/* OS startup message */
+/* Info OS */
 void _info()
 {
     exForm *formInfoSystems = new exForm();
@@ -2354,7 +2356,7 @@ void _info()
 
     formsStack.push(formInfoSystems);
 }
-
+/* OS startup */
 void _myOSstartupForm()
 {
     exForm *formMyOSstartup = new exForm;
@@ -2367,14 +2369,32 @@ void _myOSstartupForm()
     formMyOSstartup->title = "OS startup";
     formMyOSstartup->eFormShowMode = NORMAL;
 
-    formMyOSstartup->addElement(textMessage);
     formMyOSstartup->addElement(line);
+    formMyOSstartup->addElement(textMessage);
     formMyOSstartup->addElement(button);
     formMyOSstartup->addElement(buttonReboot);
     formMyOSstartup->addElement(buttonInfo);
 
     formsStack.push(formMyOSstartup);
 }
+/* OS hello */
+void _osHello()
+{
+    exForm *oshello = new exForm;
+
+    ePicture *pic1 = new ePicture(alisa_5050_bits, 10, 35, alisa_5050_w, alisa_5050_h);
+    String text1 = "Hello, I am the operating system Sozvezdiye.\n\nI was created by students of the Children's Creativity Center 2.\n\nEnjoy!";
+    eTextBox *textbox1 = new eTextBox(text1, BorderStyle::noBorder, 141, 120, 65, 10);
+
+    oshello->title = "OS hello";
+    oshello->eFormShowMode = NORMAL;
+    oshello->addElement(pic1);
+    oshello->addElement(textbox1);
+
+    formsStack.push(oshello);
+    td.removeTaskIndex(101);
+}
+
 
 
 /* Task. Stack, task, command */ 
@@ -2637,6 +2657,7 @@ TaskArguments system0[] //0 systems, 1 desktop, 2 user
     {"powersave", _systemPowerSaveBoard, NULL, SYSTEM, 0, true},
     {"fps", _myFps, NULL, SYSTEM, 0, false},
     {"desktop", _myDesktop, NULL, SYSTEM, 100, true},
+    {"oshello", _osHello, NULL, SYSTEM, 101, true},
     {"form1", _myForm1, icon.MyNullApp, DESKTOP, 0, false},
     {"form2", _myForm2, icon.MyNullApp, DESKTOP, 0, false},
     {"form3", _myForm3, icon.MyNullApp, DESKTOP, 0, false},
