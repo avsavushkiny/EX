@@ -298,8 +298,7 @@ private:
     int xForm, yForm, wForm, hForm;
     int m_x, m_y, m_w{256}, m_h{160};
 };
-
-/* ! Checkbox */
+/* Checkbox */
 class eCheckbox : public eElement
 {
 public:
@@ -325,10 +324,7 @@ public:
         return m_text;
     }
 
-    void show() override 
-    {
-        // если checked
-    };
+    void show() override;
 
     void setPosition(int x, int y, int w, int h) override
     {
@@ -344,6 +340,29 @@ private:
     int xForm, yForm, wForm, hForm;
     int m_x{0}, m_y{0};
 };
+/* Function */
+class eFunction : public eElement
+{
+public:
+    eFunction(void (*func)(), unsigned int delay) : m_func(func), m_delay(delay) {}
+    
+    void show() override;
+
+    void setPosition(int x, int y, int w, int h) override
+    {
+        this->xForm = x;
+        this->yForm = y;
+        this->wForm = w;
+        this->hForm = h;
+    }
+
+private:
+    void (*m_func)(void);
+    unsigned int m_delay;
+
+    int xForm, yForm, wForm, hForm;
+};
+
 
 /* ! Input Box */
 class eInputbox : public eElement

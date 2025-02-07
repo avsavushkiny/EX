@@ -2061,6 +2061,51 @@ void eLine::show()
     u8g2.setColorIndex(1);// 0-off px, 1-on px
     u8g2.drawHLine(xForm, yForm, wForm);
 }
+/* eCheckbox */
+void eCheckbox::show()
+{
+    // рисуем фрейм и выводим текст
+    if (m_checked == true)
+    {
+        u8g2.drawXBMP(xForm, yForm, check_true_w, check_true_h, check_true);
+    }
+
+    if (m_checked == false)
+    {
+        u8g2.drawXBMP(xForm, yForm, check_false_w, check_false_h, check_false);
+    }
+
+    _gfx.print(m_text, xForm + 15, yForm + 9, 10, 5);
+    // если курсор над фреймом, то ждем нажатия на кнопку Ввода
+    if ((_joy.posX0 >= xForm) && (_joy.posX0 <= xForm + 10) && ((_joy.posY0 >= yForm) && (_joy.posY0 <= yForm + 10)))
+    {
+        u8g2.drawBox(xForm, yForm, 10, 10);
+
+        if (_joy.pressKeyENTER() == true)
+        {
+            // если кнопка нажата
+            // - если чекед 1 то меняем на 0
+            // - если чекед 0 то меняем на 1
+            switch (m_checked)
+            {
+            case true:
+                m_checked = false;
+                delay(250);
+                break;
+            case false:
+                m_checked = true;
+                delay(250);
+                break;
+            }
+        }
+    }
+}
+/* eFunction */
+void eFunction::show()
+{
+    Timer timerFunc;
+    timerFunc.timer(m_func, m_delay);
+}
 
 void eVirtualKeyboard::show()
 {
@@ -2398,12 +2443,50 @@ void _osHello()
 
 
 /* Task. Stack, task, command */ 
+// void form1_ledControl()
+// {
+    
+//     // if (check1->isChecked())
+//     // {
+//     //     _gfx.controlBacklight(true); Serial.println("yes");
+//     // }
+//     // else 
+//     // {
+//     //     _gfx.controlBacklight(false);
+//     //     Serial.println("no");
+//     // }
+// }
+
+// void _myForm1()
+// {
+//     exForm *form1 = new exForm();
+//     eCheckbox *check1 = new eCheckbox(false, "LED controll", 5, 5);
+//     eFunction *function1 = new eFunction(form1_ledControl, 500);
+
+//     form1->title = "Form 1";
+//     form1->eFormShowMode = NORMAL;
+//     form1->addElement(check1);
+//     form1->addElement(function1);
+
+
+//     formsStack.push(form1);
+// }
+
+void form1_ledControl()
+{
+    Serial.println("test");
+}
+
 void _myForm1()
 {
     exForm *form1 = new exForm();
+    eCheckbox *check1 = new eCheckbox(false, "LED control", 5, 5);
+    eFunction *function1 = new eFunction(form1_ledControl, 500);
 
     form1->title = "Form 1";
     form1->eFormShowMode = NORMAL;
+    form1->addElement(check1);
+    form1->addElement(function1);
 
     formsStack.push(form1);
 }
