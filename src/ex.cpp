@@ -2466,8 +2466,6 @@ void _myForm1()
     form1->title = "Form 1";
     form1->eFormShowMode = NORMAL;
     form1->addElement(check1);
-
-    formsStack.push(form1);
 }
 
 void _myForm2()
