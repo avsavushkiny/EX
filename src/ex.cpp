@@ -52,9 +52,8 @@ TextBox _textBox;
 TaskDispatcher td; TextBuffer textBuffer;
 
 /* Stack exForm */
-std::stack<exForm*> formsStack;
-//exFormsStack formsStack;
-
+// std::stack<exForm*> formsStack;
+exFormStack exFormsStack;
 
 /* LED control */
 bool systemStateLedControl = true; bool flagStateLedControl = false;
@@ -2447,25 +2446,21 @@ void _osHello()
 
 
 /* Task. Stack, task, command */ 
+void ledControl()
+{
+
+}
+
 void _myForm1()
 {
     exForm *form1 = new exForm();
-    eCheckbox *check1 = new eCheckbox(false, "LED control", 5, 5);
-
-    if (check1->isChecked())
-    {
-        _gfx.controlBacklight(true);
-        Serial.println("yes");
-    }
-    else 
-    {
-        _gfx.controlBacklight(false);
-        Serial.println("no");
-    }
+    eCheckbox *check1 = new eCheckbox("LED control", 5, 5);
 
     form1->title = "Form 1";
     form1->eFormShowMode = NORMAL;
     form1->addElement(check1);
+
+    formsStack.push(form1);
 }
 
 void _myForm2()

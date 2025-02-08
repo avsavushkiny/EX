@@ -101,10 +101,54 @@ namespace
     std::vector<TaskArguments> tasksTray; // Notification bar task vector
 };
 
+
 /*
-    eForm
+    Observer, events
+    [02/2025, Alexander Savushkin]
+*/
+/* Event class */
+class Event
+{
+public:
+    // Добавьте другие типы событий по необходимости
+    enum Type { BUTTON_CLICKED, CHECKBOX_TRUE };
+
+    Event(Type type) : m_type(type) {}
+
+    Type getType() const { return m_type; }
+
+private:
+    Type m_type;
+};
+
+/* Interface for Observer pattern */
+class IObserver
+{
+public:
+    virtual ~IObserver() {}
+    virtual void onNotify(Event event) = 0;
+};
+
+/* exObserver */
+class exObserver : public IObserver
+{
+public:
+    void onNotify(Event event) override
+    {
+        if (event.getType() == Event::Type::CHECKBOX_TRUE)
+        {
+            Serial.println("event checkbox");
+        }
+    }
+private:
+};
+
+
+
+/*
+    exForm
     Visual eForm Builder
-    [01/2025, Alexander Savushkin]
+    [01-02/2025, Alexander Savushkin]
 */
 enum BorderStyle {noBorder, oneLine, twoLine, shadow, shadowNoFrame};
 /* Basic interface for all form elements */
@@ -302,7 +346,7 @@ private:
 class eCheckbox : public eElement
 {
 public:
-    eCheckbox(bool checked, const String& text, int x, int y) : m_checked(checked), m_text(text), m_x(x), m_y(y) {}
+    eCheckbox(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
 
     bool isChecked() const
     {
@@ -334,11 +378,27 @@ public:
         this->hForm = h;
     }
 
+    void registerObserver(IObserver* observer)
+    {
+        observers.push_back(observer);
+    }
+
+    void notifyObservers()
+    {
+        Event event(Event::Type::CHECKBOX_TRUE); // Создаем событие типа "чекбокс трю"
+        for (auto observer : observers)
+        {
+            observer->onNotify(event);
+        }
+    }
+
 private:
-    bool m_checked;
+    bool m_checked{0};
     String m_text;
     int xForm, yForm, wForm, hForm;
     int m_x{0}, m_y{0};
+
+    std::vector<IObserver*> observers; // list
 };
 /* Function */
 class eFunction : public eElement
@@ -569,23 +629,28 @@ private:
     Stack of eForm objects
     [01/2025, Alexander Savushkin] 270125_2336
 */
+namespace
+{
+    // Stack of forms
+    std::stack<exForm*> formsStack;
+}
 /* Class for controlling the glass forms */
-class exFormsStack
+class exFormStack
 {
 public:
     // Add the form to the stack
     void push(exForm* form)
     {
-        stack.push(form);
+        formsStack.push(form);
     }
 
     // Extract the upper form from the stack
     exForm* pop()
     {
-        if (!stack.empty())
+        if (!formsStack.empty())
         {
-            exForm* top = stack.top();
-            stack.pop();
+            exForm* top = formsStack.top();
+            formsStack.pop();
             return top;
         }
         return nullptr;
@@ -594,19 +659,19 @@ public:
     // The number of forms in the stack
     size_t size() const
     {
-        return stack.size();
+        return formsStack.size();
     }
 
     // Check, is it empty?
     bool empty() const
     {
-        return stack.empty();
+        return formsStack.empty();
     }
 
     // обновляем форму один раз
     void refreshForm()
     {
-        if (!stack.empty())
+        if (!formsStack.empty())
         {
             exForm *top = pop(); // Извлекаем верхнюю форму из стека
             push(top);           // Снова добавляем эту форму в стек
@@ -658,8 +723,6 @@ public:
 
 private:
     unsigned long prevTime{};
-    // Stack of forms
-    std::stack<exForm*> stack;
 };
 
 
