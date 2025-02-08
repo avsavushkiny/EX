@@ -603,6 +603,31 @@ public:
         return stack.empty();
     }
 
+    // обновляем форму один раз
+    void refreshForm()
+    {
+        if (!stack.empty())
+        {
+            auto *top = pop(); // Извлекаем верхнюю форму из стека
+            push(top);         // Снова добавляем эту форму в стек
+        }
+    }
+
+    // обновляем форму многократно
+    bool updateForm(unsigned int timeUpdate)
+    {
+        unsigned long currTime = millis();
+        if (currTime - prevTime >= timeUpdate)
+        {
+            prevTime = currTime;
+
+            refreshForm();
+
+            return 1;
+        }
+        return 0;
+    }
+
     /* example of use
 
     std::stack<exForm*> formsStack;
@@ -632,6 +657,7 @@ public:
     */
 
 private:
+    unsigned long prevTime{};
     // Stack of forms
     std::stack<exForm*> stack;
 };

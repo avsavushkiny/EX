@@ -2265,7 +2265,11 @@ int exForm::showForm()
     return 0; // 0 - the form works
 }
 
-
+// bool exFormsStack::updateForm(unsigned int timeUpdate)
+// {
+//     Timer timerUpdateForm;
+//     timerUpdateForm.timer(exFormsStack::refreshForm, timeUpdate);
+// }
 
 
 
@@ -2443,50 +2447,25 @@ void _osHello()
 
 
 /* Task. Stack, task, command */ 
-// void form1_ledControl()
-// {
-    
-//     // if (check1->isChecked())
-//     // {
-//     //     _gfx.controlBacklight(true); Serial.println("yes");
-//     // }
-//     // else 
-//     // {
-//     //     _gfx.controlBacklight(false);
-//     //     Serial.println("no");
-//     // }
-// }
-
-// void _myForm1()
-// {
-//     exForm *form1 = new exForm();
-//     eCheckbox *check1 = new eCheckbox(false, "LED controll", 5, 5);
-//     eFunction *function1 = new eFunction(form1_ledControl, 500);
-
-//     form1->title = "Form 1";
-//     form1->eFormShowMode = NORMAL;
-//     form1->addElement(check1);
-//     form1->addElement(function1);
-
-
-//     formsStack.push(form1);
-// }
-
-void form1_ledControl()
-{
-    Serial.println("test");
-}
-
 void _myForm1()
 {
     exForm *form1 = new exForm();
     eCheckbox *check1 = new eCheckbox(false, "LED control", 5, 5);
-    eFunction *function1 = new eFunction(form1_ledControl, 500);
+
+    if (check1->isChecked())
+    {
+        _gfx.controlBacklight(true);
+        Serial.println("yes");
+    }
+    else 
+    {
+        _gfx.controlBacklight(false);
+        Serial.println("no");
+    }
 
     form1->title = "Form 1";
     form1->eFormShowMode = NORMAL;
     form1->addElement(check1);
-    form1->addElement(function1);
 
     formsStack.push(form1);
 }
