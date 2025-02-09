@@ -1,0 +1,20 @@
+class eFunction : public eElement
+{
+public:
+    eFunction(bool (*func)(eCheckbox*), eCheckbox* a) : m_func(func), m_a(a) {}
+    
+    void show() override;
+
+    void setPosition(int x, int y, int w, int h) override
+    {
+        this->xForm = x;
+        this->yForm = y;
+        this->wForm = w;
+        this->hForm = h;
+    }
+
+private:
+    bool (*m_func)(eCheckbox*);
+    eCheckbox* m_a;
+    int xForm, yForm, wForm, hForm;
+};

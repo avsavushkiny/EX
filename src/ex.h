@@ -402,30 +402,10 @@ private:
     std::vector<IObserver*> observers; // events list
 };
 /* Function */
-// class eFunction : public eElement
-// {
-// public:
-//     eFunction(void (*func)()) : m_func(func) {}
-    
-//     void show() override;
-
-//     void setPosition(int x, int y, int w, int h) override
-//     {
-//         this->xForm = x;
-//         this->yForm = y;
-//         this->wForm = w;
-//         this->hForm = h;
-//     }
-
-// private:
-//     void (*m_func)(void);
-//     int xForm, yForm, wForm, hForm;
-// };
-
 class eFunction : public eElement
 {
 public:
-    eFunction(bool (*func)(eCheckbox*), eCheckbox* a) : m_func(func), m_a(a) {}
+    eFunction(void (*func)()) : m_func(func) {}
     
     void show() override;
 
@@ -438,10 +418,11 @@ public:
     }
 
 private:
-    bool (*m_func)(eCheckbox*);
-    eCheckbox* m_a;
+    void (*m_func)(void);
     int xForm, yForm, wForm, hForm;
 };
+
+
 
 
 

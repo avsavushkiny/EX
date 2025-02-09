@@ -2102,9 +2102,7 @@ void eCheckbox::show()
 /* eFunction */
 void eFunction::show()
 {
-    // Timer timerFunc;
-    // timerFunc.timer(m_func, m_delay);
-    m_func(m_a);
+    m_func();
 }
 
 void eVirtualKeyboard::show()
@@ -2265,11 +2263,6 @@ int exForm::showForm()
     return 0; // 0 - the form works
 }
 
-// bool exFormsStack::updateForm(unsigned int timeUpdate)
-// {
-//     Timer timerUpdateForm;
-//     timerUpdateForm.timer(exFormsStack::refreshForm, timeUpdate);
-// }
 
 
 
@@ -2465,12 +2458,9 @@ void _myForm1()
     exForm *form1 = new exForm();
     eCheckbox *check1 = new eCheckbox("LED control", 5, 5);
 
-    eFunction *func1 = new eFunction(ledControl, check1);
-
     form1->title = "Form 1";
     form1->eFormShowMode = NORMAL;
     form1->addElement(check1);
-    form1->addElement(func1);
 
     formsStack.push(form1);
 }
