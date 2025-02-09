@@ -103,7 +103,7 @@ namespace
 
 
 /*
-    Observer, events
+    [!] Observer, events
     [02/2025, Alexander Savushkin]
 */
 /* Event class */
@@ -141,6 +141,21 @@ public:
         }
     }
 private:
+
+// use in any eElement
+    // void registerObserver(IObserver* observer)
+    // {
+    //     observers.push_back(observer);
+    // }
+
+    // void notifyObservers()
+    // {
+    //     Event event(Event::Type::CHECKBOX_TRUE); // Создаем событие типа "чекбокс трю"
+    //     for (auto observer : observers)
+    //     {
+    //         observer->onNotify(event);
+    //     }
+    // }
 };
 
 
@@ -378,33 +393,39 @@ public:
         this->hForm = h;
     }
 
-    void registerObserver(IObserver* observer)
-    {
-        observers.push_back(observer);
-    }
-
-    void notifyObservers()
-    {
-        Event event(Event::Type::CHECKBOX_TRUE); // Создаем событие типа "чекбокс трю"
-        for (auto observer : observers)
-        {
-            observer->onNotify(event);
-        }
-    }
-
 private:
     bool m_checked{0};
     String m_text;
     int xForm, yForm, wForm, hForm;
     int m_x{0}, m_y{0};
 
-    std::vector<IObserver*> observers; // list
+    std::vector<IObserver*> observers; // events list
 };
 /* Function */
+// class eFunction : public eElement
+// {
+// public:
+//     eFunction(void (*func)()) : m_func(func) {}
+    
+//     void show() override;
+
+//     void setPosition(int x, int y, int w, int h) override
+//     {
+//         this->xForm = x;
+//         this->yForm = y;
+//         this->wForm = w;
+//         this->hForm = h;
+//     }
+
+// private:
+//     void (*m_func)(void);
+//     int xForm, yForm, wForm, hForm;
+// };
+
 class eFunction : public eElement
 {
 public:
-    eFunction(void (*func)(), unsigned int delay) : m_func(func), m_delay(delay) {}
+    eFunction(bool (*func)(eCheckbox*), eCheckbox* a) : m_func(func), m_a(a) {}
     
     void show() override;
 
@@ -417,11 +438,11 @@ public:
     }
 
 private:
-    void (*m_func)(void);
-    unsigned int m_delay;
-
+    bool (*m_func)(eCheckbox*);
+    eCheckbox* m_a;
     int xForm, yForm, wForm, hForm;
 };
+
 
 
 /* ! Input Box */

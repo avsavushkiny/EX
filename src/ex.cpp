@@ -2102,8 +2102,9 @@ void eCheckbox::show()
 /* eFunction */
 void eFunction::show()
 {
-    Timer timerFunc;
-    timerFunc.timer(m_func, m_delay);
+    // Timer timerFunc;
+    // timerFunc.timer(m_func, m_delay);
+    m_func(m_a);
 }
 
 void eVirtualKeyboard::show()
@@ -2446,19 +2447,30 @@ void _osHello()
 
 
 /* Task. Stack, task, command */ 
-void ledControl()
+bool ledControl(eCheckbox* check)
 {
+    if (check->isChecked())
+    {
+        _gfx.controlBacklight(true); return 1;
+    }
 
+    if (!check->isChecked()) 
+    {
+        _gfx.controlBacklight(false); return 0;
+    }
 }
 
 void _myForm1()
-{
+{ 
     exForm *form1 = new exForm();
     eCheckbox *check1 = new eCheckbox("LED control", 5, 5);
+
+    eFunction *func1 = new eFunction(ledControl, check1);
 
     form1->title = "Form 1";
     form1->eFormShowMode = NORMAL;
     form1->addElement(check1);
+    form1->addElement(func1);
 
     formsStack.push(form1);
 }
