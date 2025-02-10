@@ -426,7 +426,7 @@ private:
 
 
 
-/* ! Input Box */
+/* [!] Input Box */
 class eInputbox : public eElement
 {
 public:
