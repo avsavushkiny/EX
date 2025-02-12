@@ -2082,6 +2082,7 @@ void eCheckbox::show()
 
         if (_joy.pressKeyENTER() == true)
         {
+            click();
             // если кнопка нажата
             // - если чекед 1 то меняем на 0
             // - если чекед 0 то меняем на 1

@@ -106,58 +106,62 @@ namespace
     [!] Observer, events
     [02/2025, Alexander Savushkin]
 */
-/* Event class */
-class Event
-{
+// Интерфейс наблюдателя
+class IObserver {
 public:
-    // Добавьте другие типы событий по необходимости
-    enum Type { BUTTON_CLICKED, CHECKBOX_TRUE };
-
-    Event(Type type) : m_type(type) {}
-
-    Type getType() const { return m_type; }
-
-private:
-    Type m_type;
+    virtual ~IObserver() = default;
+    virtual void onEvent(const String& eventName, void* data) = 0;
 };
 
-/* Interface for Observer pattern */
-class IObserver
-{
+// Интерфейс субъекта
+class ISubject {
 public:
-    virtual ~IObserver() {}
-    virtual void onNotify(Event event) = 0;
+    virtual ~ISubject() = default;
+    virtual void addObserver(IObserver* observer) = 0;
+    virtual void removeObserver(IObserver* observer) = 0;
+    virtual void notifyObservers(const String& eventName, void* data) = 0;
 };
 
-/* exObserver */
-class exObserver : public IObserver
-{
+// Реализация субъекта
+class Subject : public ISubject {
 public:
-    void onNotify(Event event) override
-    {
-        if (event.getType() == Event::Type::CHECKBOX_TRUE)
-        {
-            Serial.println("event checkbox");
+    void addObserver(IObserver* observer) override {
+        observers.push_back(observer);
+    }
+
+    void removeObserver(IObserver* observer) override {
+        observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
+    }
+
+    void notifyObservers(const String& eventName, void* data) override {
+        for (auto observer : observers) {
+            observer->onEvent(eventName, data);
         }
     }
+
 private:
-
-// use in any eElement
-    // void registerObserver(IObserver* observer)
-    // {
-    //     observers.push_back(observer);
-    // }
-
-    // void notifyObservers()
-    // {
-    //     Event event(Event::Type::CHECKBOX_TRUE); // Создаем событие типа "чекбокс трю"
-    //     for (auto observer : observers)
-    //     {
-    //         observer->onNotify(event);
-    //     }
-    // }
+    std::vector<IObserver*> observers;
 };
 
+// Универсальный обработчик
+class Handler : public IObserver {
+public:
+    // Конструктор, принимающий std::function<void()>
+    Handler(std::function<void()> callback) : m_callback(callback) {}
+
+    void onEvent(const String& eventName, void* data) override {
+        if (eventName == "checkbox_true") {
+            eCheckbox* checkbox = static_cast<eCheckbox*>(data);
+            // std::cout << "Button clicked: " << button->getLabel() << std::endl;
+
+            // Вызов переданной функции
+            m_callback();
+        }
+    }
+
+private:
+    std::function<void()> m_callback; // Указатель на функцию
+};
 
 
 /*
@@ -357,8 +361,8 @@ private:
     int xForm, yForm, wForm, hForm;
     int m_x, m_y, m_w{256}, m_h{160};
 };
-/* Checkbox */
-class eCheckbox : public eElement
+/* Checkbox + субъект события */
+class eCheckbox : public eElement, public Subject
 {
 public:
     eCheckbox(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
@@ -384,6 +388,12 @@ public:
     }
 
     void show() override;
+
+    void click()
+    {
+        // Генерация события при нажатии на кнопку
+        notifyObservers("checkbox_true", this);
+    }
 
     void setPosition(int x, int y, int w, int h) override
     {
