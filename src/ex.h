@@ -102,67 +102,6 @@ namespace
 };
 
 
-/*
-    [!] Observer, events
-    [02/2025, Alexander Savushkin]
-*/
-// Интерфейс наблюдателя
-class IObserver {
-public:
-    virtual ~IObserver() = default;
-    virtual void onEvent(const String& eventName, void* data) = 0;
-};
-
-// Интерфейс субъекта
-class ISubject {
-public:
-    virtual ~ISubject() = default;
-    virtual void addObserver(IObserver* observer) = 0;
-    virtual void removeObserver(IObserver* observer) = 0;
-    virtual void notifyObservers(const String& eventName, void* data) = 0;
-};
-
-// Реализация субъекта
-class Subject : public ISubject {
-public:
-    void addObserver(IObserver* observer) override {
-        observers.push_back(observer);
-    }
-
-    void removeObserver(IObserver* observer) override {
-        observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
-    }
-
-    void notifyObservers(const String& eventName, void* data) override {
-        for (auto observer : observers) {
-            observer->onEvent(eventName, data);
-        }
-    }
-
-private:
-    std::vector<IObserver*> observers;
-};
-
-// Универсальный обработчик
-class Handler : public IObserver {
-public:
-    // Конструктор, принимающий std::function<void()>
-    Handler(std::function<void()> callback) : m_callback(callback) {}
-
-    void onEvent(const String& eventName, void* data) override {
-        if (eventName == "checkbox_true") {
-            eCheckbox* checkbox = static_cast<eCheckbox*>(data);
-            // std::cout << "Button clicked: " << button->getLabel() << std::endl;
-
-            // Вызов переданной функции
-            m_callback();
-        }
-    }
-
-private:
-    std::function<void()> m_callback; // Указатель на функцию
-};
-
 
 /*
     exForm
@@ -362,7 +301,7 @@ private:
     int m_x, m_y, m_w{256}, m_h{160};
 };
 /* Checkbox + субъект события */
-class eCheckbox : public eElement, public Subject
+class eCheckbox : public eElement
 {
 public:
     eCheckbox(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
@@ -389,12 +328,6 @@ public:
 
     void show() override;
 
-    void click()
-    {
-        // Генерация события при нажатии на кнопку
-        notifyObservers("checkbox_true", this);
-    }
-
     void setPosition(int x, int y, int w, int h) override
     {
         this->xForm = x + m_x;
@@ -408,8 +341,6 @@ private:
     String m_text;
     int xForm, yForm, wForm, hForm;
     int m_x{0}, m_y{0};
-
-    std::vector<IObserver*> observers; // events list
 };
 /* Function */
 class eFunction : public eElement

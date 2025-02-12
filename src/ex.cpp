@@ -2082,7 +2082,6 @@ void eCheckbox::show()
 
         if (_joy.pressKeyENTER() == true)
         {
-            click();
             // если кнопка нажата
             // - если чекед 1 то меняем на 0
             // - если чекед 0 то меняем на 1
@@ -2458,6 +2457,7 @@ void _myForm1()
 { 
     exForm *form1 = new exForm();
     eCheckbox *check1 = new eCheckbox("LED control", 5, 5);
+
 
     form1->title = "Form 1";
     form1->eFormShowMode = NORMAL;
