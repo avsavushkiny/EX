@@ -39,7 +39,7 @@
 
 /* We let the compiler know that the u8g2 object is defined in another file */
 extern U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2;
-extern const uint8_t gears_bits[];
+// extern const uint8_t gears_bits[];
 extern int H_LCD, W_LCD;
 
 extern void _clearCommandTerminal();
@@ -96,9 +96,9 @@ private:
 /* Defining Vectors */
 namespace
 {
-    std::vector<TaskStack> taskStack;     // Task Stack Vector
+    // std::vector<TaskStack> taskStack;     // Task Stack Vector
     std::vector<TaskArguments> tasks;     // Vector of main tasks
-    std::vector<TaskArguments> tasksTray; // Notification bar task vector
+    // std::vector<TaskArguments> tasksTray; // Notification bar task vector
 };
 
 
@@ -300,11 +300,12 @@ private:
     int xForm, yForm, wForm, hForm;
     int m_x, m_y, m_w{256}, m_h{160};
 };
-/* Checkbox + субъект события */
+/* Checkbox */
 class eCheckbox : public eElement
 {
 public:
-    eCheckbox(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
+    // eCheckbox(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
+    eCheckbox(bool checked, const String& text, int x, int y) : m_checked(checked), m_text(text), m_x(x), m_y(y) {}
 
     bool isChecked() const
     {
@@ -337,7 +338,7 @@ public:
     }
 
 private:
-    bool m_checked{0};
+    bool m_checked;
     String m_text;
     int xForm, yForm, wForm, hForm;
     int m_x{0}, m_y{0};
@@ -346,7 +347,15 @@ private:
 class eFunction : public eElement
 {
 public:
-    eFunction(void (*func)()) : m_func(func) {}
+    // eFunction(void (*func)()) : m_func(func) {}
+    // Конструктор, принимающий std::function
+    eFunction(std::function<void()> func) : m_func(func) {}
+
+    void execute() {
+        if (m_func) {
+            m_func();
+        }
+    }
     
     void show() override;
 
@@ -359,10 +368,10 @@ public:
     }
 
 private:
-    void (*m_func)(void);
+    // void (*m_func)(void);
+    std::function<void()> m_func; // Обёртка для функции
     int xForm, yForm, wForm, hForm;
 };
-
 
 
 
@@ -462,6 +471,7 @@ public:
 private:
     int xForm, yForm, wForm, hForm, m_x, m_y;
 };
+
 
 
 /* Picture xbmp */

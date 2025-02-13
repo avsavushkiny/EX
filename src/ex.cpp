@@ -2440,31 +2440,70 @@ void _osHello()
 
 
 /* Task. Stack, task, command */ 
-bool ledControl(eCheckbox* check)
-{
-    if (check->isChecked())
-    {
-        _gfx.controlBacklight(true); return 1;
-    }
+// bool globalStateLED = false;
+// void ledControl()
+// {
+//     if (globalStateLED)
+//     {
+//         _gfx.controlBacklight(true);
+//     }
 
-    if (!check->isChecked()) 
+//     if (!globalStateLED) 
+//     {
+//         _gfx.controlBacklight(false);
+//     }
+// }
+
+// void _myForm1()
+// { 
+//     exForm *form1 = new exForm();
+//     eCheckbox *check1 = new eCheckbox("LED control", 5, 5);
+//     eFunction *func1 = new eFunction(ledControl);
+
+//     globalStateLED = check1->isChecked();
+
+//     form1->title = "Form 1";
+//     form1->eFormShowMode = NORMAL;
+//     form1->addElement(check1);
+//     form1->addElement(func1);
+
+//     formsStack.push(form1);
+// }
+
+/* Task. Stack, task, command */ 
+bool globalStateLED = false;
+
+// Изменяем функцию ledControl, чтобы она принимала указатель на eCheckbox
+void ledControl()
+{
+    if (globalStateLED)
     {
-        _gfx.controlBacklight(false); return 0;
+        _gfx.controlBacklight(true);
+    }
+    else
+    {
+        _gfx.controlBacklight(false);
     }
 }
 
 void _myForm1()
 { 
     exForm *form1 = new exForm();
-    eCheckbox *check1 = new eCheckbox("LED control", 5, 5);
+    eCheckbox *check1 = new eCheckbox(globalStateLED, "LED control", 5, 5);
 
+    eFunction *func1 = new eFunction([check1]() { 
+        globalStateLED = check1->isChecked();
+        ledControl();
+    });
 
     form1->title = "Form 1";
     form1->eFormShowMode = NORMAL;
     form1->addElement(check1);
+    form1->addElement(func1);
 
     formsStack.push(form1);
 }
+
 
 void _myForm2()
 {
