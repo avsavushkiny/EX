@@ -39,6 +39,7 @@
 
 /* We let the compiler know that the u8g2 object is defined in another file */
 extern U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2;
+extern const int8_t PIN_BACKLIGHT_LCD;
 // extern const uint8_t gears_bits[];
 extern int H_LCD, W_LCD;
 
@@ -688,21 +689,43 @@ private:
     [02/2025, Alexander Savushkin]
 */
 // Абстрактный класс системных задач
-class eSystemTask
+class eSystemElement
 {
 public:
     virtual void execute() = 0;      // Чисто виртуальный метод
-    virtual ~eSystemTask() = default; // Виртуальный деструктор
+    virtual ~eSystemElement() = default; // Виртуальный деструктор
 };
 
 /* Управление подстветкой дисплея */
-class eBackLight : public eSystemTask
+class eBacklight : public eSystemElement
 {
 public:
-    eBackLight(bool stateLight) : m_stateLight(stateLight) {}
+    eBacklight(bool stateLight) : m_stateLight(stateLight) {}
 
+    // Устанавливаем подсветку дисплея
     void execute() override
     {
+        //p-n-p transistor
+        pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
+
+        if (m_stateLight == true)
+        {
+            digitalWrite(PIN_BACKLIGHT_LCD, 0); // on
+        }
+        else
+        {
+            digitalWrite(PIN_BACKLIGHT_LCD, 1); // off
+        }
+    }
+    // Устанавливаем новое значение подсветки дисплея
+    void setBacklight(const bool newState)
+    {
+        m_stateLight = newState;
+    }
+    // Получаем значение статуса подсветки дисплея
+    bool getBacklight() const
+    {
+        return m_stateLight;
     }
 
 private:
@@ -710,7 +733,7 @@ private:
 };
 
 /* Управление режимами энергосбережения*/
-class ePowerSave : public eSystemTask
+class ePowerSave : public eSystemElement
 {
 public:
     ePowerSave(bool statePowerSave) : m_statePowerSave(statePowerSave) {}
@@ -724,7 +747,7 @@ private:
 };
 
 /* Управление курсором */
-class eCursor : public eSystemTask
+class eCursor : public eSystemElement
 {
 public:
     eCursor(bool stateCursor) : m_stateCursor(stateCursor) {}
@@ -738,7 +761,7 @@ private:
 };
 
 /* Управление портом данных */
-class eDataPort : public eSystemTask
+class eDataPort : public eSystemElement
 {
 public:
     eDataPort(bool stateDataPort, int port) : m_stateDataPort(stateDataPort), m_port(port) {}
@@ -751,6 +774,46 @@ private:
     bool m_stateDataPort;
     int m_port;
 };
+
+/*
+    Systems
+    [02/2025, Alexander Savushkin]
+*/
+class Systems
+{
+public:
+    // Конструктор, инициализирующий все подсистемы
+    Systems(bool backlightState, bool powerSaveState, bool cursorState, bool dataPortState, int port)
+        : backlight(backlightState), powerSave(powerSaveState), cursor(cursorState), dataPort(dataPortState, port) {}
+
+    // Методы для управления подсветкой
+    void setBacklight(bool newState)
+    {
+        backlight.setBacklight(newState);
+    }
+
+    bool getBacklight() const
+    {
+        return backlight.getBacklight();
+    }
+
+    // Методы для выполнения задач всех подсистем
+    void executeAllSystemElements()
+    {
+        backlight.execute();
+        powerSave.execute();
+        cursor.execute();
+        dataPort.execute();
+    }
+
+private:
+    eBacklight backlight; // Управление подсветкой
+    ePowerSave powerSave; // Управление режимами энергосбережения
+    eCursor cursor;       // Управление курсором
+    eDataPort dataPort;   // Управление портом данных
+};
+
+
 
 
 
@@ -780,7 +843,6 @@ public:
         return m_value;
     }
 };
-
 
 
 /*

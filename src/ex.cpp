@@ -34,7 +34,7 @@
 #include <algorithm>
 
 //version Library and Text
-const int8_t VERSION_LIB[] = {0, 1, 4};
+const int8_t VERSION_LIB[] = {0, 1, 5};
 
 Graphics _gfx; 
 Timer _delayCursor, _trm0, _trm1, _stop, _timerUpdateClock, _fps; 
@@ -50,6 +50,10 @@ Label _labelClock, _labelBattery, _labelWifi, _taskList;
 TextBox _textBox;
 
 TaskDispatcher td; TextBuffer textBuffer;
+
+/* System task */
+// Устанавливаем значения
+Systems systems(false, true, true, false, 1);
 
 /* Stack exForm */
 // std::stack<exForm*> formsStack;
@@ -111,21 +115,21 @@ const int8_t PIN_BATTERY = 39;       // gp
     Graphics
 */
 /* backlight */
-bool Graphics::controlBacklight(bool state) //p-n-p transistor
-{
-    pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
+// bool Graphics::controlBacklight(bool state) //p-n-p transistor
+// {
+//     pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
 
-    if (state == true)
-    {
-        digitalWrite(PIN_BACKLIGHT_LCD, 0); // on
-        return true;
-    }
-    else
-    {
-        digitalWrite(PIN_BACKLIGHT_LCD, 1); // off
-        return false;
-    }
-}
+//     if (state == true)
+//     {
+//         digitalWrite(PIN_BACKLIGHT_LCD, 0); // on
+//         return true;
+//     }
+//     else
+//     {
+//         digitalWrite(PIN_BACKLIGHT_LCD, 1); // off
+//         return false;
+//     }
+// }
 /* system initialization */
 void Graphics::initializationSystem()
 {
@@ -160,7 +164,8 @@ void Graphics::initializationSystem()
     pinMode(PIN_BATTERY,      INPUT);
 
     /* turn off display backlight */
-    _gfx.controlBacklight(false);
+    // _gfx.controlBacklight(false);
+    systems.setBacklight(false);
 
     /*
        Vector
@@ -2438,38 +2443,6 @@ void _osHello()
 }
 
 
-
-/* Task. Stack, task, command */ 
-// bool globalStateLED = false;
-// void ledControl()
-// {
-//     if (globalStateLED)
-//     {
-//         _gfx.controlBacklight(true);
-//     }
-
-//     if (!globalStateLED) 
-//     {
-//         _gfx.controlBacklight(false);
-//     }
-// }
-
-// void _myForm1()
-// { 
-//     exForm *form1 = new exForm();
-//     eCheckbox *check1 = new eCheckbox("LED control", 5, 5);
-//     eFunction *func1 = new eFunction(ledControl);
-
-//     globalStateLED = check1->isChecked();
-
-//     form1->title = "Form 1";
-//     form1->eFormShowMode = NORMAL;
-//     form1->addElement(check1);
-//     form1->addElement(func1);
-
-//     formsStack.push(form1);
-// }
-
 /* Task. Stack, task, command */ 
 bool globalStateLED = false;
 
@@ -2478,11 +2451,13 @@ void ledControl()
 {
     if (globalStateLED)
     {
-        _gfx.controlBacklight(true);
+        // _gfx.controlBacklight(true);
+        systems.setBacklight(true);
     }
     else
     {
-        _gfx.controlBacklight(false);
+        systems.setBacklight(false);
+        // _gfx.controlBacklight(false);
     }
 }
 
@@ -2668,7 +2643,8 @@ void _systemPowerSaveBoard()
         while (_isTouched() == false)
         {
             _sleepModeScreen();            //output message
-            _gfx.controlBacklight(false); //off backlight
+            // _gfx.controlBacklight(false); //off backlight
+            systems.setBacklight(false);
             u8g2.setPowerSave(1);         //off display
             esp_deep_sleep_start();       //run powersave, DEEP
         }
@@ -2681,7 +2657,8 @@ void _systemPowerSaveBoard()
         while (_isTouched() == false)
         {
             _sleepModeScreen();             //output message
-            _gfx.controlBacklight(false);  //off backlight
+            // _gfx.controlBacklight(false);  //off backlight
+            systems.setBacklight(false);
             u8g2.setPowerSave(0);          //on display
             esp_light_sleep_start();       //run powersave, LIGHT
         }
@@ -2724,8 +2701,11 @@ void _sustemLedControl()
 {
     //_ledControl.button("LED", 5, 140, flagLedControl, _joy.posX0, _joy.posY0);
     
-    if (flagStateLedControl == true) _gfx.controlBacklight(true);
-    else _gfx.controlBacklight(false);
+    // if (flagStateLedControl == true) _gfx.controlBacklight(true);
+    // else _gfx.controlBacklight(false);
+    if (flagStateLedControl == true) systems.setBacklight(true);
+    else systems.setBacklight(false);
+
 }
 
 /* Cursor */
@@ -2852,6 +2832,8 @@ void runExFormStack()
 
 void runTasksCore()
 {
+    systems.executeAllSystemElements();
+    
     for (TaskArguments &t : tasks)
     {
         if (t.activ)
