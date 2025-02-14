@@ -42,12 +42,14 @@ extern U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2;
 // extern const uint8_t gears_bits[];
 extern int H_LCD, W_LCD;
 
-extern void _clearCommandTerminal();
+// extern void _clearCommandTerminal();
+
+
 
 /*
     Task-dispatcher
     Dispatcher tasks, vector
-    [01/2025, Alexander Savushkin]
+    01/2025, Alexander Savushkin
 */
 /* Task Settings */
 enum TaskType
@@ -106,7 +108,7 @@ namespace
 /*
     exForm
     Visual eForm Builder
-    [01-02/2025, Alexander Savushkin]
+    01-02/2025, Alexander Savushkin
 */
 enum BorderStyle {noBorder, oneLine, twoLine, shadow, shadowNoFrame};
 /* Basic interface for all form elements */
@@ -577,10 +579,11 @@ private:
 };
 
 
+
 /*
     eFormStack
     Stack of eForm objects
-    [01/2025, Alexander Savushkin] 270125_2336
+    01/2025, Alexander Savushkin
 */
 namespace
 {
@@ -680,14 +683,81 @@ private:
 
 
 
+/*
+    System task
+    [02/2025, Alexander Savushkin]
+*/
+// Абстрактный класс системных задач
+class eSystemTask
+{
+public:
+    virtual void execute() = 0;      // Чисто виртуальный метод
+    virtual ~eSystemTask() = default; // Виртуальный деструктор
+};
 
+/* Управление подстветкой дисплея */
+class eBackLight : public eSystemTask
+{
+public:
+    eBackLight(bool stateLight) : m_stateLight(stateLight) {}
+
+    void execute() override
+    {
+    }
+
+private:
+    bool m_stateLight;
+};
+
+/* Управление режимами энергосбережения*/
+class ePowerSave : public eSystemTask
+{
+public:
+    ePowerSave(bool statePowerSave) : m_statePowerSave(statePowerSave) {}
+
+    void execute() override
+    {
+    }
+
+private:
+    bool m_statePowerSave;
+};
+
+/* Управление курсором */
+class eCursor : public eSystemTask
+{
+public:
+    eCursor(bool stateCursor) : m_stateCursor(stateCursor) {}
+
+    void execute() override
+    {
+    }
+
+private:
+    bool m_stateCursor;
+};
+
+/* Управление портом данных */
+class eDataPort : public eSystemTask
+{
+public:
+    eDataPort(bool stateDataPort, int port) : m_stateDataPort(stateDataPort), m_port(port) {}
+
+    void execute() override
+    {
+    }
+
+private:
+    bool m_stateDataPort;
+    int m_port;
+};
 
 
 
 /*
     Relay
     Changing the state of a variable
-    [02/2025, Alexander Savushkin]
+    02/2025, Alexander Savushkin
 */
 class Relay
 {
@@ -711,10 +781,12 @@ public:
     }
 };
 
+
+
 /*
     Text-buffer
     Storing a line of text on the stack
-    [01/2025, Alexander Savushkin]
+    01/2025, Alexander Savushkin
 */
 /* Base text buffer class */
 class TextBuffer
@@ -742,6 +814,9 @@ public:
         return result;
     }
 };
+
+
+
 /*
     Trigger
     Trigger
