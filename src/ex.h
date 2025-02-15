@@ -695,7 +695,6 @@ public:
     virtual void execute() = 0;      // Чисто виртуальный метод
     virtual ~eSystemElement() = default; // Виртуальный деструктор
 };
-
 /* Управление подстветкой дисплея */
 class eBacklight : public eSystemElement
 {
@@ -731,7 +730,29 @@ public:
 private:
     bool m_stateLight;
 };
+/* Управление контрастностью дисплея */
+class eDisplayContrast : public eSystemElement
+{
+public:
+    eDisplayContrast(int value) : m_valueContrast(value) {}
 
+    void execute() override
+    {
+        u8g2.setContrast(m_valueContrast); Serial.println(m_valueContrast);
+    }
+
+    void setDisplayContrast(int newValue)
+    {
+        m_valueContrast = newValue;
+    }
+
+    int getDisplayContrast()
+    {
+        return m_valueContrast;
+    }
+private:
+    int m_valueContrast;
+};
 /* Управление режимами энергосбережения*/
 class ePowerSave : public eSystemElement
 {
@@ -745,7 +766,6 @@ public:
 private:
     bool m_statePowerSave;
 };
-
 /* Управление курсором */
 class eCursor : public eSystemElement
 {
@@ -759,7 +779,6 @@ public:
 private:
     bool m_stateCursor;
 };
-
 /* Управление портом данных */
 class eDataPort : public eSystemElement
 {
@@ -774,7 +793,6 @@ private:
     bool m_stateDataPort;
     int m_port;
 };
-
 /*
     Systems
     [02/2025, Alexander Savushkin]
@@ -783,24 +801,34 @@ class Systems
 {
 public:
     // Конструктор, инициализирующий все подсистемы
-    Systems(bool backlightState, bool powerSaveState, bool cursorState, bool dataPortState, int port)
-        : backlight(backlightState), powerSave(powerSaveState), cursor(cursorState), dataPort(dataPortState, port) {}
+    Systems(bool backlightState, int valueContrast, bool powerSaveState, bool cursorState, bool dataPortState, int port)
+        : backlight(backlightState), displayContrast(valueContrast), powerSave(powerSaveState), cursor(cursorState), dataPort(dataPortState, port) {}
 
     // Методы для управления подсветкой
     void setBacklight(bool newState)
     {
         backlight.setBacklight(newState);
     }
-
     bool getBacklight() const
     {
         return backlight.getBacklight();
+    }
+
+    // Методы установки контрастности дисплея
+    void setDisplayContrast(int newValue)
+    {
+        displayContrast.setDisplayContrast(newValue);
+    }
+    int getDisplayContrast()
+    {
+        return displayContrast.getDisplayContrast();
     }
 
     // Методы для выполнения задач всех подсистем
     void executeAllSystemElements()
     {
         backlight.execute();
+        displayContrast.execute();
         powerSave.execute();
         cursor.execute();
         dataPort.execute();
@@ -808,6 +836,7 @@ public:
 
 private:
     eBacklight backlight; // Управление подсветкой
+    eDisplayContrast displayContrast; // Установка контрастности дисплея
     ePowerSave powerSave; // Управление режимами энергосбережения
     eCursor cursor;       // Управление курсором
     eDataPort dataPort;   // Управление портом данных

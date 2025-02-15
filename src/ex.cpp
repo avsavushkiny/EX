@@ -53,7 +53,7 @@ TaskDispatcher td; TextBuffer textBuffer;
 
 /* System task */
 // Устанавливаем значения
-Systems systems(false, true, true, false, 1);
+Systems systems(false, 143, true, true, false, 1);
 
 /* Stack exForm */
 // std::stack<exForm*> formsStack;
@@ -147,7 +147,8 @@ void Graphics::initializationSystem()
     u8g2.begin(); Serial.begin(9600);
     
     /* setting display, contrast */
-    u8g2.setContrast(143); //143//150
+    // u8g2.setContrast(143); //143//150
+    systems.setDisplayContrast(143);
 
     /* setting the resolution of the analog-to-digital converter */
     analogReadResolution(RESOLUTION_ADC);
@@ -2445,7 +2446,6 @@ void _osHello()
 
 /* Task. Stack, task, command */ 
 bool globalStateLED = false;
-
 // Изменяем функцию ledControl, чтобы она принимала указатель на eCheckbox
 void ledControl()
 {
@@ -2471,14 +2471,15 @@ void _myForm1()
         ledControl();
     });
 
-    form1->title = "Form 1";
+
+
+    form1->title = "Settings";
     form1->eFormShowMode = NORMAL;
     form1->addElement(check1);
     form1->addElement(func1);
 
     formsStack.push(form1);
 }
-
 
 void _myForm2()
 {
@@ -2595,6 +2596,29 @@ void _myDispatcher()
 
     formsStack.push(formMyDispatcher);
 }
+
+// settings Form
+void _settingsForm()
+{
+    exForm *settingsForm = new exForm();
+
+    eCheckbox *checkLED = new eCheckbox(false, "Backlight display", 5, 5);
+    
+    eFunction *funcLED = new eFunction([checkLED]() { 
+        globalStateLED = checkLED->isChecked();
+        ledControl();
+    });
+
+    settingsForm->title = "Settings";
+    settingsForm->eFormShowMode = NORMAL;
+
+    settingsForm->addElement(checkLED);
+    settingsForm->addElement(funcLED);
+
+    formsStack.push(settingsForm);
+}
+
+
 
 
 
@@ -2742,6 +2766,7 @@ TaskArguments system0[] //0 systems, 1 desktop, 2 user
     {"graphics 2", _myGraphicsTest2, icon.MyGfx, DESKTOP, 0, false},
     {"dispatcher", _myDispatcher, icon.MyTaskManager, DESKTOP, 0, false},
     {"graphics 3", _myGraphicsTest3, icon.MyGfx, DESKTOP, 0, false},
+    {"settings", _settingsForm, icon.MyTech, DESKTOP, 0, false},
     // [!] Last task
     {"cursor", _systemCursor, NULL, SYSTEM, 0, true}
 };
