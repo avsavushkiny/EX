@@ -145,11 +145,6 @@ void Graphics::initializationSystem()
     
     /* setting the operating system state */
     u8g2.begin(); Serial.begin(9600);
-    
-    /* setting display, contrast */
-    // u8g2.setContrast(143); //143//150
-    systems.setDisplayContrast(143);
-    systems.executeAllSystemElements();
 
     /* setting the resolution of the analog-to-digital converter */
     analogReadResolution(RESOLUTION_ADC);
@@ -168,6 +163,11 @@ void Graphics::initializationSystem()
     /* turn off display backlight */
     // _gfx.controlBacklight(false);
     systems.setBacklight(false);
+    /* setting display, contrast */
+    // u8g2.setContrast(143); //143//150
+    // systems.setDisplayContrast(143);
+    systems.executeAllSystemElements();
+
 
     /*
        Vector
@@ -2603,26 +2603,25 @@ void _myDispatcher()
 void _settingsForm()
 {
     exForm *settingsForm = new exForm();
-    systems.VALUECONTRAST = 143;
 
     eCheckbox *checkLED = new eCheckbox(systems.STATEBACKLIGHT, "backlight control", 5, 5);
-    
-    eFunction *funcLED = new eFunction([checkLED]() {
-        systems.STATEBACKLIGHT = checkLED->isChecked();
-        systems.setBacklight(systems.STATEBACKLIGHT);
-    });
 
-    eButton *button1 = new eButton("-", nullFunction, 5, 20);
-    eButton *button2 = new eButton("+", nullFunction, 50, 20);
+    eFunction *funcLED = new eFunction([checkLED]()
+                                       {
+        systems.STATEBACKLIGHT = checkLED->isChecked();
+        systems.setBacklight(systems.STATEBACKLIGHT); });
+
     eLabel *label1 = new eLabel((String)systems.VALUECONTRAST, 26, 30);
 
-    eFunction *funcContrast = new eFunction([button1, button2](){
-    // if (button1->m_stateButton) { systems.VALUECONTRAST++; }
-    // if (button2->m_stateButton) { systems.VALUECONTRAST--; }
+    eButton *button1 = new eButton("-", []()
+                                   { systems.VALUECONTRAST -= 1; delay(250); systems.setDisplayContrast(systems.VALUECONTRAST); }, 5, 20);
+    eButton *button2 = new eButton("+", []()
+                                   { systems.VALUECONTRAST += 1; delay(250); systems.setDisplayContrast(systems.VALUECONTRAST); }, 50, 20);
 
-    Serial.println(systems.VALUECONTRAST);
+    eFunction *func1 = new eFunction([label1]()
+                                     { label1->setText((String)systems.VALUECONTRAST); });
 
-    });
+    eLabel *label2 = new eLabel("display contrast", 66, 30);
 
     settingsForm->title = "Settings";
     settingsForm->eFormShowMode = NORMAL;
@@ -2632,14 +2631,11 @@ void _settingsForm()
     settingsForm->addElement(button1);
     settingsForm->addElement(button2);
     settingsForm->addElement(label1);
-    settingsForm->addElement(funcContrast);
+    settingsForm->addElement(func1);
+    settingsForm->addElement(label2);
 
     formsStack.push(settingsForm);
 }
-
-
-
-
 
 // exForm myForm;
 // myForm.addElement(new eCheckbox(true, "Option 1", 50, 100));

@@ -738,7 +738,8 @@ public:
 
     void execute() override
     {
-        u8g2.setContrast(m_valueContrast); Serial.println(m_valueContrast);
+        u8g2.setContrast(m_valueContrast);
+        // Serial.println(m_valueContrast);
     }
 
     void setDisplayContrast(int newValue)
@@ -816,7 +817,7 @@ public:
     }
 
     // Методы установки контрастности дисплея
-    int VALUECONTRAST;
+    int VALUECONTRAST{143};
     void setDisplayContrast(int newValue)
     {
         displayContrast.setDisplayContrast(newValue);
