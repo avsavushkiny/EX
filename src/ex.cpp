@@ -149,6 +149,7 @@ void Graphics::initializationSystem()
     /* setting display, contrast */
     // u8g2.setContrast(143); //143//150
     systems.setDisplayContrast(143);
+    systems.executeAllSystemElements();
 
     /* setting the resolution of the analog-to-digital converter */
     analogReadResolution(RESOLUTION_ADC);
@@ -1879,8 +1880,10 @@ void eButton::show()
 
         if (_joy.pressKeyENTER() == true)
         {
+            m_stateButton = true;
             m_onClick(); 
         }
+        else m_stateButton = false;
     }
     else
     {
@@ -2472,7 +2475,6 @@ void _myForm1()
     });
 
 
-
     form1->title = "Settings";
     form1->eFormShowMode = NORMAL;
     form1->addElement(check1);
@@ -2601,12 +2603,25 @@ void _myDispatcher()
 void _settingsForm()
 {
     exForm *settingsForm = new exForm();
+    systems.VALUECONTRAST = 143;
 
-    eCheckbox *checkLED = new eCheckbox(false, "Backlight display", 5, 5);
+    eCheckbox *checkLED = new eCheckbox(systems.STATEBACKLIGHT, "backlight control", 5, 5);
     
-    eFunction *funcLED = new eFunction([checkLED]() { 
-        globalStateLED = checkLED->isChecked();
-        ledControl();
+    eFunction *funcLED = new eFunction([checkLED]() {
+        systems.STATEBACKLIGHT = checkLED->isChecked();
+        systems.setBacklight(systems.STATEBACKLIGHT);
+    });
+
+    eButton *button1 = new eButton("-", nullFunction, 5, 20);
+    eButton *button2 = new eButton("+", nullFunction, 50, 20);
+    eLabel *label1 = new eLabel((String)systems.VALUECONTRAST, 26, 30);
+
+    eFunction *funcContrast = new eFunction([button1, button2](){
+    // if (button1->m_stateButton) { systems.VALUECONTRAST++; }
+    // if (button2->m_stateButton) { systems.VALUECONTRAST--; }
+
+    Serial.println(systems.VALUECONTRAST);
+
     });
 
     settingsForm->title = "Settings";
@@ -2614,6 +2629,10 @@ void _settingsForm()
 
     settingsForm->addElement(checkLED);
     settingsForm->addElement(funcLED);
+    settingsForm->addElement(button1);
+    settingsForm->addElement(button2);
+    settingsForm->addElement(label1);
+    settingsForm->addElement(funcContrast);
 
     formsStack.push(settingsForm);
 }

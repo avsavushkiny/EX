@@ -144,12 +144,12 @@ public:
         this->wForm = w;
         this->hForm = h;
     }
-
+    bool m_stateButton;
 private:
     String m_label; 
     void (*m_onClick)(void);
     int xForm, yForm, wForm, hForm;
-    short outerBoundaryForm{20};
+    // short outerBoundaryForm{20};
     int m_x{0}, m_y{0};
 };
 /* Text multiline */
@@ -805,6 +805,7 @@ public:
         : backlight(backlightState), displayContrast(valueContrast), powerSave(powerSaveState), cursor(cursorState), dataPort(dataPortState, port) {}
 
     // Методы для управления подсветкой
+    bool STATEBACKLIGHT;
     void setBacklight(bool newState)
     {
         backlight.setBacklight(newState);
@@ -815,6 +816,7 @@ public:
     }
 
     // Методы установки контрастности дисплея
+    int VALUECONTRAST;
     void setDisplayContrast(int newValue)
     {
         displayContrast.setDisplayContrast(newValue);
