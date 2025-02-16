@@ -71,9 +71,9 @@ void addTasksForSystems();
 unsigned long screenTiming{}, screenTiming2{}, TIMER{};
 
 //buffer -->use enum?
-String BUFFER_STRING{""}; //Hi I'm EX OS, Experience board!
-int BUFFER_INT{};
-double BUFFER_DOUBLE{};
+// String BUFFER_STRING{""}; //Hi I'm EX OS, Experience board!
+// int BUFFER_INT{};
+// double BUFFER_DOUBLE{};
 
 //for classes-timer
 unsigned long previousMillis{};
@@ -419,7 +419,7 @@ void Interface::message(String text, int duration)
     delay(duration);
 }
 /* displaying a message to the user */
-void Interface:: popUpMessage(String label, String text, uint tDelay)
+void Interface::popUpMessage(String label, String text, uint tDelay)
 {
     uint8_t sizeText = text.length();
 
@@ -456,13 +456,13 @@ void Interface:: popUpMessage(String label, String text, uint tDelay)
     
     h_frame = countLine * 10; a = h_frame/2;
 
-    u8g2.clearBuffer();
+    u8g2.clearBuffer(); // -->
     u8g2.drawFrame(((W_LCD/2)-(maxChar*6)/2) - border, (H_LCD/2) - a - border, (maxChar * 6) + (border * 2), h_frame + (border * 2));
     u8g2.drawFrame(((W_LCD/2)-(maxChar*6)/2) - (border + 3), (H_LCD/2) - a - (border + 3), (maxChar * 6) + ((border + 3) * 2), h_frame + ((border + 3) * 2));
 
     _gfx.print(label, (W_LCD/2)-(maxChar*6)/2, (H_LCD/2) - a - (border + 4));
     _gfx.print(text, (W_LCD/2)-(maxChar*6)/2, (H_LCD/2) - a + 10);
-    u8g2.sendBuffer();
+    u8g2.sendBuffer();  // <--
 
     delay(tDelay);
 
@@ -827,7 +827,7 @@ bool Shortcut::shortcutFrame(String name, uint8_t w, uint8_t h, uint8_t x, uint8
     {
         u8g2.drawFrame(x, y, w, h);
 
-        BUFFER_STRING = name;
+        // BUFFER_STRING = name;
 
         if (Joystick::pressKeyENTER() == true)
         {
@@ -885,7 +885,7 @@ bool Label::label(String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t li
         u8g2.setDrawColor(1);
         u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1);
 
-        BUFFER_STRING = text;
+        // BUFFER_STRING = text;
 
         if (Joystick::pressKeyENTER() == true)
         {
@@ -2113,16 +2113,6 @@ void eFunction::show()
 {
     m_func();
 }
-
-void eVirtualKeyboard::show()
-{
-    // 
-    
-    // Отображаем клавиатуру
-    // Все что ввели через кнопку бросаем в m_input
-    // Отображаем полученный ввод
-}
-
 /* desktop */
 void eDesktop::show()
 {
@@ -2270,6 +2260,81 @@ int exForm::showForm()
     }
 
     return 0; // 0 - the form works
+}
+
+
+/* Systems Element */
+/* eBacklight */
+void eBacklight::execute()
+{
+    //p-n-p transistor
+    pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
+
+    if (m_stateLight == true)
+    {
+        digitalWrite(PIN_BACKLIGHT_LCD, 0); // on
+    }
+    else
+    {
+        digitalWrite(PIN_BACKLIGHT_LCD, 1); // off
+    }
+}
+/* eDisplayContrast */
+void eDisplayContrast::execute()
+{
+    u8g2.setContrast(m_valueContrast);
+    // Serial.println(m_valueContrast);
+}
+/* ePowerSave */
+bool ePowerSave::isTouched()
+{
+    if ((_joy.calculateIndexY0() == 0) && (_joy.calculateIndexX0() == 0)) return false;
+
+    return true;
+}
+void ePowerSave::execute()
+{
+    if (isTouched() == true)
+    {
+        screenTiming = TIMER;
+        u8g2.setPowerSave(0); // off powersave
+    }
+
+    if ((TIMER - screenTiming > 60000) && (_joy.posY0 >= 150))
+    {
+        screenTiming = TIMER;
+
+        while (isTouched() == false)
+        {
+            // _sleepModeScreen(); // output message
+            systems.setBacklight(false);
+            u8g2.setPowerSave(1);   // off display
+            esp_deep_sleep_start(); // run powersave, DEEP
+        }
+    }
+
+    if ((TIMER - screenTiming > 60000) && (_joy.posY0 < 150))
+    {
+        screenTiming = TIMER;
+
+        while (isTouched() == false)
+        {
+            // _sleepModeScreen(); // output message
+            systems.setBacklight(false);
+            u8g2.setPowerSave(0);    // on display
+            esp_light_sleep_start(); // run powersave, LIGHT
+        }
+    }
+}
+/* eCursor */
+void eCursor::execute()
+{
+
+}
+/* eDataPort */
+void eDataPort::execute()
+{
+
 }
 
 
@@ -2452,33 +2517,15 @@ bool globalStateLED = false;
 // Изменяем функцию ledControl, чтобы она принимала указатель на eCheckbox
 void ledControl()
 {
-    if (globalStateLED)
-    {
-        // _gfx.controlBacklight(true);
-        systems.setBacklight(true);
-    }
-    else
-    {
-        systems.setBacklight(false);
-        // _gfx.controlBacklight(false);
-    }
+
 }
 
 void _myForm1()
 { 
-    exForm *form1 = new exForm();
-    eCheckbox *check1 = new eCheckbox(globalStateLED, "LED control", 5, 5);
+    exForm *form1 = new exForm(); exForm *form11 = new exForm();
 
-    eFunction *func1 = new eFunction([check1]() { 
-        globalStateLED = check1->isChecked();
-        ledControl();
-    });
-
-
-    form1->title = "Settings";
+    form1->title = "Form 1";
     form1->eFormShowMode = NORMAL;
-    form1->addElement(check1);
-    form1->addElement(func1);
 
     formsStack.push(form1);
 }
@@ -2706,8 +2753,8 @@ void _systemPowerSaveBoard()
 /* Task. System RawADC */
 void _systemRawADC()
 {
-    String text = "Coord X: " + (String)_joy.RAW_DATA_X0 + " Coord Y: " + (String)_joy.RAW_DATA_Y0;
-    BUFFER_STRING = text; 
+    // String text = "Coord X: " + (String)_joy.RAW_DATA_X0 + " Coord Y: " + (String)_joy.RAW_DATA_Y0;
+    // BUFFER_STRING = text; 
 }
 /* Task. Reboot ESP32 */
 void _rebootBoard()

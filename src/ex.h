@@ -40,11 +40,7 @@
 /* We let the compiler know that the u8g2 object is defined in another file */
 extern U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2;
 extern const int8_t PIN_BACKLIGHT_LCD;
-// extern const uint8_t gears_bits[];
 extern int H_LCD, W_LCD;
-
-// extern void _clearCommandTerminal();
-
 
 
 /*
@@ -103,7 +99,6 @@ namespace
     std::vector<TaskArguments> tasks;     // Vector of main tasks
     // std::vector<TaskArguments> tasksTray; // Notification bar task vector
 };
-
 
 
 /*
@@ -379,101 +374,101 @@ private:
 
 
 
-/* [!] Input Box */
-class eInputbox : public eElement
-{
-public:
-    eInputbox(int x, int y) : m_x(x), m_y(y) {}
+// /* [!] Input Box */
+// class eInputbox : public eElement
+// {
+// public:
+//     eInputbox(int x, int y) : m_x(x), m_y(y) {}
 
-    void show() override
-    {
-        // Вызовите метод отображения текста
-        // и обработайте ввод пользователя
-    }
+//     void show() override
+//     {
+//         // Вызовите метод отображения текста
+//         // и обработайте ввод пользователя
+//     }
 
-    void setPosition(int x, int y, int w, int h) override
-    {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
-        this->wForm = w;
-        this->hForm = h;
-    }
+//     void setPosition(int x, int y, int w, int h) override
+//     {
+//         this->xForm = x + m_x;
+//         this->yForm = y + m_y;
+//         this->wForm = w;
+//         this->hForm = h;
+//     }
 
-    void setText(const String& new_text)
-    {
-        m_text = new_text;
-    }
+//     void setText(const String& new_text)
+//     {
+//         m_text = new_text;
+//     }
 
-    String getText() const
-    {
-        return m_text;
-    }
+//     String getText() const
+//     {
+//         return m_text;
+//     }
 
-private:
-    String m_text;
-    int xForm, yForm, wForm, hForm;
-    int m_x, m_y;
-};
+// private:
+//     String m_text;
+//     int xForm, yForm, wForm, hForm;
+//     int m_x, m_y;
+// };
 
-// Класс VirtualKeyboard, наследующийся от eElement
-class eVirtualKeyboard : public eElement
-{
-public:
-    eVirtualKeyboard(int x, int y) : m_x(x), m_y(y) {}
+// // Класс VirtualKeyboard, наследующийся от eElement
+// class eVirtualKeyboard : public eElement
+// {
+// public:
+//     eVirtualKeyboard(int x, int y) : m_x(x), m_y(y) {}
 
-    void show() override;
-    // {
-    //     // Отображаем клавиатуру
-    //     // Все что ввели через кнопку бросаем в m_input
-    //     // Отображаем полученный ввод
-    // }
+//     void show() override;
+//     // {
+//     //     // Отображаем клавиатуру
+//     //     // Все что ввели через кнопку бросаем в m_input
+//     //     // Отображаем полученный ввод
+//     // }
 
-    void setPosition(int x, int y, int w, int h) override
-    {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
-        this->wForm = w;
-        this->hForm = h;
-    }
+//     void setPosition(int x, int y, int w, int h) override
+//     {
+//         this->xForm = x + m_x;
+//         this->yForm = y + m_y;
+//         this->wForm = w;
+//         this->hForm = h;
+//     }
 
-    void setInput(const String &new_text)
-    {
-        m_input = new_text;
-    }
+//     void setInput(const String &new_text)
+//     {
+//         m_input = new_text;
+//     }
 
-    String getInput()
-    {
-        return m_input;
-    }
+//     String getInput()
+//     {
+//         return m_input;
+//     }
 
-private:
-    String m_input;
-    int xForm, yForm, wForm, hForm;
-    int m_x, m_y;
-};
+// private:
+//     String m_input;
+//     int xForm, yForm, wForm, hForm;
+//     int m_x, m_y;
+// };
 
-/* [!] List box */
-class eListBox : public eElement
-{
-public:
-    template<typename T>
-    eListBox(std::vector<T>& t, int x, int y) : m_x(x), m_y(y) {}
+// /* [!] List box */
+// class eListBox : public eElement
+// {
+// public:
+//     template<typename T>
+//     eListBox(std::vector<T>& t, int x, int y) : m_x(x), m_y(y) {}
 
-    void show() override
-    {
-    }
+//     void show() override
+//     {
+//     }
 
-    void setPosition(int x, int y, int w, int h) override
-    {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
-        this->wForm = w;
-        this->hForm = h;
-    }
+//     void setPosition(int x, int y, int w, int h) override
+//     {
+//         this->xForm = x + m_x;
+//         this->yForm = y + m_y;
+//         this->wForm = w;
+//         this->hForm = h;
+//     }
 
-private:
-    int xForm, yForm, wForm, hForm, m_x, m_y;
-};
+// private:
+//     int xForm, yForm, wForm, hForm, m_x, m_y;
+// };
 
 
 
@@ -566,7 +561,7 @@ protected:
     std::vector<eElement*> elements;
 };
 /* Implementation of a concrete class exForm */
-enum EFORMSHOWMODE { FULLSCREEN, MAXIMIZED, NORMAL };
+enum EFORMSHOWMODE { FULLSCREEN, MAXIMIZED, NORMAL, FLAT };
 class exForm : public eForm
 {
 public:
@@ -578,7 +573,6 @@ private:
     int xForm, yForm;
     short outerBoundaryForm{20};
 };
-
 
 
 /*
@@ -683,12 +677,23 @@ private:
 };
 
 
+/*
+    PopUp form
+    [02/2025, Alexander Savushkin]
+*/
+class PopUpForm
+{
+public:
+
+private:
+};
+
 
 /*
     System task
     [02/2025, Alexander Savushkin]
 */
-// Абстрактный класс системных задач
+// Абстрактный класс системных элементов
 class eSystemElement
 {
 public:
@@ -702,20 +707,8 @@ public:
     eBacklight(bool stateLight) : m_stateLight(stateLight) {}
 
     // Устанавливаем подсветку дисплея
-    void execute() override
-    {
-        //p-n-p transistor
-        pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
+    void execute() override;
 
-        if (m_stateLight == true)
-        {
-            digitalWrite(PIN_BACKLIGHT_LCD, 0); // on
-        }
-        else
-        {
-            digitalWrite(PIN_BACKLIGHT_LCD, 1); // off
-        }
-    }
     // Устанавливаем новое значение подсветки дисплея
     void setBacklight(const bool newState)
     {
@@ -736,11 +729,7 @@ class eDisplayContrast : public eSystemElement
 public:
     eDisplayContrast(int value) : m_valueContrast(value) {}
 
-    void execute() override
-    {
-        u8g2.setContrast(m_valueContrast);
-        // Serial.println(m_valueContrast);
-    }
+    void execute() override;
 
     void setDisplayContrast(int newValue)
     {
@@ -760,9 +749,9 @@ class ePowerSave : public eSystemElement
 public:
     ePowerSave(bool statePowerSave) : m_statePowerSave(statePowerSave) {}
 
-    void execute() override
-    {
-    }
+    bool isTouched();
+
+    void execute() override;
 
 private:
     bool m_statePowerSave;
@@ -773,9 +762,7 @@ class eCursor : public eSystemElement
 public:
     eCursor(bool stateCursor) : m_stateCursor(stateCursor) {}
 
-    void execute() override
-    {
-    }
+    void execute() override;
 
 private:
     bool m_stateCursor;
@@ -786,9 +773,7 @@ class eDataPort : public eSystemElement
 public:
     eDataPort(bool stateDataPort, int port) : m_stateDataPort(stateDataPort), m_port(port) {}
 
-    void execute() override
-    {
-    }
+    void execute() override;
 
 private:
     bool m_stateDataPort;
@@ -844,9 +829,6 @@ private:
     eCursor cursor;       // Управление курсором
     eDataPort dataPort;   // Управление портом данных
 };
-
-
-
 
 
 /*
@@ -910,7 +892,6 @@ public:
 };
 
 
-
 /*
     Trigger
     Trigger
@@ -931,42 +912,43 @@ public:
         return m_value;
     }
 };
-/*
-    Action-menu
-    Additional Actions Menu
-    [01/2025, Alexander Savushkin] 270125_0116
-*/
-class FormActionMenuElements
-{
-protected:
-    virtual void show() const = 0;
-};
 
-class FormActionMenuTextBox : FormActionMenuElements
-{
-private:
-    String fam_text;
-public:
-    FormActionMenuTextBox(const String& text) : fam_text(text) {}
+// /*
+//     Action-menu
+//     Additional Actions Menu
+//     [01/2025, Alexander Savushkin] 270125_0116
+// */
+// class FormActionMenuElements
+// {
+// protected:
+//     virtual void show() const = 0;
+// };
 
-    void show() const override {};
-};
+// class FormActionMenuTextBox : FormActionMenuElements
+// {
+// private:
+//     String fam_text;
+// public:
+//     FormActionMenuTextBox(const String& text) : fam_text(text) {}
 
-class FormActionMenu
-{
-private:
-    std::vector<FormActionMenuElements*> fam_elements;
-public:
-    ~FormActionMenu()
-    {
-        for (FormActionMenuElements* elements : fam_elements)
-        {
-            delete elements;
-        }
-    }
+//     void show() const override {};
+// };
 
-    void showActionMenu(const String& title) const {};
-};
+// class FormActionMenu
+// {
+// private:
+//     std::vector<FormActionMenuElements*> fam_elements;
+// public:
+//     ~FormActionMenu()
+//     {
+//         for (FormActionMenuElements* elements : fam_elements)
+//         {
+//             delete elements;
+//         }
+//     }
+
+//     void showActionMenu(const String& title) const {};
+// };
 
 
 
