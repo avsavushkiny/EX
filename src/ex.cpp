@@ -2261,7 +2261,11 @@ int exForm::showForm()
 
     return 0; // 0 - the form works
 }
+/* PopUpMessage */
+int exForm::popUpMessage(bool state, String &message)
+{
 
+}
 
 /* Systems Element */
 /* eBacklight */
@@ -2522,7 +2526,7 @@ void ledControl()
 
 void _myForm1()
 { 
-    exForm *form1 = new exForm(); exForm *form11 = new exForm();
+    exForm *form1 = new exForm();
 
     form1->title = "Form 1";
     form1->eFormShowMode = NORMAL;
