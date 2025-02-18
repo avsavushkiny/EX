@@ -566,6 +566,7 @@ class exForm : public eForm
 {
 public:
     int showForm() override;
+    int popUpMessage(bool state, String &message);
 
     String title = "Title form";
     EFORMSHOWMODE eFormShowMode;
