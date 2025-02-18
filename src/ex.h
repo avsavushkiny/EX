@@ -123,7 +123,9 @@ public:
 class eButton : public eElement
 {
 public:    
-    eButton(const String& label, void (*onClick)(), int x, int y) : m_label(label), m_onClick(onClick), m_x(x), m_y(y) {}
+    // eButton(const String& label, void (*onClick)(), int x, int y) : m_label(label), m_onClick(onClick), m_x(x), m_y(y) {}
+    eButton(const String& label, std::function<void()> func, int x, int y) : m_label(label), m_func(func), m_x(x), m_y(y) {}
+
 
     void setLabel(const String &new_label)
     {
@@ -141,8 +143,9 @@ public:
     }
     bool m_stateButton;
 private:
+    std::function<void()> m_func; // Обёртка для функции
     String m_label; 
-    void (*m_onClick)(void);
+    // void (*m_onClick)(void);
     int xForm, yForm, wForm, hForm;
     // short outerBoundaryForm{20};
     int m_x{0}, m_y{0};
@@ -566,7 +569,6 @@ class exForm : public eForm
 {
 public:
     int showForm() override;
-    int popUpMessage(bool state, String &message);
 
     String title = "Title form";
     EFORMSHOWMODE eFormShowMode;
@@ -682,12 +684,19 @@ private:
     PopUp form
     [02/2025, Alexander Savushkin]
 */
-class PopUpForm
+class InstantMessage
 {
 public:
+    InstantMessage(String label, String text, unsigned int tDelay) : m_label(label), m_text(text), m_delay(tDelay) {}
+
+    void show();
 
 private:
+    String m_label, m_text;
+    unsigned int m_delay;
+    int xForm{0}, yForm{0}, m_sizeW{256}, m_sizeH{160};
 };
+
 
 
 /*
@@ -818,7 +827,7 @@ public:
     {
         backlight.execute();
         displayContrast.execute();
-        powerSave.execute();
+        // powerSave.execute();
         cursor.execute();
         dataPort.execute();
     }

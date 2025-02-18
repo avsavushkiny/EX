@@ -109,7 +109,14 @@ const int8_t PIN_BUZZER  = 26;       // gp
 const int8_t PIN_BATTERY = 39;       // gp
 
 
-
+void db(String text)
+{
+    Serial.println(text);
+}
+void db(int value)
+{
+    Serial.println(value);
+}
 /* 
     class
     Graphics
@@ -1881,7 +1888,7 @@ void eButton::show()
         if (_joy.pressKeyENTER() == true)
         {
             m_stateButton = true;
-            m_onClick(); 
+            m_func(); 
         }
         else m_stateButton = false;
     }
@@ -2261,11 +2268,7 @@ int exForm::showForm()
 
     return 0; // 0 - the form works
 }
-/* PopUpMessage */
-int exForm::popUpMessage(bool state, String &message)
-{
 
-}
 
 /* Systems Element */
 /* eBacklight */
@@ -2340,6 +2343,93 @@ void eDataPort::execute()
 {
 
 }
+
+
+/* ! Instant message */
+void InstantMessage::show()
+{
+    //2
+    // short border{5}; short border2{8}; // size border
+    // int count{0}; int countChars{0}; int maxChar{0}; // for counting characters
+    // short line{1}; // there will always be at least one line of text in the text
+    // int numberOfCharacters{0}; // количество символов
+    // short charH{10}, charW{5};
+    // int ch{0}, ln{0}; int xx{xForm}, yy{yForm};
+
+    
+    // u8g2.clearBuffer(); // -->
+    // u8g2.drawFrame(xx, yy, m_sizeW, m_sizeH);
+    // u8g2.drawFrame(xx - 3, yy - 3, m_sizeW + 6, m_sizeH + 6);
+
+    // for (char c : m_text)
+    // {
+    //     numberOfCharacters++;
+    // }
+
+    // int numberOfCharactersLineFrame = (m_sizeW - border - border) / charW; // количество символов в строчке Фрейма
+    // int numberOfLines = numberOfCharacters / numberOfCharactersLineFrame; // количество строк
+    // int numberOfLinesFrame = (m_sizeH - border - border) / charH; // количество строчек в Фрейме
+    
+    // for (char c : m_text)
+    // {
+    //     u8g2.setFont(u8g2_font_6x10_tr);
+    //     u8g2.setCursor(xx + border, yy + charH + border);
+    //     u8g2.print(c);
+
+    //     xx += charW;
+    //     ch++;
+
+    //     if (c == '\n')
+    //     {
+    //         yy += charH; ch = 0; xx = xForm; ln++;
+    //     }
+
+    //     if (ch >= numberOfCharactersLineFrame)
+    //     {
+    //         yy += charH; ch = 0; xx = xForm; ln++;
+    //     }
+    // }
+    // u8g2.sendBuffer(); // <--
+
+    // delay(m_delay);
+
+    short border{5};
+    short border2{8}; // size border
+    short charHeight{10};
+    short charWidth{5}; // size char
+    int count{0}, x{128}, y{80};
+    int maxChar{0}; // for counting characters
+    int line{1};    // there will always be at least one line of text in the text
+
+    for (char c : m_text) // count the characters in each line
+    {
+        if (c == '\n')
+        {
+            if (count > maxChar)
+                maxChar = count;
+            count = 0;
+            line++;
+        }
+        else
+        {
+            count++;
+        }
+    }
+
+    int numberOfPixels = maxChar * charWidth;               // the maximum number of pixels based on the number of characters in a line
+    int numberOfPixelsToOffset = (maxChar / 2) * charWidth; // a given number of pixels must be offset
+
+    u8g2.clearBuffer(); // -->
+    _gfx.print(m_text, x - numberOfPixelsToOffset + GLOBAL_X, y + GLOBAL_Y, charHeight, charWidth);
+
+    u8g2.drawFrame(x - numberOfPixelsToOffset - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * charHeight));
+    u8g2.drawFrame(x - numberOfPixelsToOffset - border2 + GLOBAL_X, y - charHeight - border2 + GLOBAL_Y, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight));
+    u8g2.sendBuffer(); // <--
+
+    delay(m_delay);
+}
+
+
 
 
 
@@ -2516,10 +2606,8 @@ void _osHello()
 }
 
 
-/* Task. Stack, task, command */ 
-bool globalStateLED = false;
-// Изменяем функцию ledControl, чтобы она принимала указатель на eCheckbox
-void ledControl()
+/* Task. Stack, task, command */
+void test()
 {
 
 }
@@ -2527,9 +2615,15 @@ void ledControl()
 void _myForm1()
 { 
     exForm *form1 = new exForm();
+    eButton *button1 = new eButton("Test message", [](){
+        InstantMessage message0("Test", "Hello world,\nhello, hello, hello\nw o r l d!", 3000);
+        message0.show();
+    }, 5, 5);
 
     form1->title = "Form 1";
     form1->eFormShowMode = NORMAL;
+    form1->addElement(button1);
+
 
     formsStack.push(form1);
 }
@@ -2711,29 +2805,24 @@ bool _isTouched()
 
   return true;
 }
-/* shows a notification about the start of sleep mode */
-void _sleepModeScreen()
-{
-    _mess.popUpMessage("Power save", "Light sleep.\nBye, bye my User!\nUse the Joystick to wake up!\0\0", 1000);
-}
 /* a system-task for working in an energy-efficient mode */
 void _systemPowerSaveBoard()
 {
     if (_isTouched() == true)
     {
         screenTiming = TIMER; u8g2.setPowerSave(0);  //off powersave
+        db("touch");
     }
-    
-    //if ((_joy.posY0 >= 150) && (_joy.posX0 <= 100)) BUFFER_STRING = "Deep powersave mode";
     
     if ((TIMER - screenTiming > 60000) && (_joy.posY0 >= 150))
     {
-        screenTiming = TIMER;
+        screenTiming = TIMER; db("sleep1");
 
         while (_isTouched() == false)
         {
-            _sleepModeScreen();            //output message
-            // _gfx.controlBacklight(false); //off backlight
+            InstantMessage message1("Sleep", "Sleeeeeep)\nBye, bye, my User.", 3000);
+            message1.show();
+
             systems.setBacklight(false);
             u8g2.setPowerSave(1);         //off display
             esp_deep_sleep_start();       //run powersave, DEEP
@@ -2742,12 +2831,13 @@ void _systemPowerSaveBoard()
     
     if ((TIMER - screenTiming > 60000) && (_joy.posY0 < 150))
     {
-        screenTiming = TIMER;
+        screenTiming = TIMER; db("sleep2");
 
         while (_isTouched() == false)
         {
-            _sleepModeScreen();             //output message
-            // _gfx.controlBacklight(false);  //off backlight
+            InstantMessage message2("Sleep", "Sleeeeeep)\nBye, bye, my User.", 3000);
+            message2.show();
+
             systems.setBacklight(false);
             u8g2.setPowerSave(0);          //on display
             esp_light_sleep_start();       //run powersave, LIGHT
