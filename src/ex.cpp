@@ -2673,6 +2673,17 @@ void _myForm3()
     formsStack.push(form3);
 }
 
+void form4()
+{
+    exForm *form4 = exForm();
+
+    form4->title = "Robotics";
+    form4->eFormShowMode = FULLSCREEN;
+
+    formsStack.push(form4);
+}
+
+
 void _myDispatcherFunction(int xG, int yG, int wG, int hG)
 {
     int xx{5}, yy{23};
