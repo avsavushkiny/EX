@@ -687,11 +687,14 @@ private:
 class InstantMessage
 {
 public:
-    InstantMessage(String label, String text, unsigned int tDelay) : m_label(label), m_text(text), m_delay(tDelay) {}
+    InstantMessage(String text, unsigned int tDelay) : m_text(text), m_delay(tDelay) {}
 
     void show();
 
+    void drawDotGrid(int interval);
+
 private:
+    // BorderStyle m_borderMessage;
     String m_label, m_text;
     unsigned int m_delay;
     int xForm{0}, yForm{0}, m_sizeW{256}, m_sizeH{160};

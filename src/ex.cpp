@@ -2345,61 +2345,30 @@ void eDataPort::execute()
 }
 
 
-/* ! Instant message */
+/* Instant message */
+/* Draw dot-grid */
+void InstantMessage::drawDotGrid(int interval)
+{
+    // Проверяем, чтобы интервал был больше 0
+    if (interval <= 0)
+    {
+        return; // Если интервал некорректный, ничего не делаем
+    }
+
+    // Проходим по всем строкам и столбцам с заданным интервалом
+    for (int x = 0; x < 256; x += interval)
+    {
+        for (int y = 0; y < 160; y += interval)
+        {
+            u8g2.drawPixel(x, y); // Рисуем точку (1 — белый цвет)
+        }
+    }
+}
+/* Draw show function */
 void InstantMessage::show()
 {
-    //2
-    // short border{5}; short border2{8}; // size border
-    // int count{0}; int countChars{0}; int maxChar{0}; // for counting characters
-    // short line{1}; // there will always be at least one line of text in the text
-    // int numberOfCharacters{0}; // количество символов
-    // short charH{10}, charW{5};
-    // int ch{0}, ln{0}; int xx{xForm}, yy{yForm};
-
-    
-    // u8g2.clearBuffer(); // -->
-    // u8g2.drawFrame(xx, yy, m_sizeW, m_sizeH);
-    // u8g2.drawFrame(xx - 3, yy - 3, m_sizeW + 6, m_sizeH + 6);
-
-    // for (char c : m_text)
-    // {
-    //     numberOfCharacters++;
-    // }
-
-    // int numberOfCharactersLineFrame = (m_sizeW - border - border) / charW; // количество символов в строчке Фрейма
-    // int numberOfLines = numberOfCharacters / numberOfCharactersLineFrame; // количество строк
-    // int numberOfLinesFrame = (m_sizeH - border - border) / charH; // количество строчек в Фрейме
-    
-    // for (char c : m_text)
-    // {
-    //     u8g2.setFont(u8g2_font_6x10_tr);
-    //     u8g2.setCursor(xx + border, yy + charH + border);
-    //     u8g2.print(c);
-
-    //     xx += charW;
-    //     ch++;
-
-    //     if (c == '\n')
-    //     {
-    //         yy += charH; ch = 0; xx = xForm; ln++;
-    //     }
-
-    //     if (ch >= numberOfCharactersLineFrame)
-    //     {
-    //         yy += charH; ch = 0; xx = xForm; ln++;
-    //     }
-    // }
-    // u8g2.sendBuffer(); // <--
-
-    // delay(m_delay);
-
-    short border{5};
-    short border2{8}; // size border
-    short charHeight{10};
-    short charWidth{5}; // size char
-    int count{0}, x{128}, y{80};
-    int maxChar{0}; // for counting characters
-    int line{1};    // there will always be at least one line of text in the text
+    short border{5}, border2{8}, charHeight{10}, charWidth{5};
+    int count{0}, x{128}, y{80}, maxChar{0}, line{1};
 
     for (char c : m_text) // count the characters in each line
     {
@@ -2416,14 +2385,46 @@ void InstantMessage::show()
         }
     }
 
+    // Проверяем последнюю строку, если она не заканчивается на '\n'
+    if (count > maxChar)
+    {
+        maxChar = count;
+    }
+
+    int lineYoffset = (line / 2) * 8;
+    
+    //--> Рисуем сетку на дисплее
+    u8g2.setDrawColor(1);
+    drawDotGrid(2); //1, 2, 4, 8, 16, 32,
+    
+    //--> выводим границы текста
     int numberOfPixels = maxChar * charWidth;               // the maximum number of pixels based on the number of characters in a line
     int numberOfPixelsToOffset = (maxChar / 2) * charWidth; // a given number of pixels must be offset
 
-    u8g2.clearBuffer(); // -->
-    _gfx.print(m_text, x - numberOfPixelsToOffset + GLOBAL_X, y + GLOBAL_Y, charHeight, charWidth);
+    //--> границы фрейма
+    // Определяем границы фрейма
+    int frameX = x - numberOfPixelsToOffset - border2 + GLOBAL_X;
+    int frameY = y - charHeight - border2 + GLOBAL_Y - lineYoffset;
+    int frameWidth = border2 + border2 + numberOfPixels;
+    int frameHeight = border2 + border2 + (line * charHeight);
+    // Проходим по всем пикселям внутри фрейма и рисуем их
+    u8g2.setDrawColor(0);
+    for (int px = frameX; px < frameX + frameWidth; px++)
+    {
+        for (int py = frameY; py < frameY + frameHeight; py++)
+        {
+            u8g2.drawPixel(px, py); // Рисуем пиксель со значением 0
+        }
+    }
+    u8g2.setDrawColor(1);
+    //<-- границы фрема
 
-    u8g2.drawFrame(x - numberOfPixelsToOffset - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y, border + border + numberOfPixels, border + border + (line * charHeight));
-    u8g2.drawFrame(x - numberOfPixelsToOffset - border2 + GLOBAL_X, y - charHeight - border2 + GLOBAL_Y, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight));
+    // u8g2.clearBuffer(); // -->
+    _gfx.print(m_text, x - numberOfPixelsToOffset + GLOBAL_X, y + GLOBAL_Y - lineYoffset, charHeight, charWidth);
+
+    u8g2.drawFrame(x - numberOfPixelsToOffset - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y - lineYoffset, border + border + numberOfPixels, border + border + (line * charHeight));
+    u8g2.drawFrame(x - numberOfPixelsToOffset - border2 + GLOBAL_X, y - charHeight - border2 + GLOBAL_Y - lineYoffset, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight));
+
     u8g2.sendBuffer(); // <--
 
     delay(m_delay);
@@ -2616,7 +2617,7 @@ void _myForm1()
 { 
     exForm *form1 = new exForm();
     eButton *button1 = new eButton("Test message", [](){
-        InstantMessage message0("Test", "Hello world,\nhello, hello, hello\nw o r l d!", 3000);
+        InstantMessage message0("Hello world,\nhello, hello, hello\nw o r l d!\0", 3000);
         message0.show();
     }, 5, 5);
 
@@ -2675,7 +2676,7 @@ void _myForm3()
 
 void form4()
 {
-    exForm *form4 = exForm();
+    exForm *form4 = new exForm();
 
     form4->title = "Robotics";
     form4->eFormShowMode = FULLSCREEN;
@@ -2819,19 +2820,20 @@ bool _isTouched()
 /* a system-task for working in an energy-efficient mode */
 void _systemPowerSaveBoard()
 {
+    String text = "The console has entered\nhibernation mode.\n\nTo exit this mode,\nmove the stick upwards.";
+    
     if (_isTouched() == true)
     {
         screenTiming = TIMER; u8g2.setPowerSave(0);  //off powersave
-        db("touch");
     }
     
     if ((TIMER - screenTiming > 60000) && (_joy.posY0 >= 150))
     {
-        screenTiming = TIMER; db("sleep1");
+        screenTiming = TIMER;
 
         while (_isTouched() == false)
         {
-            InstantMessage message1("Sleep", "Sleeeeeep)\nBye, bye, my User.", 3000);
+            InstantMessage message1("The console has entered\ndeep sleep mode.", 3000);
             message1.show();
 
             systems.setBacklight(false);
@@ -2842,11 +2844,11 @@ void _systemPowerSaveBoard()
     
     if ((TIMER - screenTiming > 60000) && (_joy.posY0 < 150))
     {
-        screenTiming = TIMER; db("sleep2");
+        screenTiming = TIMER;
 
         while (_isTouched() == false)
         {
-            InstantMessage message2("Sleep", "Sleeeeeep)\nBye, bye, my User.", 3000);
+            InstantMessage message2(text, 3000);
             message2.show();
 
             systems.setBacklight(false);
