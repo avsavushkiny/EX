@@ -2301,35 +2301,40 @@ bool ePowerSave::isTouched()
 }
 void ePowerSave::execute()
 {
+    String text = "The console has entered\nhibernation mode.\n\nTo exit this mode,\nmove the stick upwards.";
+    
     if (isTouched() == true)
     {
-        screenTiming = TIMER;
-        u8g2.setPowerSave(0); // off powersave
+        screenTiming = TIMER; u8g2.setPowerSave(0);  //off powersave
     }
-
+    
     if ((TIMER - screenTiming > 60000) && (_joy.posY0 >= 150))
     {
         screenTiming = TIMER;
 
         while (isTouched() == false)
         {
-            // _sleepModeScreen(); // output message
+            InstantMessage message1("The console has entered\ndeep sleep mode.", 3000);
+            message1.show();
+
             systems.setBacklight(false);
-            u8g2.setPowerSave(1);   // off display
-            esp_deep_sleep_start(); // run powersave, DEEP
+            u8g2.setPowerSave(1);         //off display
+            esp_deep_sleep_start();       //run powersave, DEEP
         }
     }
-
+    
     if ((TIMER - screenTiming > 60000) && (_joy.posY0 < 150))
     {
         screenTiming = TIMER;
 
         while (isTouched() == false)
         {
-            // _sleepModeScreen(); // output message
+            InstantMessage message2(text, 3000);
+            message2.show();
+
             systems.setBacklight(false);
-            u8g2.setPowerSave(0);    // on display
-            esp_light_sleep_start(); // run powersave, LIGHT
+            u8g2.setPowerSave(0);          //on display
+            esp_light_sleep_start();       //run powersave, LIGHT
         }
     }
 }
@@ -2760,29 +2765,42 @@ void _myDispatcher()
 void _settingsForm()
 {
     exForm *settingsForm = new exForm();
+    uint8_t x{0}, y{0};
 
-    eCheckbox *checkLED = new eCheckbox(systems.STATEBACKLIGHT, "backlight control", 5, 5);
+    // --> LED control
+    eCheckbox *checkLED = new eCheckbox(systems.STATEBACKLIGHT, "backlight control", x + 5, y + 5);
 
     eFunction *funcLED = new eFunction([checkLED]()
                                        {
         systems.STATEBACKLIGHT = checkLED->isChecked();
         systems.setBacklight(systems.STATEBACKLIGHT); });
 
-    eLabel *label1 = new eLabel((String)systems.VALUECONTRAST, 26, 30);
+    // --> Set contrast
+    eLabel *label1 = new eLabel((String)systems.VALUECONTRAST, x + 26, y + 30);
 
     eButton *button1 = new eButton("-", []()
-                                   { systems.VALUECONTRAST -= 1; delay(250); systems.setDisplayContrast(systems.VALUECONTRAST); }, 5, 20);
+                                   { systems.VALUECONTRAST -= 1; delay(250); systems.setDisplayContrast(systems.VALUECONTRAST); }, x + 5, y + 20);
     eButton *button2 = new eButton("+", []()
-                                   { systems.VALUECONTRAST += 1; delay(250); systems.setDisplayContrast(systems.VALUECONTRAST); }, 50, 20);
+                                   { systems.VALUECONTRAST += 1; delay(250); systems.setDisplayContrast(systems.VALUECONTRAST); }, x+ 50, y + 20);
 
     eFunction *func1 = new eFunction([label1]()
                                      { label1->setText((String)systems.VALUECONTRAST); });
 
-    eLabel *label2 = new eLabel("display contrast", 66, 30);
+    eLabel *label2 = new eLabel("display contrast", x + 66, y + 30);
 
+    // --> RAW data Stick0
+    /* ! нужно захватить эти переменные по ссылке, используя &. */
+    // String rawDataStick;
+    // eFunction *func2 = new eFunction([&rawDataStick](){
+    //     rawDataStick = "RAW data Stick: X: " + String(_joy.RAW_DATA_X0) + " Y: " + String(_joy.RAW_DATA_Y0);
+    // });
+    // eLabel *label3 = new eLabel(rawDataStick, x + 5, y + 45);
+    
+    // --> Title, show mode Form
     settingsForm->title = "Settings";
     settingsForm->eFormShowMode = NORMAL;
 
+    // --> Add elements Form
     settingsForm->addElement(checkLED);
     settingsForm->addElement(funcLED);
     settingsForm->addElement(button1);
@@ -2790,73 +2808,18 @@ void _settingsForm()
     settingsForm->addElement(label1);
     settingsForm->addElement(func1);
     settingsForm->addElement(label2);
+    // settingsForm->addElement(func2);
+    // settingsForm->addElement(label3);
 
+    // --> Push Form object
     formsStack.push(settingsForm);
 }
 
-// exForm myForm;
-// myForm.addElement(new eCheckbox(true, "Option 1", 50, 100));
-// myForm.addElement(new eInputBox(150, 200));
-// myForm.showForm();
 
 
 
-/* Clear all commands */
-void _clearCommandTerminal()
-{
-  for (TaskArguments &_ta : tasks)
-  {
-    _ta.activ = false;
-  }
-}
-/* Powersave mode */
-/* the function checks whether the joystick or button is pressed at a certain moment */
-bool _isTouched()
-{
-  if ((_joy.calculateIndexY0() == 0) && (_joy.calculateIndexX0() == 0)) return false;
 
-  return true;
-}
-/* a system-task for working in an energy-efficient mode */
-void _systemPowerSaveBoard()
-{
-    String text = "The console has entered\nhibernation mode.\n\nTo exit this mode,\nmove the stick upwards.";
-    
-    if (_isTouched() == true)
-    {
-        screenTiming = TIMER; u8g2.setPowerSave(0);  //off powersave
-    }
-    
-    if ((TIMER - screenTiming > 60000) && (_joy.posY0 >= 150))
-    {
-        screenTiming = TIMER;
 
-        while (_isTouched() == false)
-        {
-            InstantMessage message1("The console has entered\ndeep sleep mode.", 3000);
-            message1.show();
-
-            systems.setBacklight(false);
-            u8g2.setPowerSave(1);         //off display
-            esp_deep_sleep_start();       //run powersave, DEEP
-        }
-    }
-    
-    if ((TIMER - screenTiming > 60000) && (_joy.posY0 < 150))
-    {
-        screenTiming = TIMER;
-
-        while (_isTouched() == false)
-        {
-            InstantMessage message2(text, 3000);
-            message2.show();
-
-            systems.setBacklight(false);
-            u8g2.setPowerSave(0);          //on display
-            esp_light_sleep_start();       //run powersave, LIGHT
-        }
-    }
-}
 /* Task. System RawADC */
 void _systemRawADC()
 {
@@ -2876,30 +2839,6 @@ void _myFps()
     u8g2.print(fps);
 }
 
-
-/* Task. System LED control */
-void _flagLedControl()
-{
-    for (int i = 0; i < 1; i++)
-    {
-        if (flagStateLedControl == true)
-        {
-            flagStateLedControl = false; delay(250); break;
-        }
-        else
-            flagStateLedControl = true; delay(250);
-    }
-}
-void _sustemLedControl()
-{
-    //_ledControl.button("LED", 5, 140, flagLedControl, _joy.posX0, _joy.posY0);
-    
-    // if (flagStateLedControl == true) _gfx.controlBacklight(true);
-    // else _gfx.controlBacklight(false);
-    if (flagStateLedControl == true) systems.setBacklight(true);
-    else systems.setBacklight(false);
-
-}
 
 /* Cursor */
 void _systemCursor()
@@ -2924,7 +2863,7 @@ Icon icon;
 */
 TaskArguments system0[] //0 systems, 1 desktop, 2 user
 {
-    {"powersave", _systemPowerSaveBoard, NULL, SYSTEM, 0, true},
+    // {"powersave", _systemPowerSaveBoard, NULL, SYSTEM, 0, true}, // ! modify
     {"fps", _myFps, NULL, SYSTEM, 0, false},
     {"desktop", _myDesktop, NULL, SYSTEM, 100, true},
     {"oshello", _osHello, NULL, SYSTEM, 101, true},
@@ -3026,8 +2965,6 @@ void runExFormStack()
 
 void runTasksCore()
 {
-    systems.executeAllSystemElements();
-    
     for (TaskArguments &t : tasks)
     {
         if (t.activ)
@@ -3036,6 +2973,8 @@ void runTasksCore()
             t.f();
         }
     }
+
+    systems.executeAllSystemElements();
 }
 
 void TaskDispatcher::terminal3()

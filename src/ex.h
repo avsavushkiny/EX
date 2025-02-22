@@ -373,108 +373,6 @@ private:
     std::function<void()> m_func; // Обёртка для функции
     int xForm, yForm, wForm, hForm;
 };
-
-
-
-
-// /* [!] Input Box */
-// class eInputbox : public eElement
-// {
-// public:
-//     eInputbox(int x, int y) : m_x(x), m_y(y) {}
-
-//     void show() override
-//     {
-//         // Вызовите метод отображения текста
-//         // и обработайте ввод пользователя
-//     }
-
-//     void setPosition(int x, int y, int w, int h) override
-//     {
-//         this->xForm = x + m_x;
-//         this->yForm = y + m_y;
-//         this->wForm = w;
-//         this->hForm = h;
-//     }
-
-//     void setText(const String& new_text)
-//     {
-//         m_text = new_text;
-//     }
-
-//     String getText() const
-//     {
-//         return m_text;
-//     }
-
-// private:
-//     String m_text;
-//     int xForm, yForm, wForm, hForm;
-//     int m_x, m_y;
-// };
-
-// // Класс VirtualKeyboard, наследующийся от eElement
-// class eVirtualKeyboard : public eElement
-// {
-// public:
-//     eVirtualKeyboard(int x, int y) : m_x(x), m_y(y) {}
-
-//     void show() override;
-//     // {
-//     //     // Отображаем клавиатуру
-//     //     // Все что ввели через кнопку бросаем в m_input
-//     //     // Отображаем полученный ввод
-//     // }
-
-//     void setPosition(int x, int y, int w, int h) override
-//     {
-//         this->xForm = x + m_x;
-//         this->yForm = y + m_y;
-//         this->wForm = w;
-//         this->hForm = h;
-//     }
-
-//     void setInput(const String &new_text)
-//     {
-//         m_input = new_text;
-//     }
-
-//     String getInput()
-//     {
-//         return m_input;
-//     }
-
-// private:
-//     String m_input;
-//     int xForm, yForm, wForm, hForm;
-//     int m_x, m_y;
-// };
-
-// /* [!] List box */
-// class eListBox : public eElement
-// {
-// public:
-//     template<typename T>
-//     eListBox(std::vector<T>& t, int x, int y) : m_x(x), m_y(y) {}
-
-//     void show() override
-//     {
-//     }
-
-//     void setPosition(int x, int y, int w, int h) override
-//     {
-//         this->xForm = x + m_x;
-//         this->yForm = y + m_y;
-//         this->wForm = w;
-//         this->hForm = h;
-//     }
-
-// private:
-//     int xForm, yForm, wForm, hForm, m_x, m_y;
-// };
-
-
-
 /* Picture xbmp */
 class ePicture : public eElement
 {
@@ -830,7 +728,7 @@ public:
     {
         backlight.execute();
         displayContrast.execute();
-        // powerSave.execute();
+        powerSave.execute();
         cursor.execute();
         dataPort.execute();
     }
@@ -925,49 +823,6 @@ public:
         return m_value;
     }
 };
-
-// /*
-//     Action-menu
-//     Additional Actions Menu
-//     [01/2025, Alexander Savushkin] 270125_0116
-// */
-// class FormActionMenuElements
-// {
-// protected:
-//     virtual void show() const = 0;
-// };
-
-// class FormActionMenuTextBox : FormActionMenuElements
-// {
-// private:
-//     String fam_text;
-// public:
-//     FormActionMenuTextBox(const String& text) : fam_text(text) {}
-
-//     void show() const override {};
-// };
-
-// class FormActionMenu
-// {
-// private:
-//     std::vector<FormActionMenuElements*> fam_elements;
-// public:
-//     ~FormActionMenu()
-//     {
-//         for (FormActionMenuElements* elements : fam_elements)
-//         {
-//             delete elements;
-//         }
-//     }
-
-//     void showActionMenu(const String& title) const {};
-// };
-
-
-
-
-
-
 
 
 /*
