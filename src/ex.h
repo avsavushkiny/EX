@@ -97,7 +97,7 @@ namespace
 {
     // std::vector<TaskStack> taskStack;     // Task Stack Vector
     std::vector<TaskArguments> tasks;     // Vector of main tasks
-    // std::vector<TaskArguments> tasksTray; // Notification bar task vector
+    std::vector<TaskArguments> userTasks;
 };
 
 
@@ -399,10 +399,11 @@ private:
     const uint8_t *m_bitmap;
 };
 /* Desktop */
+template <typename T>
 class eDesktop : public eElement
 {
 public:
-    eDesktop() {}
+    eDesktop(const std::vector<T>& data) : data_(data) {}
     void show() override;
     void setPosition(int x, int y, int w, int h) override
     {
@@ -413,6 +414,7 @@ public:
     }
 
 private:
+    std::vector<T> data_;
     int xForm, yForm, wForm, hForm;
 };
 /* Graphics */
@@ -486,96 +488,77 @@ namespace
     // Stack of forms
     std::stack<exForm*> formsStack;
 }
+
+
 /* Class for controlling the glass forms */
-class exFormStack
-{
-public:
-    // Add the form to the stack
-    void push(exForm* form)
-    {
-        formsStack.push(form);
-    }
+// class exFormStack
+// {
+// public:
+//     // Add the form to the stack
+//     void push(exForm* form)
+//     {
+//         formsStack.push(form);
+//     }
 
-    // Extract the upper form from the stack
-    exForm* pop()
-    {
-        if (!formsStack.empty())
-        {
-            exForm* top = formsStack.top();
-            formsStack.pop();
-            return top;
-        }
-        return nullptr;
-    }
+//     // Extract the upper form from the stack
+//     exForm* pop()
+//     {
+//         if (!formsStack.empty())
+//         {
+//             exForm* top = formsStack.top();
+//             formsStack.pop();
+//             return top;
+//         }
+//         return nullptr;
+//     }
 
-    // The number of forms in the stack
-    size_t size() const
-    {
-        return formsStack.size();
-    }
+//     exForm* top()
+//     {
+//         exForm* top = formsStack.top();
+//         return top;
+//     }
 
-    // Check, is it empty?
-    bool empty() const
-    {
-        return formsStack.empty();
-    }
+//     // The number of forms in the stack
+//     size_t size() const
+//     {
+//         return formsStack.size();
+//     }
 
-    // обновляем форму один раз
-    void refreshForm()
-    {
-        if (!formsStack.empty())
-        {
-            exForm *top = pop(); // Извлекаем верхнюю форму из стека
-            push(top);           // Снова добавляем эту форму в стек
-        }
-    }
+//     // Check, is it empty?
+//     bool empty() const
+//     {
+//         return formsStack.empty();
+//     }
 
-    // обновляем форму многократно
-    bool updateForm(unsigned int timeUpdate)
-    {
-        unsigned long currTime = millis();
-        if (currTime - prevTime >= timeUpdate)
-        {
-            prevTime = currTime;
+//     // обновляем форму один раз
+//     void refreshForm()
+//     {
+//         if (!formsStack.empty())
+//         {
+//             exForm *top = pop(); // Извлекаем верхнюю форму из стека
+//             push(top);           // Снова добавляем эту форму в стек
+//         }
+//     }
 
-            refreshForm();
+//     // обновляем форму многократно
+//     bool updateForm(unsigned int timeUpdate)
+//     {
+//         unsigned long currTime = millis();
+//         if (currTime - prevTime >= timeUpdate)
+//         {
+//             prevTime = currTime;
 
-            return 1;
-        }
-        return 0;
-    }
+//             refreshForm();
 
-    /* example of use
+//             return 1;
+//         }
+//         return 0;
+//     }
 
-    std::stack<exForm*> formsStack;
 
-    exForm* form1 = new exForm(); // Создаем несколько экземпляров классов exForm
-    exForm* form2 = new exForm();
-    exForm* form3 = new exForm();
-
-    formsStack.push(form1); // Добавляем формы в стек
-    formsStack.push(form2);
-    formsStack.push(form3);
-
-    std::cout << "Количество форм в стеке: " << formsStack.size() << std::endl;
-
-    while (!formsStack.empty()) // Извлекаем формы из стека
-    {
-        exForm* currentForm = formsStack.top();
-        formsStack.pop();
-
-        int result = currentForm->showForm("Форма"); // Вызываем метод showForm и получаем результат
-
-        if (result == 1) {
-            delete currentForm; // Освобождаем память, если результат равен 1
-        }
-    }
-
-    */
-
-private:
-    unsigned long prevTime{};
-};
+// private:
+//     unsigned long prevTime{};
+// };
 
 
 /*
@@ -596,6 +579,191 @@ private:
     String m_label, m_text;
     unsigned int m_delay;
     int xForm{0}, yForm{0}, m_sizeW{256}, m_sizeH{160};
+};
+
+
+/*
+    DataPort RX, TX
+    [02/2025, Alexander Savushkin]
+*/
+//1-GND, 2-3v3, 3-GPIO35, 4-GPIO34, 5-GPIO19, 6-TX, 7-RX, 8-GPIO21, 9-GPIO22
+/* TX */
+class DataTransmitter
+{
+public:
+    // Конструктор, принимающий данные для передачи
+    DataTransmitter(const void *data, size_t dataSize) : data(data), dataSize(dataSize)
+    {
+        Serial.begin(9600);
+    }
+
+    // Метод для отправки данных
+    bool sendData()
+    {
+        byte crc = calculateCRC((byte *)data, dataSize); // Вычисляем CRC
+        int retries = 3;                                 // Количество попыток передачи
+
+        while (retries > 0)
+        {
+            // Отправка данных
+            Serial.write((byte *)data, dataSize);
+            Serial.write(crc); // Отправляем CRC
+
+            // Ожидание подтверждения
+            if (waitForAck())
+            {
+                Serial.println("Data sent successfully.");
+                return true;
+            }
+            else
+            {
+                Serial.println("Timeout: No acknowledgment received. Retrying...");
+                retries--;
+            }
+        }
+
+        Serial.println("Transmission failed after retries.");
+        return false;
+    }
+
+private:
+    const void *data; // Указатель на данные для передачи
+    size_t dataSize;  // Размер данных
+
+    // Метод для вычисления контрольной суммы (CRC8)
+    byte calculateCRC(const byte *data, size_t length)
+    {
+        byte crc = 0;
+        for (size_t i = 0; i < length; i++)
+        {
+            crc ^= data[i];
+            for (byte j = 0; j < 8; j++)
+            {
+                if (crc & 0x80)
+                {
+                    crc = (crc << 1) ^ 0x07;
+                }
+                else
+                {
+                    crc <<= 1;
+                }
+            }
+        }
+        return crc;
+    }
+
+    // Метод для ожидания подтверждения с тайм-аутом
+    bool waitForAck(unsigned long timeout = 1000)
+    {
+        unsigned long startTime = millis();
+        while (!Serial.available())
+        {
+            if (millis() - startTime > timeout)
+            { // Тайм-аут
+                return false;
+            }
+        }
+        char ack = Serial.read();
+        return (ack == 'A'); // Возвращает true, если получено подтверждение
+    }
+
+    /*
+    MyData data;
+        data.id = 123;
+        data.value = 45.67;
+        data.status = true;
+
+        // Создание объекта DataTransmitter с данными
+        DataTransmitter transmitter(&data, sizeof(data));
+
+        // Отправка данных
+        if (transmitter.sendData()) {
+            Serial.println("Data transmission successful!");
+        } else {
+            Serial.println("Data transmission failed.");
+        }
+    */
+};
+/* RX */
+class DataReceiver
+{
+public:
+    // Конструктор
+    DataReceiver()
+    {
+        Serial.begin(9600);
+    }
+
+    // Метод для приема данных
+    template <typename T>
+    bool receiveData(T &data)
+    {
+        if (Serial.available() >= sizeof(data) + 1)
+        { // +1 для CRC
+            // Чтение данных
+            Serial.readBytes((byte *)&data, sizeof(data));
+            byte receivedCRC = Serial.read(); // Чтение CRC
+
+            // Проверка CRC
+            byte calculatedCRC = calculateCRC((byte *)&data, sizeof(data));
+            if (receivedCRC == calculatedCRC)
+            {
+                // Подтверждение приема
+                Serial.write('A'); // Отправляем подтверждение
+                return true;       // Данные приняты успешно
+            }
+            else
+            {
+                Serial.println("CRC error: Data corrupted.");
+                return false; // Ошибка CRC
+            }
+        }
+        return false; // Данные не получены
+    }
+
+private:
+    // Метод для вычисления контрольной суммы (CRC8)
+    byte calculateCRC(const byte *data, size_t length)
+    {
+        byte crc = 0;
+        for (size_t i = 0; i < length; i++)
+        {
+            crc ^= data[i];
+            for (byte j = 0; j < 8; j++)
+            {
+                if (crc & 0x80)
+                {
+                    crc = (crc << 1) ^ 0x07;
+                }
+                else
+                {
+                    crc <<= 1;
+                }
+            }
+        }
+        return crc;
+    }
+
+    /*
+    DataReceiver receiver;
+    MyData receivedData;
+
+    // Прием данных
+    if (receiver.receiveData(receivedData)) {
+        // Данные успешно приняты
+        Serial.print("ID: ");
+        Serial.println(receivedData.id);
+        Serial.print("Value: ");
+        Serial.println(receivedData.value);
+        Serial.print("Status: ");
+        Serial.println(receivedData.status);
+    } else {
+        // Ошибка приема данных
+        Serial.println("Failed to receive data.");
+    }
+
+    delay(1000); // Задержка для удобства
+    */
 };
 
 
@@ -690,6 +858,9 @@ private:
     bool m_stateDataPort;
     int m_port;
 };
+
+
+
 /*
     Systems
     [02/2025, Alexander Savushkin]

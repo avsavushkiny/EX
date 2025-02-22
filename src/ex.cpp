@@ -56,8 +56,6 @@ TaskDispatcher td; TextBuffer textBuffer;
 Systems systems(false, 143, true, true, false, 1);
 
 /* Stack exForm */
-// std::stack<exForm*> formsStack;
-exFormStack exFormsStack;
 
 /* LED control */
 bool systemStateLedControl = true; bool flagStateLedControl = false;
@@ -69,11 +67,6 @@ void addTasksForSystems();
 
 //for screensaver
 unsigned long screenTiming{}, screenTiming2{}, TIMER{};
-
-//buffer -->use enum?
-// String BUFFER_STRING{""}; //Hi I'm EX OS, Experience board!
-// int BUFFER_INT{};
-// double BUFFER_DOUBLE{};
 
 //for classes-timer
 unsigned long previousMillis{};
@@ -2121,7 +2114,8 @@ void eFunction::show()
     m_func();
 }
 /* desktop */
-void eDesktop::show()
+template <typename T>
+void eDesktop<T>::show()
 {
     uint8_t border{4};
     uint8_t xx{border};
@@ -2129,7 +2123,7 @@ void eDesktop::show()
 
     uint8_t countTask{1};
 
-    for (TaskArguments &t : tasks)
+    for (TaskArguments &t : data_)
     {
         if ((t.activ == false) && (t.bitMap != NULL) && (t.type == DESKTOP))
         {
@@ -2542,7 +2536,7 @@ void _myDesktop()
 {
     exForm *form0 = new exForm();
 
-    eDesktop *desktop0 = new eDesktop();
+    eDesktop<TaskArguments> *desktop0 = new eDesktop<TaskArguments>(tasks);
 
     form0->title = "Desktop";
     form0->eFormShowMode = FULLSCREEN;
@@ -2551,6 +2545,18 @@ void _myDesktop()
 
     formsStack.push(form0);
     td.removeTaskIndex(100);
+}
+/* User Desktop */
+void _userDesktop()
+{
+    exForm *form1 = new exForm();
+    eDesktop<TaskArguments> *desktop1 = new eDesktop<TaskArguments>(userTasks);
+
+    form1->title = "User Desktop";
+    form1->eFormShowMode = FULLSCREEN;
+    form1->addElement(desktop1);
+
+    formsStack.push(form1);
 }
 /* Info OS */
 void _info()
@@ -2612,12 +2618,7 @@ void _osHello()
 }
 
 
-/* Task. Stack, task, command */
-void test()
-{
-
-}
-
+/* Task. Stack, task, command */ 
 void _myForm1()
 { 
     exForm *form1 = new exForm();
@@ -2820,12 +2821,7 @@ void _settingsForm()
 
 
 
-/* Task. System RawADC */
-void _systemRawADC()
-{
-    // String text = "Coord X: " + (String)_joy.RAW_DATA_X0 + " Coord Y: " + (String)_joy.RAW_DATA_Y0;
-    // BUFFER_STRING = text; 
-}
+
 /* Task. Reboot ESP32 */
 void _rebootBoard()
 {
@@ -2875,6 +2871,7 @@ TaskArguments system0[] //0 systems, 1 desktop, 2 user
     {"dispatcher", _myDispatcher, icon.MyTaskManager, DESKTOP, 0, false},
     {"graphics 3", _myGraphicsTest3, icon.MyGfx, DESKTOP, 0, false},
     {"settings", _settingsForm, icon.MyTech, DESKTOP, 0, false},
+    {"userdesktop", _userDesktop, icon.MyUserWorkSpace, DESKTOP, 0, false},
     // [!] Last task
     {"cursor", _systemCursor, NULL, SYSTEM, 0, true}
 };
