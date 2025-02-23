@@ -6,7 +6,7 @@ Terminal trm;
 
 TaskDispatcher dispatcher; UserIcon icons;
 
-void f()
+void userTest()
 {
     exForm *userForm = new exForm();
 
@@ -19,7 +19,7 @@ void f()
 void setup()
 {  
     gfx.initializationSystem();
-    dispatcher.addTask({"f", f, icons.MyMessage, DESKTOP, 0, false});
+    dispatcher.addTask({"User test", userTest, icons.MyTechInfo, DESKTOP, 0, false});
 }
 
 void loop()

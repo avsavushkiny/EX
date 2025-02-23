@@ -56,6 +56,7 @@ TaskDispatcher td; TextBuffer textBuffer;
 Systems systems(false, 143, true, true, false, 1);
 
 /* Stack exForm */
+std::stack<exForm*> formsStack;
 
 /* LED control */
 bool systemStateLedControl = true; bool flagStateLedControl = false;
@@ -1615,71 +1616,6 @@ void Timer::stopwatch(void (*f)(void), int interval)
         prevTime = currTime;
         f();
     }
-}
-
-
-/* 
-    class
-    PowerSave
-*/
-/* turns off the backlight and turns on an infinite loop
-   with the text to pause until the joysticks are pressed or moved */
-bool _isTouched(); void _sleepModeScreen();//prototype
-/* ---> remove support */
-void PowerSave::sleepLight(bool state, uint timeUntil)
-{
-  if ((state == true))
-  {
-    if (_isTouched() == true)
-    {
-      screenTiming = millis();
-    }
-
-    if (millis() - screenTiming > timeUntil)
-    {
-      screenTiming = millis();
-
-      digitalWrite(PIN_BACKLIGHT_LCD, false);
-
-      while (_isTouched() == false)
-      {
-        /* Sleep */
-        _gfx.render(_sleepModeScreen, 500);
-        //esp_deep_sleep_start();
-        esp_light_sleep_start();
-      }
-
-      digitalWrite(PIN_BACKLIGHT_LCD, true);
-    }
-  }
-}
-/* ---> remove support */
-void PowerSave::sleepDeep(bool state, uint timeUntil)
-{
-  if ((state == true))
-  {
-    if (_isTouched() == true)
-    {
-      screenTiming = TIMER;
-    }
-    else screenTiming = screenTiming;
-
-
-    if (TIMER - screenTiming > timeUntil)
-    {
-      screenTiming = TIMER;
-
-      digitalWrite(PIN_BACKLIGHT_LCD, false);
-
-      while (_isTouched() == false)
-      {
-        /* Sleep */
-        esp_deep_sleep_start();
-      }
-
-      digitalWrite(PIN_BACKLIGHT_LCD, true);
-    }
-  }
 }
 
 

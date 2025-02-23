@@ -477,88 +477,75 @@ private:
     short outerBoundaryForm{20};
 };
 
+extern std::stack<exForm*> formsStack;
 
 /*
     eFormStack
     Stack of eForm objects
     01/2025, Alexander Savushkin
 */
-namespace
-{
-    // Stack of forms
-    std::stack<exForm*> formsStack;
-}
-
-
 /* Class for controlling the glass forms */
-// class exFormStack
-// {
-// public:
-//     // Add the form to the stack
-//     void push(exForm* form)
-//     {
-//         formsStack.push(form);
-//     }
+class exFormStack
+{
+public:
+    // Add the form to the stack
+    void push(exForm* form)
+    {
+        formsStack.push(form);
+    }
+    // Extract the upper form from the stack
+    exForm* pop()
+    {
+        if (!formsStack.empty())
+        {
+            exForm* top = formsStack.top();
+            formsStack.pop();
+            return top;
+        }
+        return nullptr;
+    }
+    exForm* top()
+    {
+        exForm* top = formsStack.top();
+        return top;
+    }
+    // The number of forms in the stack
+    size_t size() const
+    {
+        return formsStack.size();
+    }
+    // Check, is it empty?
+    bool empty() const
+    {
+        return formsStack.empty();
+    }
+    // обновляем форму один раз
+    void refreshForm()
+    {
+        if (!formsStack.empty())
+        {
+            exForm *top = pop(); // Извлекаем верхнюю форму из стека
+            push(top);           // Снова добавляем эту форму в стек
+        }
+    }
+    // обновляем форму многократно
+    bool updateForm(unsigned int timeUpdate)
+    {
+        unsigned long currTime = millis();
+        if (currTime - prevTime >= timeUpdate)
+        {
+            prevTime = currTime;
 
-//     // Extract the upper form from the stack
-//     exForm* pop()
-//     {
-//         if (!formsStack.empty())
-//         {
-//             exForm* top = formsStack.top();
-//             formsStack.pop();
-//             return top;
-//         }
-//         return nullptr;
-//     }
+            refreshForm();
 
-//     exForm* top()
-//     {
-//         exForm* top = formsStack.top();
-//         return top;
-//     }
+            return 1;
+        }
+        return 0;
+    }
 
-//     // The number of forms in the stack
-//     size_t size() const
-//     {
-//         return formsStack.size();
-//     }
-
-//     // Check, is it empty?
-//     bool empty() const
-//     {
-//         return formsStack.empty();
-//     }
-
-//     // обновляем форму один раз
-//     void refreshForm()
-//     {
-//         if (!formsStack.empty())
-//         {
-//             exForm *top = pop(); // Извлекаем верхнюю форму из стека
-//             push(top);           // Снова добавляем эту форму в стек
-//         }
-//     }
-
-//     // обновляем форму многократно
-//     bool updateForm(unsigned int timeUpdate)
-//     {
-//         unsigned long currTime = millis();
-//         if (currTime - prevTime >= timeUpdate)
-//         {
-//             prevTime = currTime;
-
-//             refreshForm();
-
-//             return 1;
-//         }
-//         return 0;
-//     }
-
-
-// private:
-//     unsigned long prevTime{};
-// };
+private:
+    unsigned long prevTime{};
+};
 
 
 /*
