@@ -367,11 +367,10 @@ public:
         this->wForm = w;
         this->hForm = h;
     }
-
+    int xForm, yForm, wForm, hForm;
 private:
     // void (*m_func)(void);
     std::function<void()> m_func; // Обёртка для функции
-    int xForm, yForm, wForm, hForm;
 };
 /* Picture xbmp */
 class ePicture : public eElement
