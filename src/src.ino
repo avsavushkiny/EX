@@ -1,8 +1,17 @@
 #include "ex.h"
-#include "user_xbm.h"
+#include "user_xbm.h" 
+#include "rxtx.h" // Подключаем библиотеку для работы с UART
 
 Graphics gfx;
 Terminal trm;
+
+struct Data
+{
+    short a, b;
+    bool s;
+};
+
+Data dt = {10, 20, false};
 
 TaskDispatcher dispatcher; UserIcon icons;
 
@@ -36,18 +45,19 @@ void f(int x, int y)
     // }
 }
 
+
 void userTest()
 {
     exForm *userForm = new exForm();
 
-    eButton *button1 = new eButton("Test DataPort", NULL, 5, 5);
-    eFunction *func1 = new eFunction([](){f(5,5);});
+    eButton *button1 = new eButton("Test DataPort", [dt](){
+        DataTX dtx(&dt, sizeof(dt)); dtx.sendData();
+    }, 5, 5);
 
     userForm->title = "User form";
     userForm->eFormShowMode = FULLSCREEN;
 
     userForm->addElement(button1);
-    userForm->addElement(func1);
 
     formsStack.push(userForm);
 }
