@@ -85,7 +85,7 @@ public:
 
             // Проверка CRC
             byte calculatedCRC = calculateCRC((byte *)&data, sizeof(T));
-
+            
             // Serial.println(receivedCRC);
             // Serial.println(calculatedCRC);
 
