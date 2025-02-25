@@ -4,14 +4,31 @@
 template <typename T>
 class DATATX
 {
-public:
+    public:
     DATATX(T *data) : data(data) {}
 
-    void send()
+    void sendData()
     {
         byte crc = calculateCRC((byte *)data, sizeof(T)); // Вычисляем CRC
         Serial.write((byte *)data, sizeof(T));            // Отправляем данные
         Serial.write(crc);                                // Отправляем CRC
+    }
+
+    void dataDebugging() // !
+    {
+        byte crc = calculateCRC((byte *)&data, sizeof(T));
+
+        Serial.print("Data bytes: ");
+        for (size_t i = 0; i < sizeof(T); i++)
+        {
+            Serial.print(((byte *)&data)[i], HEX);
+            Serial.print(" ");
+        }
+        Serial.print("Size of data: ");
+        Serial.println(sizeof(T));
+
+        Serial.print("Calculated CRC: ");
+        Serial.println(crc, HEX);
     }
 
 private:
@@ -39,7 +56,6 @@ private:
         return crc;
     }
 };
-
 // Класс для приема данных
 class DATARX
 {
@@ -77,7 +93,7 @@ public:
     template <typename T>
     bool receive(T &data)
     {
-        if (Serial.available() >= sizeof(T) + 1)
+        if (Serial.available() >= sizeof(data) + 1)
         { // +1 для CRC
             // Чтение данных
             Serial.readBytes((byte *)&data, sizeof(T));
@@ -85,9 +101,9 @@ public:
 
             // Проверка CRC
             byte calculatedCRC = calculateCRC((byte *)&data, sizeof(T));
-
-            // Serial.println(receivedCRC);
-            // Serial.println(calculatedCRC);
+            
+            Serial.print(receivedCRC, HEX); Serial.print(" CRC ");
+            Serial.println(calculatedCRC, HEX);
 
             if (receivedCRC == calculatedCRC)
             {

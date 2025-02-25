@@ -7,11 +7,11 @@ TaskDispatcher dispatcher; UserIcon icons;
 
 struct Data
 {
-    short a, b;
-    bool s;
+    short a, b; String t;
+    bool s; bool d;
 };
 
-Data dt = {10, 20, false};
+Data dt = {10, 20, "hello", true, true};
 
 void userTest()
 {
@@ -21,8 +21,8 @@ void userTest()
 
     DATATX<Data> *transmitter;
     transmitter = new DATATX<Data>(&dt);
-    transmitter->send();
-    
+    transmitter->sendData();
+    InstantMessage message("Data sent!", 2000); message.show();
     }, 5, 5);
 
     userForm->title = "User form";
