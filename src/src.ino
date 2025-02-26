@@ -7,7 +7,7 @@ TaskDispatcher dispatcher; UserIcon icons;
 
 struct Data
 {
-    short a, b; String t;
+    short a, b; char t[20];
     bool s; bool d;
 };
 
@@ -19,9 +19,13 @@ void userTest()
 
     eButton *button1 = new eButton("Test DataPort", [](){
 
-    DATATX<Data> *transmitter;
-    transmitter = new DATATX<Data>(&dt);
-    transmitter->sendData();
+    // DATATX<Data> *transmitter;
+    // transmitter = new DATATX<Data>(&dt);
+    // transmitter->sendData();
+    DATATX transmitter;
+    transmitter.sendData(dt, 0);
+
+
     InstantMessage message("Data sent!", 2000); message.show();
     }, 5, 5);
 
