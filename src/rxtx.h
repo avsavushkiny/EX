@@ -21,7 +21,7 @@ public:
         if (numberPort == 1)
         {
             Serial1.write((byte *)&data, sizeof(T)); // Отправляем данные
-            Serial1.write(crc);                     // Отправляем CRC
+            Serial1.write(crc);                      // Отправляем CRC
         }
     }
 
