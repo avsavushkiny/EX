@@ -38,7 +38,7 @@
 #define EX_H
 
 /* We let the compiler know that the u8g2 object is defined in another file */
-extern U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2;
+// extern U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2;
 extern const int8_t PIN_BACKLIGHT_LCD;
 extern int H_LCD, W_LCD;
 
@@ -378,10 +378,7 @@ class ePicture : public eElement
 public:
     ePicture(const uint8_t *bitmap, int x, int y, int w, int h) : m_bitmap(bitmap), m_x(x), m_y(y), m_w(w), m_h(h) {}
 
-    void show() override
-    {
-        u8g2.drawXBMP(xForm, yForm, m_w, m_h, m_bitmap);
-    }
+    void show() override;
 
     void setPosition(int x, int y, int w, int h) override
     {

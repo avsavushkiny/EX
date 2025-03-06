@@ -27,12 +27,11 @@
 #include <functional>
 #include <algorithm>
 
-
 //version Library and Text
 const int8_t VERSION_LIB[] = {0, 1, 5};
 const int8_t VERSION_GGL[] = {0, 1, 0};
 
-GGL ggl;
+GGL ggl; SystemIcon sysIcon;
 
 Graphics _gfx; 
 Timer _delayCursor, _trm0, _trm1, _stop, _timerUpdateClock, _fps; 
@@ -143,7 +142,9 @@ void Graphics::initializationSystem()
     esp_sleep_enable_ext0_wakeup(GPIO_NUM_32, 1);    // Stick 0
     
     /* setting the operating system state */
-    u8g2.begin(); Serial.begin(9600);
+    // u8g2.begin();
+    Serial.begin(9600);
+    ggl.gray.begin(); ggl.gray.display();
 
     /* setting the resolution of the analog-to-digital converter */
     analogReadResolution(RESOLUTION_ADC);
@@ -161,11 +162,14 @@ void Graphics::initializationSystem()
 
     /* turn off display backlight */
     // _gfx.controlBacklight(false);
-    systems.setBacklight(false);
+
+    // systems.setBacklight(false);!!!
+
     /* setting display, contrast */
     // u8g2.setContrast(143); //143//150
     // systems.setDisplayContrast(143);
-    systems.executeAllSystemElements();
+
+    // systems.executeAllSystemElements();!!!
 
 
     /*
@@ -181,13 +185,17 @@ void Graphics::initializationSystem()
         UI-begin
         display detailed information
     */
-    u8g2.clearBuffer();
-    // u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, ex_bits);
-    _textBox.textBox("Sozvezdiye OS\n\nExperiment board\n2024", _textBox.middle, _textBox.noBorder, 10, 6, 128, 80);
+    // u8g2.clearBuffer();
+    ggl.gray.clearBuffer();
+    // u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, ex_b/its);
+    String info = "Sozvezdiye OS\n\nExperiment board\n2024";
+    // _textBox.textBox(info, _textBox.middle, _textBox.noBorder, 10, 6, 128, 80);
 
-    _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2], 0, H_LCD, 10, 4);
+    // _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2], 0, H_LCD, 10, 4);
+    ggl.gray.writeLine(0, 150, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2], 10, 1, ggl.gray.BLACK);
     //_gfx.print(6, (String)_ssize, 0, 6, 10, 6);
-    u8g2.sendBuffer();
+    // u8g2.sendBuffer();
+    ggl.gray.sendBuffer();
 
     delay(1500);
 }
@@ -200,31 +208,39 @@ void Graphics::render(void (*f)(), int timeDelay)
 
     do
     {
-        u8g2.clearBuffer();
+        // u8g2.clearBuffer();
+        ggl.gray.clearBuffer();
         f();
-        u8g2.sendBuffer();
+        // u8g2.sendBuffer();
+        ggl.gray.sendBuffer();
     } while (millis() < time);
 }
 /* data render (full frame) no time delay */
 void Graphics::render(void (*f)())
 {
-    u8g2.clearBuffer();
+    // u8g2.clearBuffer();
+    ggl.gray.clearBuffer();
     f();
-    u8g2.sendBuffer();
+    // u8g2.sendBuffer();
+    ggl.gray.sendBuffer();
 }
 /* data render two function (full frame) */
 void Graphics::render(void (*f1)(), void (*f2)())
 {
-      u8g2.clearBuffer();
-      f1();
-      f2();
-      u8g2.sendBuffer();
+    //   u8g2.clearBuffer();
+    ggl.gray.clearBuffer();
+    f1();
+    f2();
+    //   u8g2.sendBuffer();
+    ggl.gray.sendBuffer();
 }
 /* clearing the output buffer */
 void Graphics::clear()
 {
-    u8g2.clearBuffer();
-    u8g2.sendBuffer();
+    // u8g2.clearBuffer();
+    // u8g2.sendBuffer();
+    ggl.gray.clearBuffer();
+    ggl.gray.sendBuffer();
 }
 /* text output with parameters, add size font, add line interval (def: 10) and character interval (def: 6) */
 void Graphics::print(int8_t sizeFont, String text, int x, int y, int8_t lii, int8_t chi) // text, x-position, y-position, line interval (8-10), character interval (4-6)
@@ -233,19 +249,20 @@ void Graphics::print(int8_t sizeFont, String text, int x, int y, int8_t lii, int
     int yy{0};
 
     //micro, 6, 7, 8, 10, 12, 13
-    if (sizeFont == 5) u8g2.setFont(u8g2_font_micro_tr);
-    else if (sizeFont == 6) u8g2.setFont(u8g2_font_4x6_tr);
-    else if (sizeFont == 7) u8g2.setFont(u8g2_font_5x7_tr);
-    else if (sizeFont == 8) u8g2.setFont(u8g2_font_5x8_tr);
-    else if (sizeFont == 10) u8g2.setFont(u8g2_font_6x10_tr);
-    else if (sizeFont == 12) u8g2.setFont(u8g2_font_6x12_tr);
-    else if (sizeFont == 13) u8g2.setFont(u8g2_font_6x13_tr);
-    else u8g2.setFont(u8g2_font_6x10_tr); //default
+    // if (sizeFont == 5) u8g2.setFont(u8g2_font_micro_tr);
+    // else if (sizeFont == 6) u8g2.setFont(u8g2_font_4x6_tr);
+    // else if (sizeFont == 7) u8g2.setFont(u8g2_font_5x7_tr);
+    // else if (sizeFont == 8) u8g2.setFont(u8g2_font_5x8_tr);
+    // else if (sizeFont == 10) u8g2.setFont(u8g2_font_6x10_tr);
+    // else if (sizeFont == 12) u8g2.setFont(u8g2_font_6x12_tr);
+    // else if (sizeFont == 13) u8g2.setFont(u8g2_font_6x13_tr);
+    // else u8g2.setFont(u8g2_font_6x10_tr); //default
 
     for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
     {
-        u8g2.setCursor(xx + x, yy + y);
-        u8g2.print(text[i]);
+        // u8g2.setCursor(xx + x, yy + y);
+        // u8g2.print(text[i]);
+        ggl.gray.writeLine(xx + x, yy + y, text[i], 10, 1, ggl.gray.BLACK);
 
         if (text[i] == '\n')
         {
@@ -260,12 +277,13 @@ void Graphics::print(String text, int x, int y, int8_t lii, int8_t chi) // text,
     int sizeText = text.length() + 1;
     int yy{0};
 
-    u8g2.setFont(u8g2_font_6x10_tr);
+    // u8g2.setFont(u8g2_font_6x10_tr);
 
     for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
     {
-        u8g2.setCursor(xx + x, yy + y);
-        u8g2.print(text[i]);
+        // u8g2.setCursor(xx + x, yy + y);
+        // u8g2.print(text[i]);
+        ggl.gray.writeLine(xx + x, yy + y, text[i], 10, 1, ggl.gray.BLACK);
 
         if (text[i] == '\n')
         {
@@ -281,12 +299,13 @@ void Graphics::print(String text, int x, int y) // text, x-position, y-position,
     int sizeText = text.length() + 1;
     int yy{0};
 
-    u8g2.setFont(u8g2_font_6x10_tr);
+    // u8g2.setFont(u8g2_font_6x10_tr);
 
     for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
     {
-        u8g2.setCursor(xx + x, yy + y);
-        u8g2.print(text[i]);
+        // u8g2.setCursor(xx + x, yy + y);
+        // u8g2.print(text[i]);
+        ggl.gray.writeLine(xx + x, yy + y, text[i], 10, 1, ggl.gray.BLACK);
 
         if (text[i] == '\n')
         {
@@ -295,7 +314,7 @@ void Graphics::print(String text, int x, int y) // text, x-position, y-position,
         }
     }
 }
-/* "wink text" output  */
+/* [?] "wink text" output */
 bool Graphics::winkPrint(void (*f)(String, int, int), String text, int x, int y, int interval)
 {
     unsigned long currTime = millis();
@@ -313,10 +332,15 @@ bool Graphics::winkPrint(void (*f)(String, int, int), String text, int x, int y,
 /* wait display */
 bool Graphics::waitDisplay()
 {
-    u8g2.clearBuffer();
-    u8g2.drawXBMP(((W_LCD - wait_width)/2), ((H_LCD - wait_height)/2), wait_width, wait_height, wait_bits);
-    delay(150);
-    u8g2.sendBuffer(); return true;
+    // u8g2.clearBuffer();
+    // u8g2.drawXBMP(((W_LCD - wait_width)/2), ((H_LCD - wait_height)/2), wait_width, wait_height, wait_bits);
+    // delay(150);
+    // u8g2.sendBuffer(); return true;
+
+    ggl.gray.clearBuffer();
+    ggl.gray.bitmap(((W_LCD - wait_width)/2), ((H_LCD - wait_height)/2), sysIcon.wait, sysIcon.wait_w, sysIcon.wait_h);
+    ggl.gray.sendBuffer();
+    delay(150); return true;
 }
 /* Calculate FPS */
 int Graphics::calculateFPS()
@@ -344,14 +368,15 @@ bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
 {
     if (stateCursor == true)
     {
-        u8g2.setDrawColor(1);  //0-white 1-black 2-inversion
-        u8g2.setBitmapMode(1); //0-non transparent 1-transparent
+        // u8g2.setDrawColor(1);  //0-white 1-black 2-inversion
+        // u8g2.setBitmapMode(1); //0-non transparent 1-transparent
 
-        u8g2.drawXBMP(xCursor, yCursor, cursor_w, cursor_h, cursor_bits);
+        // u8g2.drawXBMP(xCursor, yCursor, cursor_w, cursor_h, cursor_bits);
+        ggl.gray.bitmap(xCursor, yCursor, sysIcon.cursor0, sysIcon.cursor0_w, sysIcon.cursor0_h);
         
-        u8g2.setDrawColor(1);
-        u8g2.setBitmapMode(0);
-        u8g2.setColorIndex(1);
+        // u8g2.setDrawColor(1);
+        // u8g2.setBitmapMode(0);
+        // u8g2.setColorIndex(1);
         return true;
     }
     else
@@ -362,12 +387,13 @@ bool Cursor::cursor(bool stateCursor)
 {
     if (stateCursor == true)
     {
-        u8g2.setDrawColor(1);  //0-white 1-black 2-inversion
-        u8g2.setBitmapMode(1); //0-non transparent 1-transparent
+        // u8g2.setDrawColor(1);  //0-white 1-black 2-inversion
+        // u8g2.setBitmapMode(1); //0-non transparent 1-transparent
         _joy.updatePositionXY();
-        u8g2.drawXBMP(_joy.posX0, _joy.posY0, cursor_w, cursor_h, cursor_bits);
-        u8g2.setDrawColor(1);
-        u8g2.setBitmapMode(0);
+        // u8g2.drawXBMP(_joy.posX0, _joy.posY0, cursor_w, cursor_h, cursor_bits);
+        ggl.gray.bitmap(_joy.posX0, _joy.posY0, sysIcon.cursor0, sysIcon.cursor0_w, sysIcon.cursor0_h);
+        // u8g2.setDrawColor(1);
+        // u8g2.setBitmapMode(0);
         return true;
     }
     else
@@ -379,7 +405,7 @@ bool Cursor::cursor(bool stateCursor)
     class
     Interface
 */
-/* displaying a message to the user */
+/* [!] displaying a message to the user */
 void Interface::message(String text, int duration)
 {
     uint8_t x{10}, y{34};
@@ -417,7 +443,7 @@ void Interface::message(String text, int duration)
 
     delay(duration);
 }
-/* displaying a message to the user */
+/* [!] displaying a message to the user */
 void Interface::popUpMessage(String label, String text, uint tDelay)
 {
     uint8_t sizeText = text.length();
@@ -472,7 +498,7 @@ void Interface::popUpMessage(String label, String text, uint tDelay)
         Serial.println(text[i], BIN);
     }*/
 }
-/* displaying a message to the user */
+/* [!] displaying a message to the user */
 void Interface::popUpMessage(String label1, String label2, String text, uint tDelay)
 {
     uint8_t sizeText = text.length();
@@ -529,7 +555,7 @@ void Interface::popUpMessage(String label1, String label2, String text, uint tDe
         Serial.println(text[i], BIN);
     }*/
 }
-/* displaying a message to the user */
+/* [!] displaying a message to the user */
 void Interface::popUpMessage(String label, String text)
 {
     uint8_t sizeText = text.length();
@@ -580,9 +606,9 @@ void Interface::popUpMessage(String label, String text)
 
     //Serial.println(max); Serial.println(countChar);
 }
-/* displaying the dialog to the user */
+/* [!] displaying the dialog to the user */
 bool Interface::dialogueMessage(String label, String text, void (*f1)(), void (*f2)()){}
-/* displaying the dialog to the user */
+/* [!] displaying the dialog to the user */
 bool Interface::dialogueMessage(String label, String text)
 {
     while (true)
@@ -659,7 +685,7 @@ bool Interface::dialogueMessage(String label, String text)
     class
     Button
 */
-/* button return boolean state */
+/* [!] button return boolean state */
 bool Button::button(String text, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
 {
   uint8_t sizeText = text.length();
@@ -690,7 +716,7 @@ bool Button::button(String text, uint8_t x, uint8_t y, void (*f)(void), int xCur
   
   return false;
 }
-/* button return boolean state */
+/* [!] button return boolean state */
 bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor)
 {
   uint8_t sizeText = text.length();
@@ -729,17 +755,19 @@ bool Button::button2(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t
 {
   uint8_t sizeText = text.length(); short border{3}; short charW{5};
 
-    u8g2.setDrawColor(1); // 0-white,  1-black, 2-XOR
-    u8g2.setBitmapMode(0);// 0-off, 1-on Transporent mode
-    u8g2.setColorIndex(1);// 0-off px, 1-on px
+    // u8g2.setDrawColor(1); // 0-white,  1-black, 2-XOR
+    // u8g2.setBitmapMode(0);// 0-off, 1-on Transporent mode
+    // u8g2.setColorIndex(1);// 0-off px, 1-on px
 
   if ((xCursor >= x && xCursor <= (x + (sizeText * charW) + border + border)) && (yCursor >= y && yCursor <= y + 13))
   {
-    u8g2.setColorIndex(1); // включаем пиксели
-    u8g2.drawBox(x, y, (sizeText * charW) + border + border, 13); // рисуем черный бокс
-    u8g2.setColorIndex(0); // отключаем птксели
-    _gfx.print(text, x + border, y + 7 /* font H */ + border, 8, charW); // выводим тест
-    u8g2.setColorIndex(1); // включаем пиксели
+    // u8g2.setColorIndex(1); // включаем пиксели
+    // u8g2.drawBox(x, y, (sizeText * charW) + border + border, 13); // рисуем черный бокс
+    ggl.gray.drawBox(x, y, (sizeText * charW) + border + border, 13, ggl.gray.BLACK);
+    // u8g2.setColorIndex(0); // отключаем птксели
+    // _gfx.print(text, x + border, y + 7 /* font H */ + border, 8, charW); // выводим тест
+    ggl.gray.writeLine(x + border, y + 7 /* font H */ + border, text, 10, 1, ggl.gray.BLACK);
+    // u8g2.setColorIndex(1); // включаем пиксели
 
     if (Joystick::pressKeyENTER() == true)
     {
@@ -748,9 +776,11 @@ bool Button::button2(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t
   }
   else
   {
-    u8g2.setColorIndex(1); // включаем пиксели
-    u8g2.drawFrame(x, y, (sizeText * charW) + border + border, 13); // рисуем прозрачный фрейм
-    _gfx.print(text, x + border, y + 7 /* font H */ + border, 8, charW); // выводим тест
+    // u8g2.setColorIndex(1); // включаем пиксели
+    // u8g2.drawFrame(x, y, (sizeText * charW) + border + border, 13); // рисуем прозрачный фрейм
+    ggl.gray.drawFrame(x, y, (sizeText * charW) + border + border, 13, ggl.gray.BLACK);
+    // _gfx.print(text, x + border, y + 7 /* font H */ + border, 8, charW); // выводим тест
+    ggl.gray.writeLine(x + border, y + 7 /* font H */ + border, text, 10, 1, ggl.gray.BLACK);
   }
   
   return false;
@@ -761,7 +791,7 @@ bool Button::button2(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t
     class
     Shortcut
 */
-/* displaying a shortcut to a task-function */
+/* [!] displaying a shortcut to a task-function */
 bool Shortcut::shortcut(const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
 {
   u8g2.setDrawColor(1);
@@ -785,16 +815,20 @@ bool Shortcut::shortcut(const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(v
 /* displaying a shortcut to a task-function */
 bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
 {
-  u8g2.setDrawColor(1);
-  u8g2.setBitmapMode(0);
-  u8g2.drawXBMP(x, y, 32, 32, bitMap);
-  u8g2.drawXBMP(x, y + 21, 11, 11, shortcut_bits);
+//   u8g2.setDrawColor(1);
+//   u8g2.setBitmapMode(0);
+  ggl.gray.bitmap(x, y, bitMap, 32, 32);
+//   u8g2.drawXBMP(x, y, 32, 32, bitMap);
+//   u8g2.drawXBMP(x, y + 21, 11, 11, shortcut_bits);
+  ggl.gray.bitmap(x, y, sysIcon.shortcut0, 11, 11);
+
   
   TextBox textBoxNameTask;
 
   if ((xCursor >= x && xCursor <= (x + 32)) && (yCursor >= y && yCursor <= (y + 32)))
   {
-    u8g2.drawFrame(x, y, 32, 32);
+    // u8g2.drawFrame(x, y, 32, 32);
+    ggl.gray.drawFrame(x, y, 32, 32, ggl.gray.BLACK);
 
     textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 32);
     
@@ -812,9 +846,7 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
 
   return false;
 }
-
-
-/* displaying a shortcut to a task-function */
+/* [!] displaying a shortcut to a task-function */
 bool Shortcut::shortcutFrame(String name, uint8_t w, uint8_t h, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
 {
     u8g2.setDrawColor(1);
@@ -846,7 +878,7 @@ bool Shortcut::shortcutFrame(String name, uint8_t w, uint8_t h, uint8_t x, uint8
     class
     Label
 */
-/* text object as a link */
+/* [!] text object as a link */
 bool Label::label(String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t lii, uint8_t chi, int xCursor, int yCursor)
 {
     /*u8g2.setDrawColor(1);
@@ -918,7 +950,7 @@ bool Label::label(String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t li
 
     return false;
 }
-/* text object as a link, sends the description to the output buffer */
+/* [!] text object as a link, sends the description to the output buffer */
 void Label::label(String text, void (*f)(void), uint8_t xLabel, uint8_t yLabel)
 {
     uint8_t sizeText = text.length();
@@ -979,7 +1011,7 @@ void Label::label(String text, void (*f)(void), uint8_t xLabel, uint8_t yLabel)
      class
      TextBox
 */
-/* dynamic Frame */
+/* [!] dynamic Frame */
 void TextBox::textBox(String str, objectLocation location, objectBoundary boundary, short charH, short charW, int x, int y)
 {
     short border{5}; short border2{8}; // size border
@@ -1113,7 +1145,7 @@ void TextBox::textBox(String str, objectLocation location, objectBoundary bounda
     //_gfx.print((String)maxChar, 0, 30);
     //_gfx.print((String)line, 0, 40);
 }
-/* static Frame */
+/* [!] static Frame */
 void TextBox::textBox(String str, objectBoundary boundary, int sizeH, int sizeW, short charH, short charW, int x, int y)
 {
     short border{5}; short border2{8}; // size border
@@ -1198,7 +1230,7 @@ void TextBox::textBox(String str, objectBoundary boundary, int sizeH, int sizeW,
     //_gfx.print((String)numberOfLines, 0, 30);
     //_gfx.print((String)numberOfLinesFrame, 0, 40);
 }
-/* no Frame */
+/* [!] no Frame */
 void TextBox::textBox(String str, int sizeH, int sizeW, short charH, short charW, int x, int y)
 {
     short border{0}; short border2{0}; // size border
@@ -1806,11 +1838,14 @@ void eButton::show()
     if ((_joy.posX0 >= xForm && _joy.posX0 <= (xForm + (sizeText * charW) + border + border)) && (_joy.posY0 >= yForm && _joy.posY0 <= yForm + 13))
     {
 
-        u8g2.setColorIndex(1);                                               // включаем пиксели
-        u8g2.drawBox(xForm, yForm, (sizeText * charW) + border + border, 13);    // рисуем черный бокс
-        u8g2.setColorIndex(0);                                               // отключаем птксели
-        _gfx.print(m_label, xForm + border, yForm + 7 /* font H */ + border, 8, charW); // выводим тест
-        u8g2.setColorIndex(1);                                               // включаем пиксели
+        // u8g2.setColorIndex(1);                                               // включаем пиксели
+        // u8g2.drawBox(xForm, yForm, (sizeText * charW) + border + border, 13);    // рисуем черный бокс
+        // u8g2.setColorIndex(0);                                               // отключаем птксели
+        // _gfx.print(m_label, xForm + border, yForm + 7 /* font H */ + border, 8, charW); // выводим тест
+        // u8g2.setColorIndex(1);                                               // включаем пиксели
+
+        ggl.gray.drawBox(xForm, yForm, (sizeText * charW) + border + border, 13, ggl.gray.BLACK);
+        ggl.gray.writeLine(xForm + border, yForm + 7 /* font H */ + border, m_label, 10, 1, ggl.gray.BLACK);
 
         if (_joy.pressKeyENTER() == true)
         {
@@ -1821,15 +1856,19 @@ void eButton::show()
     }
     else
     {
-        u8g2.setColorIndex(1);                                                  // включаем пиксели
-        u8g2.drawFrame(xForm, yForm, (sizeText * charW) + border + border, 13);     // рисуем прозрачный фрейм
-        _gfx.print(m_label, xForm + border, yForm + 7 /* font H */ + border, 8, charW); // выводим тест
+        // u8g2.setColorIndex(1);                                                  // включаем пиксели
+        // u8g2.drawFrame(xForm, yForm, (sizeText * charW) + border + border, 13);     // рисуем прозрачный фрейм
+        // _gfx.print(m_label, xForm + border, yForm + 7 /* font H */ + border, 8, charW); // выводим тест
+
+        ggl.gray.drawFrame(xForm, yForm, (sizeText * charW) + border + border, 13, ggl.gray.BLACK);
+        ggl.gray.writeLine(xForm + border, yForm + 7 /* font H */ + border, m_label, 10, 0, ggl.gray.BLACK);
     }
 }
 /* eText */
 void eText::show()
 {
-    _gfx.print(m_text, xForm, yForm + highChar, 10, 5);
+    // _gfx.print(m_text, xForm, yForm + highChar, 10, 5);
+    ggl.gray.writeLine(xForm, yForm + highChar, m_text, 10, 1, ggl.gray.BLACK);
 }
 /* eTextbox */
 void eTextBox::show()
@@ -1844,30 +1883,47 @@ void eTextBox::show()
     if (m_borderStyle == noBorder){ /* we don't draw anything */ }
     if (m_borderStyle == oneLine)
     {
-        u8g2.drawFrame(xx, yy, m_sizeW, m_sizeH);
+        // u8g2.drawFrame(xx, yy, m_sizeW, m_sizeH);
+        ggl.gray.drawFrame(xx, yy, m_sizeW, m_sizeH, ggl.gray.BLACK);
     }
     if (m_borderStyle == twoLine)
     {
-        u8g2.drawFrame(xx, yy, m_sizeW, m_sizeH);
-        u8g2.drawFrame(xx - 3, yy - 3, m_sizeW + 6, m_sizeH + 6);
+        // u8g2.drawFrame(xx, yy, m_sizeW, m_sizeH);
+        // u8g2.drawFrame(xx - 3, yy - 3, m_sizeW + 6, m_sizeH + 6);
+
+        ggl.gray.drawFrame(xx, yy, m_sizeW, m_sizeH, ggl.gray.BLACK);
+        ggl.gray.drawFrame(xx - 3, yy - 3, m_sizeW + 6, m_sizeH + 6, ggl.gray.BLACK);
     }
     if (m_borderStyle == shadow)
     {
-        u8g2.drawFrame(xx, yy, m_sizeW, m_sizeH);
+        // u8g2.drawFrame(xx, yy, m_sizeW, m_sizeH);
+        ggl.gray.drawFrame(xx, yy, m_sizeW, m_sizeH, ggl.gray.BLACK);
 
-        u8g2.drawHLine(xx + 1, yy + m_sizeH, m_sizeW);
-        u8g2.drawHLine(xx + 2, yy + m_sizeH + 1, m_sizeW);
+        // u8g2.drawHLine(xx + 1, yy + m_sizeH, m_sizeW);
+        // u8g2.drawHLine(xx + 2, yy + m_sizeH + 1, m_sizeW);
 
-        u8g2.drawVLine(xx + m_sizeW, yy + 1, m_sizeH);
-        u8g2.drawVLine(xx + m_sizeW + 1, yy + 2, m_sizeH);
+        ggl.gray.drawHLine(xx + 1, yy + m_sizeH, m_sizeW, ggl.gray.BLACK, 1);
+        ggl.gray.drawHLine(xx + 2, yy + m_sizeH + 1, m_sizeW, ggl.gray.BLACK, 1);
+
+        // u8g2.drawVLine(xx + m_sizeW, yy + 1, m_sizeH);
+        // u8g2.drawVLine(xx + m_sizeW + 1, yy + 2, m_sizeH);
+
+        ggl.gray.drawVLine(xx + m_sizeW, yy + 1, m_sizeH, ggl.gray.BLACK, 1);
+        ggl.gray.drawVLine(xx + m_sizeW + 1, yy + 2, m_sizeH, ggl.gray.BLACK, 1);
     }
     if (m_borderStyle == shadowNoFrame)
     {
-        u8g2.drawHLine(xx + 1, yy + m_sizeH, m_sizeW);
-        u8g2.drawHLine(xx + 2, yy + m_sizeH + 1, m_sizeW);
+        // u8g2.drawHLine(xx + 1, yy + m_sizeH, m_sizeW);
+        // u8g2.drawHLine(xx + 2, yy + m_sizeH + 1, m_sizeW);
 
-        u8g2.drawVLine(xx + m_sizeW, yy + 1, m_sizeH);
-        u8g2.drawVLine(xx + m_sizeW + 1, yy + 2, m_sizeH);
+        ggl.gray.drawHLine(xx + 1, yy + m_sizeH, m_sizeW, ggl.gray.BLACK, 1);
+        ggl.gray.drawHLine(xx + 2, yy + m_sizeH + 1, m_sizeW, ggl.gray.BLACK, 1);
+
+        // u8g2.drawVLine(xx + m_sizeW, yy + 1, m_sizeH);
+        // u8g2.drawVLine(xx + m_sizeW + 1, yy + 2, m_sizeH);
+
+        ggl.gray.drawVLine(xx + m_sizeW, yy + 1, m_sizeH, ggl.gray.BLACK, 1);
+        ggl.gray.drawVLine(xx + m_sizeW + 1, yy + 2, m_sizeH, ggl.gray.BLACK, 1);
     }
     
     
@@ -1882,9 +1938,11 @@ void eTextBox::show()
     
     for (char c : m_text)
     {
-        u8g2.setFont(u8g2_font_6x10_tr);
-        u8g2.setCursor(xx + border, yy + charH + border);
-        u8g2.print(c);
+        // u8g2.setFont(u8g2_font_6x10_tr);
+        // u8g2.setCursor(xx + border, yy + charH + border);
+        // u8g2.print(c);
+
+        ggl.gray.writeLine(xx + border, yy + charH + border, c, 10, 1, ggl.gray.BLACK);
 
         // adds dots if frame is full
         /*if ((ln >= numberOfLinesFrame - 1) && (numberOfCharactersLineFrame == (ch + 3)))
@@ -1924,15 +1982,17 @@ void eLabel::show()
     uint8_t chi{5}, lii{8};
     int x{xForm}, y{yForm};
 
-    u8g2.setColorIndex(1); // включаем пиксели
+    // u8g2.setColorIndex(1); // включаем пиксели
 
-    u8g2.setCursor(x, y);
-    u8g2.setFont(u8g2_font_6x10_tr);
+    // u8g2.setCursor(x, y);
+    // u8g2.setFont(u8g2_font_6x10_tr);
 
     for (int i = 0; i < sizeText; i++)
     {
-        u8g2.setCursor(x, y);
-        u8g2.print(m_text[i]); x += chi;
+        // u8g2.setCursor(x, y);
+        // u8g2.print(m_text[i]); 
+        x += chi;
+        ggl.gray.writeLine(x, y, m_text[i], 10, 1, ggl.gray.BLACK);
 
         if (m_text[i] == '\n')
         {
@@ -1949,17 +2009,19 @@ void eLinkLabel::show()
     if ((_joy.posX0 >= x && _joy.posX0 <= (x + (sizeText * chi))) && (_joy.posY0 >= y - (lii + 2) && _joy.posY0 <= y + 2))
     {
 
-        u8g2.setColorIndex(1);                                         // включаем пиксели
-        u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1); // рисуем черный бокс
-        u8g2.setColorIndex(0);                                         // отключаем пиксели
+        // u8g2.setColorIndex(1);                                         // включаем пиксели
+        // u8g2.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1); // рисуем черный бокс
+        ggl.gray.drawBox(x - 1, y - (lii), (sizeText * chi) + 2, lii + 1, ggl.gray.BLACK);
+        // u8g2.setColorIndex(0);                                         // отключаем пиксели
 
-        u8g2.setCursor(x + 3, y);
-        u8g2.setFont(u8g2_font_6x10_tr);
+        // u8g2.setCursor(x + 3, y);
+        // u8g2.setFont(u8g2_font_6x10_tr);
 
         for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
         {
-            u8g2.setCursor(xx + x, yy + y);
-            u8g2.print(m_text[i]);
+            // u8g2.setCursor(xx + x, yy + y);
+            // u8g2.print(m_text[i]);
+            ggl.gray.writeLine(xx + x, yy + y, m_text[i], 10, 1, ggl.gray.LIGHT_GRAY);
 
             if (m_text[i] == '\n')
             {
@@ -1967,7 +2029,7 @@ void eLinkLabel::show()
                 xx = -chi; // 6
             }
         }
-        u8g2.setColorIndex(1);                                          // включаем пиксели
+        // u8g2.setColorIndex(1);                                          // включаем пиксели
 
 
         if (_joy.pressKeyENTER() == true)
@@ -1977,15 +2039,17 @@ void eLinkLabel::show()
     }
     else
     {
-        u8g2.setColorIndex(1);                                          // включаем пиксели
+        // u8g2.setColorIndex(1);                                          // включаем пиксели
 
-        u8g2.setCursor(x + 3, y);
-        u8g2.setFont(u8g2_font_6x10_tr);
+        // u8g2.setCursor(x + 3, y);
+        x = x + 3;
+        // u8g2.setFont(u8g2_font_6x10_tr);
 
         for (int i = 0, xx = 0; i < sizeText, xx < (sizeText * chi); i++, xx += chi)
         {
-            u8g2.setCursor(xx + x, yy + y);
-            u8g2.print(m_text[i]);
+            // u8g2.setCursor(xx + x, yy + y);
+            // u8g2.print(m_text[i]);
+            ggl.gray.writeLine(xx + x, yy + y, m_text[i], 10, 1, ggl.gray.BLACK);
 
             if (m_text[i] == '\n')
             {
@@ -1998,10 +2062,11 @@ void eLinkLabel::show()
 /* Horizontal line */
 void eLine::show()
 {
-    u8g2.setDrawColor(1); // 0-white,  1-black, 2-XOR
-    u8g2.setBitmapMode(0);// 0-off, 1-on Transporent mode
-    u8g2.setColorIndex(1);// 0-off px, 1-on px
-    u8g2.drawHLine(xForm, yForm, wForm);
+    // u8g2.setDrawColor(1); // 0-white,  1-black, 2-XOR
+    // u8g2.setBitmapMode(0);// 0-off, 1-on Transporent mode
+    // u8g2.setColorIndex(1);// 0-off px, 1-on px
+    // u8g2.drawHLine(xForm, yForm, wForm);
+    ggl.gray.drawHLine(xForm, yForm, wForm, ggl.gray.BLACK, 1);
 }
 /* eCheckbox */
 void eCheckbox::show()
@@ -2009,19 +2074,23 @@ void eCheckbox::show()
     // рисуем фрейм и выводим текст
     if (m_checked == true)
     {
-        u8g2.drawXBMP(xForm, yForm, check_true_w, check_true_h, check_true);
+        // u8g2.drawXBMP(xForm, yForm, check_true_w, check_true_h, check_true);
+        ggl.gray.drawFillFrame(xForm, yForm, 10, 10, ggl.gray.BLACK, ggl.gray.DARK_GRAY);
     }
 
     if (m_checked == false)
     {
-        u8g2.drawXBMP(xForm, yForm, check_false_w, check_false_h, check_false);
+        // u8g2.drawXBMP(xForm, yForm, check_false_w, check_false_h, check_false);
+        ggl.gray.drawFillFrame(xForm, yForm, 10, 10, ggl.gray.BLACK, ggl.gray.LIGHT_GRAY);
     }
 
-    _gfx.print(m_text, xForm + 15, yForm + 9, 10, 5);
+    // _gfx.print(m_text, xForm + 15, yForm + 9, 10, 5);
+    ggl.gray.writeLine(xForm + 15, yForm + 9, m_text, 10, 1, ggl.gray.BLACK);
     // если курсор над фреймом, то ждем нажатия на кнопку Ввода
     if ((_joy.posX0 >= xForm) && (_joy.posX0 <= xForm + 10) && ((_joy.posY0 >= yForm) && (_joy.posY0 <= yForm + 10)))
     {
-        u8g2.drawBox(xForm, yForm, 10, 10);
+        // u8g2.drawBox(xForm, yForm, 10, 10);
+        ggl.gray.drawBox(xForm, yForm, 10, 10, ggl.gray.BLACK);
 
         if (_joy.pressKeyENTER() == true)
         {
@@ -2046,6 +2115,12 @@ void eCheckbox::show()
 void eFunction::show()
 {
     m_func();
+}
+/* ePicture */
+void ePicture::show()
+{
+    // u8g2.drawXBMP(xForm, yForm, m_w, m_h, m_bitmap);
+    ggl.gray.bitmap(xForm, yForm, m_bitmap, m_w, m_h);
 }
 /* desktop */
 template <typename T>
@@ -2119,8 +2194,10 @@ int exForm::showForm()
             return 1; // 1 - exit and delete form from stack
         }
 
-        u8g2.setColorIndex(1); // вкл пиксели
-        u8g2.drawFrame(0, 12 /* height button (13px) - 1 */, 256, 148); // x, y, w, h
+        // u8g2.setColorIndex(1); // вкл пиксели
+        // u8g2.drawFrame(0, 12 /* height button (13px) - 1 */, 256, 148); // x, y, w, h
+
+        ggl.gray.drawFrame(0, 12, 256, 148, ggl.gray.BLACK);
         _gfx.print(10, title, 5, 10, 10, 5); // size Font, text, x, y, lii, chi
         
         uint8_t xSizeStack{};
@@ -2144,8 +2221,10 @@ int exForm::showForm()
             return 1; // 1 - exit and delete form from stack
         }
 
-        u8g2.setColorIndex(1); // вкл пиксели
-        u8g2.drawFrame(0, 12 /* height button - 1 */, 256, 137 /* 137 - 10px tray*/); // x, y, w, h
+        // u8g2.setColorIndex(1); // вкл пиксели
+        // u8g2.drawFrame(0, 12 /* height button - 1 */, 256, 137 /* 137 - 10px tray*/); // x, y, w, h
+        
+        ggl.gray.drawFrame(0, 12, 256, 137, ggl.gray.BLACK);
         _gfx.print(10, title, 5, 10, 10, 5); // size Font, text, x, y, lii, chi
        
         uint8_t xSizeStack{};
@@ -2170,8 +2249,10 @@ int exForm::showForm()
             return 1; // 1 - exit and delete form from stack
         }
 
-        u8g2.setColorIndex(1); // вкл пиксели
-        u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
+        // u8g2.setColorIndex(1); // вкл пиксели
+        // u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
+
+        ggl.gray.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120, ggl.gray.BLACK);
         _gfx.print(10, title, outerBoundaryForm + 5, outerBoundaryForm - 2 + 6, 10, 5);
         
         uint8_t xSizeStack{};
@@ -2217,7 +2298,7 @@ void eBacklight::execute()
 /* eDisplayContrast */
 void eDisplayContrast::execute()
 {
-    u8g2.setContrast(m_valueContrast);
+    // u8g2.setContrast(m_valueContrast);!!!
     // Serial.println(m_valueContrast);
 }
 /* ePowerSave */
@@ -2233,7 +2314,8 @@ void ePowerSave::execute()
     
     if (isTouched() == true)
     {
-        screenTiming = TIMER; u8g2.setPowerSave(0);  //off powersave
+        screenTiming = TIMER;
+        // u8g2.setPowerSave(0);  //off powersave!!!
     }
     
     if ((TIMER - screenTiming > 60000) && (_joy.posY0 >= 150))
@@ -2246,7 +2328,7 @@ void ePowerSave::execute()
             message1.show();
 
             systems.setBacklight(false);
-            u8g2.setPowerSave(1);         //off display
+            // u8g2.setPowerSave(1);         //off display!!!
             esp_deep_sleep_start();       //run powersave, DEEP
         }
     }
@@ -2261,7 +2343,7 @@ void ePowerSave::execute()
             message2.show();
 
             systems.setBacklight(false);
-            u8g2.setPowerSave(0);          //on display
+            // u8g2.setPowerSave(0);          //on display!!!
             esp_light_sleep_start();       //run powersave, LIGHT
         }
     }
@@ -2294,6 +2376,7 @@ void InstantMessage::drawDotGrid(int interval)
         for (int y = 0; y < 160; y += interval)
         {
             u8g2.drawPixel(x, y); // Рисуем точку (1 — белый цвет)
+            ggl.gray.drawPixel(x, y, ggl.gray.BLACK);
         }
     }
 }
@@ -2327,7 +2410,7 @@ void InstantMessage::show()
     int lineYoffset = (line / 2) * 8;
     
     //--> Рисуем сетку на дисплее
-    u8g2.setDrawColor(1);
+    // u8g2.setDrawColor(1);
     drawDotGrid(2); //1, 2, 4, 8, 16, 32,
     
     //--> выводим границы текста
@@ -2341,24 +2424,29 @@ void InstantMessage::show()
     int frameWidth = border2 + border2 + numberOfPixels;
     int frameHeight = border2 + border2 + (line * charHeight);
     // Проходим по всем пикселям внутри фрейма и рисуем их
-    u8g2.setDrawColor(0);
+    // u8g2.setDrawColor(0);
     for (int px = frameX; px < frameX + frameWidth; px++)
     {
         for (int py = frameY; py < frameY + frameHeight; py++)
         {
-            u8g2.drawPixel(px, py); // Рисуем пиксель со значением 0
+            // u8g2.drawPixel(px, py); // Рисуем пиксель со значением 0
+            ggl.gray.drawPixel(px, py, ggl.gray.WHITE);
         }
     }
-    u8g2.setDrawColor(1);
+    // u8g2.setDrawColor(1);
     //<-- границы фрема
 
     // u8g2.clearBuffer(); // -->
     _gfx.print(m_text, x - numberOfPixelsToOffset + GLOBAL_X, y + GLOBAL_Y - lineYoffset, charHeight, charWidth);
 
-    u8g2.drawFrame(x - numberOfPixelsToOffset - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y - lineYoffset, border + border + numberOfPixels, border + border + (line * charHeight));
-    u8g2.drawFrame(x - numberOfPixelsToOffset - border2 + GLOBAL_X, y - charHeight - border2 + GLOBAL_Y - lineYoffset, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight));
+    // u8g2.drawFrame(x - numberOfPixelsToOffset - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y - lineYoffset, border + border + numberOfPixels, border + border + (line * charHeight));
+    // u8g2.drawFrame(x - numberOfPixelsToOffset - border2 + GLOBAL_X, y - charHeight - border2 + GLOBAL_Y - lineYoffset, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight));
 
-    u8g2.sendBuffer(); // <--
+    ggl.gray.drawFrame(x - numberOfPixelsToOffset - border, y - charHeight - border - lineYoffset, border + border + numberOfPixels, border + border + (line * charHeight), ggl.gray.BLACK);
+    ggl.gray.drawFrame(x - numberOfPixelsToOffset - border2, y - charHeight - border2 - lineYoffset, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight), ggl.gray.BLACK);
+
+    // u8g2.sendBuffer(); // <--
+    ggl.gray.sendBuffer();
 
     delay(m_delay);
 }
@@ -2377,7 +2465,8 @@ void _graphicsTest1(int xG, int yG, int wG, int hG)
     {
         int y = random(12, 160);
         int h = random(160 - y);
-        u8g2.drawVLine(x, y, h); 
+        // u8g2.drawVLine(x, y, h);
+        ggl.gray.drawVLine(x, y, h, ggl.gray.BLACK, 1); 
     }
 }
 void _myGraphicsTest1()
@@ -2403,7 +2492,8 @@ void _graphicsTest2(int xG, int yG, int wG, int hG)
         {
             if ((x / w + y / h) % 2 == 0)
             {
-                u8g2.drawBox(x, y, w, h);
+                // u8g2.drawBox(x, y, w, h);
+                ggl.gray.drawBox(x, y, w, h, ggl.gray.BLACK);
             }
         }
     }
@@ -2439,7 +2529,8 @@ void _graphicsTest3(int xG, int yG, int wG, int hG)
     // draw points
     for (int i = 0; i < numPoints; i++)
     {
-        u8g2.drawPixel(points[i][0], points[i][1]);
+        // u8g2.drawPixel(points[i][0], points[i][1]);
+        ggl.gray.drawPixel(points[i][0], points[i][1], ggl.gray.BLACK);
     }
 
     // draw lines
@@ -2447,7 +2538,8 @@ void _graphicsTest3(int xG, int yG, int wG, int hG)
     {
         for (int j = i + 1; j < numPoints; j++)
         {
-            u8g2.drawLine(points[i][0], points[i][1], points[j][0], points[j][1]);
+            // u8g2.drawLine(points[i][0], points[i][1], points[j][0], points[j][1]);
+            ggl.gray.drawLine(points[i][0], points[i][1], points[j][0], points[j][1], ggl.gray.BLACK);
         }
     }
 }
@@ -2629,8 +2721,8 @@ void _myDispatcherFunction(int xG, int yG, int wG, int hG)
 {
     int xx{5}, yy{23};
 
-    u8g2.setDrawColor(1); // 0-white,  1-black, 2-XOR
-    u8g2.setColorIndex(1);// 0-off px, 1-on px
+    // u8g2.setDrawColor(1); // 0-white,  1-black, 2-XOR
+    // u8g2.setColorIndex(1);// 0-off px, 1-on px
 
     // _gfx.print("Active tasks:", xx + 5, yy + 10, 8, 5);
 
@@ -2641,7 +2733,7 @@ void _myDispatcherFunction(int xG, int yG, int wG, int hG)
             String _Text = _ta.name;
             uint8_t sizeText = _Text.length();
 
-            _gfx.print(_ta.name, xx, yy, 8, 5);
+            // _gfx.print(_ta.name, xx, yy, 8, 5);!!!
             
             if ((xx + (sizeText * 5) + 5) <= 240) //256 - 5 - 5
             {
@@ -2669,7 +2761,7 @@ void _myDispatcherFunction(int xG, int yG, int wG, int hG)
             uint8_t sizeText = _Text.length();
             
             Label labelTask;
-            labelTask.label(_ta.name, _ta.f, xx, yy);
+            // labelTask.label(_ta.name, _ta.f, xx, yy);!!!
             // _gfx.print(_ta.name, xx, yy, 8, 5);
             
             if ((xx + (sizeText * 5) + 5) <= 240) //256 - 5 - 5
@@ -2765,8 +2857,9 @@ void _rebootBoard()
 void _myFps()
 {
     int fps = _gfx.calculateFPS();
-    u8g2.setCursor(241, 135);
-    u8g2.print(fps);
+    // u8g2.setCursor(241, 135);
+    // u8g2.print(fps);
+    ggl.gray.writeLine(241, 125, fps, 10, 1, ggl.gray.BLACK);
 }
 
 
@@ -2778,10 +2871,10 @@ void _systemCursor()
 
     if ((_joy.pressKeyEX() == true) && (_joy.pressKeyENTER() == true))
     {
-        u8g2.setCursor(_joy.posX0 + 10, _joy.posY0 + 10);
-        u8g2.print(_joy.posX0);
-        u8g2.setCursor(_joy.posX0 + 10, _joy.posY0 + 20);
-        u8g2.print(_joy.posY0);
+        // u8g2.setCursor(_joy.posX0 + 10, _joy.posY0 + 10); !!!
+        // u8g2.print(_joy.posX0);
+        // u8g2.setCursor(_joy.posX0 + 10, _joy.posY0 + 20);
+        // u8g2.print(_joy.posY0);
     }
 }
 
@@ -2797,15 +2890,15 @@ TaskArguments system0[] //0 systems, 1 desktop, 2 user
     {"fps", _myFps, NULL, SYSTEM, 0, false},
     {"desktop", _myDesktop, NULL, SYSTEM, 100, true},
     {"oshello", _osHello, NULL, SYSTEM, 101, true},
-    {"form1", _myForm1, icon.MyNullApp, DESKTOP, 0, false},
-    {"form2", _myForm2, icon.MyNullApp, DESKTOP, 0, false},
-    {"form3", _myForm3, icon.MyNullApp, DESKTOP, 0, false},
-    {"graphics 1", _myGraphicsTest1, icon.MyGfx, DESKTOP, 0, false},
-    {"graphics 2", _myGraphicsTest2, icon.MyGfx, DESKTOP, 0, false},
-    {"dispatcher", _myDispatcher, icon.MyTaskManager, DESKTOP, 0, false},
-    {"graphics 3", _myGraphicsTest3, icon.MyGfx, DESKTOP, 0, false},
-    {"settings", _settingsForm, icon.MyTech, DESKTOP, 0, false},
-    {"userdesktop", _userDesktop, icon.MyUserWorkSpace, DESKTOP, 0, false},
+    {"form1", _myForm1, sysIcon.task0, DESKTOP, 0, false},
+    {"form2", _myForm2, sysIcon.task0, DESKTOP, 0, false},
+    {"form3", _myForm3, sysIcon.task0, DESKTOP, 0, false},
+    {"graphics 1", _myGraphicsTest1, sysIcon.task0, DESKTOP, 0, false},
+    {"graphics 2", _myGraphicsTest2, sysIcon.task0, DESKTOP, 0, false},
+    {"dispatcher", _myDispatcher, sysIcon.task0, DESKTOP, 0, false},
+    {"graphics 3", _myGraphicsTest3, sysIcon.task0, DESKTOP, 0, false},
+    {"settings", _settingsForm, sysIcon.task0, DESKTOP, 0, false},
+    {"userdesktop", _userDesktop, sysIcon.task0, DESKTOP, 0, false},
     // [!] Last task
     {"cursor", _systemCursor, NULL, SYSTEM, 0, true}
 };

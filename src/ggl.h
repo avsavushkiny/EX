@@ -2,15 +2,15 @@
     [name]       Gray Graphic Library
     [chip]       ST75256 (display JLX256160-920)
     [resolution] 256x160
-    [version]    1.2
+    [version]    0.1
     [create]     Alexander Savushkin
     [date]       05\03\2025
     [e-mail]     aeondc@gmail.com
     [github]     https://github.com/avsavushkiny/ggl
 */
 
-#ifndef _GGL_
-#define _GGL_
+#ifndef GGL_H
+#define GGL_H
 
 #include <SPI.h>
 #include <Arduino.h>
