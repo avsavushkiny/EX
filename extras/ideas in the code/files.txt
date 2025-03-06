@@ -1,0 +1,27 @@
+Этот код можно разбить на следующие файлы:
+
+
+TaskDispatcher.h - для класса TaskDispatcher и связанных с ним структур и перечислений.
+eElement.h - для базового класса eElement и его наследников.
+eForm.h - для класса eForm и его наследника exForm.
+eFormStack.h - для класса exFormStack.
+eSystemTask.h - для абстрактного класса eSystemTask и его наследников.
+Relay.h - для класса Relay.
+TextBuffer.h - для класса TextBuffer.
+Trigger.h - для класса Trigger.
+FormActionMenu.h - для класса FormActionMenu и его наследников.
+Joystick.h - для класса Joystick.
+Graphics.h - для класса Graphics.
+Timer.h - для класса Timer.
+Interface.h - для класса Interface.
+Button.h - для класса Button.
+Shortcut.h - для класса Shortcut.
+Label.h - для класса Label.
+TextBox.h - для класса TextBox.
+Cursor.h - для класса Cursor.
+PowerSave.h - для класса PowerSave.
+Melody.h - для класса Melody.
+Terminal.h - для класса Terminal.
+
+
+Каждый из этих файлов должен содержать определение соответствующего класса и связанных с ним структур, перечислений и функций. Это поможет улучшить читаемость и поддерживаемость кода, а также упростит его модификацию и расширение.
