@@ -1,14 +1,7 @@
 /*
- [v 0.0.1] -> First release.
-           - The first implementation. The terminal is used, the organization of tasks.
-           - Create classes Graphics, Timer, Interface, Powersave, Melody, Button, Shortcut, Application, Label, Task.
-           - Add Battery control, LED control tasks.
- [v 0.0.2] -> Organization, definition of events.
-           - Add tasks: Reboot board, FPS.
-           - Add powersave mode display
-           - Fix bug-code
- [v 0.0.3] -> Using a vector for a task list.
-           - Fix bug-code
+  Version OS 0.1.5 with 'ggl' graphic library
+  Dev: Aleksander Savushkin
+  06/03/2025
 */
 
 /*
@@ -28,13 +21,18 @@
 #include <U8g2lib.h> 
 #include "ex.h"
 #include "ex_xbm.h"
+#include "ggl.h"
 
 #include <vector>
 #include <functional>
 #include <algorithm>
 
+
 //version Library and Text
 const int8_t VERSION_LIB[] = {0, 1, 5};
+const int8_t VERSION_GGL[] = {0, 1, 0};
+
+GGL ggl;
 
 Graphics _gfx; 
 Timer _delayCursor, _trm0, _trm1, _stop, _timerUpdateClock, _fps; 
