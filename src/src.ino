@@ -19,9 +19,6 @@ void userTest()
 
     eButton *button1 = new eButton("Test DataPort", [](){
 
-    // DATATX<Data> *transmitter;
-    // transmitter = new DATATX<Data>(&dt);
-    // transmitter->sendData();
     DATATX transmitter;
     transmitter.sendData(dt, 0);
 
