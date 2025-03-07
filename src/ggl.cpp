@@ -208,7 +208,7 @@ void GRAY::bitmap(short x, short y, const uint8_t *pBmp, short chWidth, short ch
   if (page == 0)               // Если количество страниц равно 0
     page = 1;                  // Устанавливаем количество страниц равным 1
 
-  for (k = 0; k < page; k++) // Цикл по страницам
+  for (k = 0; k <= page; k++) // Цикл по страницам
   {
     for (j = 0; j < chWidth; j++) // Цикл по ширине символа
     {
@@ -223,113 +223,49 @@ void GRAY::bitmap(short x, short y, const uint8_t *pBmp, short chWidth, short ch
   }
 }
 
+// void GRAY::bitmap(short x, short y, const uint8_t *pBmp, short chWidth, short chHeight)
+// {
+//   int i, j;
+//   int16_t yy = y * 2; // Удваиваем координату y
+
+//   // Проверяем, что высота и ширина изображения корректны
+//   if (chWidth <= 0 || chHeight <= 0) return;
+
+//   // Количество байт на строку (11 пикселей = 2 байта)
+//   int bytesPerRow = (chWidth + 7) / 8;
+
+//   for (j = 0; j < chHeight; j++) // Цикл по строкам изображения
+//   {
+//     for (i = 0; i < chWidth; i++) // Цикл по пикселям в строке
+//     {
+//       // Вычисляем индекс байта и бита
+//       int byteIndex = j * bytesPerRow + (i / 8);
+//       int bitIndex = i % 8;
+
+//       // Читаем байт из битовой карты
+//       uint8_t byte = pgm_read_byte(pBmp + byteIndex);
+
+//       // Если бит в битовой карте равен 1
+//       if (byte & (0x01 << bitIndex))
+//       {
+//         // Отрисовываем пиксель
+//         GRAY::pixel(x + i, yy + j, 1);
+//       }
+//     }
+//   }
+// }
+
 // Write
-void GRAY::writeChar(short x, short y, char acsii, char size, char mode, Color color)
+void GRAY::writeChar(short x, short yy, char acsii, char size, char mode, Color color)
 {
+  short y = yy * 2;
   short i, j, y0 = y;
   char temp;
 
   if (acsii == '\n') return;
+  if (acsii == '\0') return;
 
 
-  unsigned char ch = acsii - ' ';
-
-  for (i = 0; i < size; i++)
-  {
-    if (size == 10)
-    {
-      if (mode)
-        temp = pgm_read_byte(&Font1006[ch][i]);
-      else
-        temp = ~pgm_read_byte(&Font1006[ch][i]);
-    }
-    else
-    {
-      if (mode)
-        temp = pgm_read_byte(&Font1206[ch][i]);
-      else
-        temp = ~pgm_read_byte(&Font1206[ch][i]);
-    }
-
-    for (j = 0; j < 8; j++)
-    {
-      // Обработка битов в зависимости от цвета
-      switch (color)
-      {
-      case BLACK:
-        if (temp & 0x80)
-        {
-          GRAY::pixel(x, y, 1);     // Первый бит: 1
-          GRAY::pixel(x, y + 1, 1); // Второй бит: 1
-          break;
-        }
-        else
-        {
-          // GGL::pixelGray(x, y, 0);     // Первый бит: 0
-          // GGL::pixelGray(x, y + 1, 0); // Второй бит: 0
-          break;
-        }
-
-      case DARK_GRAY:
-        if (temp & 0x80)
-        {
-          GRAY::pixel(x, y, 0);     // Первый бит: 0
-          GRAY::pixel(x, y + 1, 1); // Второй бит: 1
-          break;
-        }
-        else
-        {
-          // GGL::pixelGray(x, y, 0);     // Первый бит: 0
-          // GGL::pixelGray(x, y + 1, 0); // Второй бит: 0
-          break;
-        }
-      case LIGHT_GRAY:
-        if (temp & 0x80)
-        {
-          GRAY::pixel(x, y, 1);     // Первый бит: 1
-          GRAY::pixel(x, y + 1, 0); // Второй бит: 0
-          break;
-        }
-        else
-        {
-          // GGL::pixelGray(x, y, 0);     // Первый бит: 0
-          // GGL::pixelGray(x, y + 1, 0); // Второй бит: 0
-          break;
-        }
-      case WHITE:
-        if (temp & 0x80)
-        {
-          GRAY::pixel(x, y, 0);     // Первый бит: 0
-          GRAY::pixel(x, y + 1, 0); // Второй бит: 0
-          break;
-        }
-        else
-        {
-          // GGL::pixelGray(x, y, 0);     // Первый бит: 0
-          // GGL::pixelGray(x, y + 1, 0); // Второй бит: 0
-          break;
-        }
-      }
-
-      temp <<= 1; // Сдвигаем temp на один бит влево
-
-      y += 2;
-
-      if ((y - y0) >= size * 2) // Если мы достигли конца строки (учитываем удвоение строк)
-      {
-        y = y0; // Возвращаемся к началу строки
-        x++;    // Переходим к следующему столбцу
-        break;  // Выходим из цикла
-      }
-    }
-  }
-}
-void GRAY::printChar(short x, short yy, char acsii, char size, char mode, Color color)
-{
-  short y = yy * 2;
-
-  short i, j, y0 = y;
-  char temp;
   unsigned char ch = acsii - ' ';
 
   for (i = 0; i < size; i++)
@@ -424,7 +360,7 @@ void GRAY::printChar(short x, short yy, char acsii, char size, char mode, Color 
 }
 void GRAY::writeLine(short x, short y, const char *pString, int8_t Size, int8_t Mode, Color color)
 {
-  int yy = y * 2;
+  int yy = y;
 
   while (*pString != '\0')
   {
@@ -445,7 +381,7 @@ void GRAY::writeLine(short x, short y, const char *pString, int8_t Size, int8_t 
 }
 void GRAY::writeLine(short x, short y, const String &text, int8_t Size, int8_t Mode, Color color)
 {
-  int yy = y * 2; // Учитываем двойную высоту для отрисовки
+  int yy = y; // Учитываем двойную высоту для отрисовки
 
   // Перебор каждого символа в строке
   for (int i = 0; i < text.length(); i++)
