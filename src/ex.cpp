@@ -144,7 +144,7 @@ void Graphics::initializationSystem()
     /* setting the operating system state */
     // u8g2.begin();
     Serial.begin(9600);
-    ggl.gray.begin(); ggl.gray.display();
+    ggl.gray.begin();
 
     /* setting the resolution of the analog-to-digital converter */
     analogReadResolution(RESOLUTION_ADC);
@@ -169,7 +169,7 @@ void Graphics::initializationSystem()
     // u8g2.setContrast(143); //143//150
     // systems.setDisplayContrast(143);
 
-    // systems.executeAllSystemElements();!!!
+    systems.executeAllSystemElements();
 
 
     /*
@@ -189,7 +189,7 @@ void Graphics::initializationSystem()
     ggl.gray.clearBuffer();
     // u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, ex_b/its);
     String info = "Sozvezdiye OS\n\nExperiment board\n2024";
-    // _textBox.textBox(info, _textBox.middle, _textBox.noBorder, 10, 6, 128, 80);
+    _textBox.textBox(info, _textBox.middle, _textBox.noBorder, 10, 6, 128, 80);
 
     // _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2], 0, H_LCD, 10, 4);
     ggl.gray.writeLine(0, 150, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2], 10, 1, ggl.gray.BLACK);
@@ -1942,7 +1942,8 @@ void eTextBox::show()
         // u8g2.setCursor(xx + border, yy + charH + border);
         // u8g2.print(c);
 
-        ggl.gray.writeLine(xx + border, yy + charH + border, c, 10, 1, ggl.gray.BLACK);
+        // ggl.gray.writeLine(xx + border, yy + charH + border, c, 10, 1, ggl.gray.BLACK);
+        ggl.gray.writeChar(xx + border, yy + charH + border, c, 10, 1, ggl.gray.BLACK);
 
         // adds dots if frame is full
         /*if ((ln >= numberOfLinesFrame - 1) && (numberOfCharactersLineFrame == (ch + 3)))

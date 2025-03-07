@@ -52,6 +52,7 @@ public:
 
     /* Write */
     void writeChar(short x, short y, char acsii, char size, char mode, Color color);
+    void printChar(short x, short y, char acsii, char size, char mode, Color color);
     void writeLine(short x, short y, const char *pString, int8_t Size, int8_t Mode, Color color);
     void writeLine(short x, short y, const String &text, int8_t Size, int8_t Mode, Color color);
     void writeLine(short x, short y, int number, int8_t Size, int8_t Mode, Color color);

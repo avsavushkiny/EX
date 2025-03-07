@@ -228,6 +228,108 @@ void GRAY::writeChar(short x, short y, char acsii, char size, char mode, Color c
 {
   short i, j, y0 = y;
   char temp;
+
+  if (acsii == '\n') return;
+
+
+  unsigned char ch = acsii - ' ';
+
+  for (i = 0; i < size; i++)
+  {
+    if (size == 10)
+    {
+      if (mode)
+        temp = pgm_read_byte(&Font1006[ch][i]);
+      else
+        temp = ~pgm_read_byte(&Font1006[ch][i]);
+    }
+    else
+    {
+      if (mode)
+        temp = pgm_read_byte(&Font1206[ch][i]);
+      else
+        temp = ~pgm_read_byte(&Font1206[ch][i]);
+    }
+
+    for (j = 0; j < 8; j++)
+    {
+      // Обработка битов в зависимости от цвета
+      switch (color)
+      {
+      case BLACK:
+        if (temp & 0x80)
+        {
+          GRAY::pixel(x, y, 1);     // Первый бит: 1
+          GRAY::pixel(x, y + 1, 1); // Второй бит: 1
+          break;
+        }
+        else
+        {
+          // GGL::pixelGray(x, y, 0);     // Первый бит: 0
+          // GGL::pixelGray(x, y + 1, 0); // Второй бит: 0
+          break;
+        }
+
+      case DARK_GRAY:
+        if (temp & 0x80)
+        {
+          GRAY::pixel(x, y, 0);     // Первый бит: 0
+          GRAY::pixel(x, y + 1, 1); // Второй бит: 1
+          break;
+        }
+        else
+        {
+          // GGL::pixelGray(x, y, 0);     // Первый бит: 0
+          // GGL::pixelGray(x, y + 1, 0); // Второй бит: 0
+          break;
+        }
+      case LIGHT_GRAY:
+        if (temp & 0x80)
+        {
+          GRAY::pixel(x, y, 1);     // Первый бит: 1
+          GRAY::pixel(x, y + 1, 0); // Второй бит: 0
+          break;
+        }
+        else
+        {
+          // GGL::pixelGray(x, y, 0);     // Первый бит: 0
+          // GGL::pixelGray(x, y + 1, 0); // Второй бит: 0
+          break;
+        }
+      case WHITE:
+        if (temp & 0x80)
+        {
+          GRAY::pixel(x, y, 0);     // Первый бит: 0
+          GRAY::pixel(x, y + 1, 0); // Второй бит: 0
+          break;
+        }
+        else
+        {
+          // GGL::pixelGray(x, y, 0);     // Первый бит: 0
+          // GGL::pixelGray(x, y + 1, 0); // Второй бит: 0
+          break;
+        }
+      }
+
+      temp <<= 1; // Сдвигаем temp на один бит влево
+
+      y += 2;
+
+      if ((y - y0) >= size * 2) // Если мы достигли конца строки (учитываем удвоение строк)
+      {
+        y = y0; // Возвращаемся к началу строки
+        x++;    // Переходим к следующему столбцу
+        break;  // Выходим из цикла
+      }
+    }
+  }
+}
+void GRAY::printChar(short x, short yy, char acsii, char size, char mode, Color color)
+{
+  short y = yy * 2;
+
+  short i, j, y0 = y;
+  char temp;
   unsigned char ch = acsii - ' ';
 
   for (i = 0; i < size; i++)
