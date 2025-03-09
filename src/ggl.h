@@ -39,16 +39,30 @@ public:
         WHITE
     };
 
+    enum BitmapMode
+    {
+        TRANSPARENT,
+        NOT_TRANSPARENT,
+    };
+
+    enum DisplayPowerSavingMode
+    {
+        OPERATING_MODE,
+        SLEEP_MODE
+    };
+
     /* Settings */
     void begin();
     void clear();
     void clearBuffer();
     void display();
-    void sendBuffer(); 
+    void sendBuffer();
+    void setContrast(int16_t newContrast);
+    void setPowerMode(DisplayPowerSavingMode dpsm);
     
     /* Bitmap */
     void pixel(short x, short y, char color);
-    void bitmap(short x, short y, const uint8_t *pBmp, short chWidth, short chHeight);
+    void bitmap(short x, short y, const uint8_t *pBmp, short chWidth, short chHeight, BitmapMode bm);
 
     /* Write */
     void writeChar(short x, short y, char acsii, char size, char mode, Color color);

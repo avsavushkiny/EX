@@ -140,6 +140,29 @@ void GRAY::sendBuffer()
     }
   }
 }
+void GRAY::setContrast(int16_t newContrast)
+{
+  transferCommand(0x30); // 0011 0000 EC1
+  transferCommand(0x81); // 1000 0001 Vop Control [21]
+  transferData(240 & 0x3F);
+  transferData((240 >> 6) & 0x07);
+  transferCommand(0xaf); // 1010 1111 Display On [2]
+}
+void GRAY::setPowerMode(DisplayPowerSavingMode dpsm)
+{
+  if (dpsm == OPERATING_MODE)
+  {
+    transferCommand(0x30); // 0011 0000 EC1
+    transferCommand(0x94); // 1001 0100 Sleep out mode [6]
+    transferCommand(0xaf); // 1010 1111 Display On [2]
+  }
+  if (dpsm == SLEEP_MODE)
+  {
+    transferCommand(0x30); // 0011 0000 EC1
+    transferCommand(0x95); // 1001 0101 Sleep mode [6]
+    transferCommand(0xaf); // 1010 1111 Display On [2]
+  }
+}
 
 // Methods for sending data and commands
 void GRAY::rotate(int ROTATE)
@@ -200,60 +223,37 @@ void GRAY::pixel(short x, short y, char color)
   else
     _LCD_BUFFER[x + (y / 8) * 256] &= ~(1 << (y % 8)); // Сбрасываем бит в буфере экрана
 }
-void GRAY::bitmap(short x, short y, const uint8_t *pBmp, short chWidth, short chHeight)
-{
-  int i, j, k;
-  int16_t yy = y * 2;          // Удваиваем координату y
-  int page = chHeight * 2 / 8; // Вычисляем количество страниц
-  if (page == 0)               // Если количество страниц равно 0
-    page = 1;                  // Устанавливаем количество страниц равным 1
 
-  for (k = 0; k <= page; k++) // Цикл по страницам
+void GRAY::bitmap(short x, short y, const uint8_t *pBmp, short chWidth, short chHeight, BitmapMode bm)
+{
+  int i, j, k; int8_t pp{};
+  int16_t yy = y * 2;          // Удваиваем координату y
+  int page = chHeight * 2 / 8; // Вычисляем количество страниц с округлением вверх
+
+  if (chHeight % 8 == 0) pp = 0;
+  if (chHeight % 8 != 0) pp = 1;
+  
+  for (k = 0; k < page + pp; k++) // Цикл по страницам
   {
     for (j = 0; j < chWidth; j++) // Цикл по ширине символа
     {
-      for (i = 0; i < 8; i++) // Цикл по высоте символа
+      // Определяем количество пикселей на текущей странице
+      int max_i = (k == page + 1) ? ((chHeight * 2) - 8) : 8; // (условие) ? (если true) : (если false)
+
+      for (i = 0; i < max_i; i++) // Цикл по строкам на текущей странице
       {
-        if (pgm_read_byte(pBmp + j + k * chWidth) & (0x01 << (i & 7))) // Если бит в битовой карте равен 1
+        if (pgm_read_byte(pBmp + j + k * chWidth) & (0x01 << (i & 7)))
         {
           GRAY::pixel(x + j, yy + i + k * 8, 1); // Рисуем пиксель
+        }
+        else
+        {
+          if (bm == NOT_TRANSPARENT) GRAY::pixel(x + j, yy + i + k * 8, 0); // Рисуем пиксель
         }
       }
     }
   }
 }
-
-// void GRAY::bitmap(short x, short y, const uint8_t *pBmp, short chWidth, short chHeight)
-// {
-//   int i, j;
-//   int16_t yy = y * 2; // Удваиваем координату y
-
-//   // Проверяем, что высота и ширина изображения корректны
-//   if (chWidth <= 0 || chHeight <= 0) return;
-
-//   // Количество байт на строку (11 пикселей = 2 байта)
-//   int bytesPerRow = (chWidth + 7) / 8;
-
-//   for (j = 0; j < chHeight; j++) // Цикл по строкам изображения
-//   {
-//     for (i = 0; i < chWidth; i++) // Цикл по пикселям в строке
-//     {
-//       // Вычисляем индекс байта и бита
-//       int byteIndex = j * bytesPerRow + (i / 8);
-//       int bitIndex = i % 8;
-
-//       // Читаем байт из битовой карты
-//       uint8_t byte = pgm_read_byte(pBmp + byteIndex);
-
-//       // Если бит в битовой карте равен 1
-//       if (byte & (0x01 << bitIndex))
-//       {
-//         // Отрисовываем пиксель
-//         GRAY::pixel(x + i, yy + j, 1);
-//       }
-//     }
-//   }
-// }
 
 // Write
 void GRAY::writeChar(short x, short yy, char acsii, char size, char mode, Color color)

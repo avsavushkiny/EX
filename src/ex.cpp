@@ -339,7 +339,7 @@ bool Graphics::waitDisplay()
     // u8g2.sendBuffer(); return true;
 
     ggl.gray.clearBuffer();
-    ggl.gray.bitmap(((W_LCD - wait_width)/2), ((H_LCD - wait_height)/2), sysIcon.wait, sysIcon.wait_w, sysIcon.wait_h);
+    ggl.gray.bitmap(((W_LCD - wait_width)/2), ((H_LCD - wait_height)/2), sysIcon.wait, sysIcon.wait_w, sysIcon.wait_h, ggl.gray.NOT_TRANSPARENT);
     ggl.gray.sendBuffer();
     delay(150); return true;
 }
@@ -373,7 +373,7 @@ bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
         // u8g2.setBitmapMode(1); //0-non transparent 1-transparent
 
         // u8g2.drawXBMP(xCursor, yCursor, cursor_w, cursor_h, cursor_bits);
-        ggl.gray.bitmap(xCursor, yCursor, sysIcon.cursor0, sysIcon.cursor0_w, sysIcon.cursor0_h);
+        ggl.gray.bitmap(xCursor, yCursor, sysIcon.cursor0, sysIcon.cursor0_w, sysIcon.cursor0_h, ggl.gray.TRANSPARENT);
         
         // u8g2.setDrawColor(1);
         // u8g2.setBitmapMode(0);
@@ -392,7 +392,7 @@ bool Cursor::cursor(bool stateCursor)
         // u8g2.setBitmapMode(1); //0-non transparent 1-transparent
         _joy.updatePositionXY();
         // u8g2.drawXBMP(_joy.posX0, _joy.posY0, cursor_w, cursor_h, cursor_bits);
-        ggl.gray.bitmap(_joy.posX0, _joy.posY0, sysIcon.cursor0, sysIcon.cursor0_w, sysIcon.cursor0_h);
+        ggl.gray.bitmap(_joy.posX0, _joy.posY0, sysIcon.cursor0, sysIcon.cursor0_w, sysIcon.cursor0_h, ggl.gray.TRANSPARENT);
         // u8g2.setDrawColor(1);
         // u8g2.setBitmapMode(0);
         return true;
@@ -820,10 +820,11 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
 {
 //   u8g2.setDrawColor(1);
 //   u8g2.setBitmapMode(0);
-  ggl.gray.bitmap(x, y, bitMap, 32, 32);
+  ggl.gray.bitmap(x, y, bitMap, 32, 32, ggl.gray.NOT_TRANSPARENT);
 //   u8g2.drawXBMP(x, y, 32, 32, bitMap);
 //   u8g2.drawXBMP(x, y + 21, 11, 11, shortcut_bits);
-  ggl.gray.bitmap(x, y + 21, sysIcon.shortcut0, 11, 11);
+
+  ggl.gray.bitmap(x, y + 21, sysIcon.shortcut0, 11, 11, ggl.gray.NOT_TRANSPARENT);
 
   
   TextBox textBoxNameTask;
@@ -2139,7 +2140,7 @@ void eFunction::show()
 void ePicture::show()
 {
     // u8g2.drawXBMP(xForm, yForm, m_w, m_h, m_bitmap);
-    ggl.gray.bitmap(xForm, yForm, m_bitmap, m_w, m_h);
+    ggl.gray.bitmap(xForm, yForm, m_bitmap, m_w, m_h, ggl.gray.NOT_TRANSPARENT);
 }
 /* desktop */
 template <typename T>
@@ -2319,6 +2320,7 @@ void eDisplayContrast::execute()
 {
     // u8g2.setContrast(m_valueContrast);!!!
     // Serial.println(m_valueContrast);
+    ggl.gray.setContrast(m_valueContrast);
 }
 /* ePowerSave */
 bool ePowerSave::isTouched()

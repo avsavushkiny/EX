@@ -681,7 +681,7 @@ public:
     }
 
     // Методы установки контрастности дисплея
-    int VALUECONTRAST{143};
+    int VALUECONTRAST{143}; // 143 old value
     void setDisplayContrast(int newValue)
     {
         displayContrast.setDisplayContrast(newValue);
