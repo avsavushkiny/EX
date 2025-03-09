@@ -31,7 +31,7 @@
 const int8_t VERSION_LIB[] = {0, 1, 5};
 const int8_t VERSION_GGL[] = {0, 1, 1};
 
-GGL ggl; SystemIcon sysIcon; FPS fps;
+GGL ggl; SystemIcon sysIcon; FPS fps; Icon icon;
 
 Graphics _gfx; 
 Timer _delayCursor, _trm0, _trm1, _stop, _timerUpdateClock, _fps; 
@@ -2141,6 +2141,19 @@ void ePicture::show()
     // u8g2.drawXBMP(xForm, yForm, m_w, m_h, m_bitmap);
     ggl.gray.bitmap(xForm, yForm, m_bitmap, m_w, m_h, ggl.gray.NOT_TRANSPARENT);
 }
+/* eBackground */
+void eBackground::show()
+{
+    // Проходим по всему окну с шагом, равным размеру изображения
+    for (int y = yForm; y < 148; y += m_h)
+    {
+        for (int x = xForm; x < 256; x += m_w)
+        {
+            // Выводим изображение на текущей позиции (x, y)
+            ggl.gray.bitmap(x, y, m_bitmap, m_w, m_h, ggl.gray.TRANSPARENT);
+        }
+    }
+}
 /* desktop */
 template <typename T>
 void eDesktop<T>::show()
@@ -2398,6 +2411,8 @@ void ePowerSave::execute()
 {
     String text = "The console has entered\nhibernation mode.\n\nTo exit this mode,\nmove the stick upwards.";
     
+    ggl.gray.writeLine(17, 150, "Deep sleep LINE, leave cursor here", 10, 1, ggl.gray.LIGHT_GRAY);
+    
     if (isTouched() == true)
     {
         screenTiming = TIMER;
@@ -2475,7 +2490,7 @@ void InstantMessage::show()
     short border{5}, border2{8}, charHeight{10}, charWidth{5};
     int count{0}, x{128}, y{80}, maxChar{0}, line{1};
 
-    for (char c : m_text) // count the characters in each line
+    for (char c : m_text) // Считаем символы в каждой строке
     {
         if (c == '\n')
         {
@@ -2496,51 +2511,62 @@ void InstantMessage::show()
         maxChar = count;
     }
 
+    if (maxChar == 0 || line == 0) {
+        return; // Не отображаем ничего, если нет символов или строк
+    }
+
     int lineYoffset = (line / 2) * 8;
-    
-    //--> Рисуем сетку на дисплее
-    // u8g2.setDrawColor(1);
-    // drawDotGrid(2); //1, 2, 4, 8, 16, 32,
-    
+      
     //--> выводим границы текста
-    int numberOfPixels = maxChar * charWidth;               // the maximum number of pixels based on the number of characters in a line
-    int numberOfPixelsToOffset = (maxChar / 2) * charWidth; // a given number of pixels must be offset
+    int numberOfPixels = maxChar * charWidth;               // Максимальное количество пикселей на основе количества символов в строке
+    int numberOfPixelsToOffset = (maxChar / 2) * charWidth; // Смещение для центрирования текста
 
     //--> границы фрейма
-    // Определяем границы фрейма
     int frameX = x - numberOfPixelsToOffset - border2 + GLOBAL_X;
     int frameY = y - charHeight - border2 + GLOBAL_Y - lineYoffset;
     int frameWidth = border2 + border2 + numberOfPixels;
     int frameHeight = border2 + border2 + (line * charHeight);
-    // Проходим по всем пикселям внутри фрейма и рисуем их
-    // u8g2.setDrawColor(0);
-    // for (int px = frameX; px < frameX + frameWidth; px++)
-    // {
-    //     for (int py = frameY; py < frameY + frameHeight; py++)
-    //     {
-    //         // u8g2.drawPixel(px, py); // Рисуем пиксель со значением 0
-    //         ggl.gray.drawPixel(px, py, ggl.gray.WHITE);
-    //     }
-    // }
-    // u8g2.setDrawColor(1);
     //<-- границы фрема
-    // ggl.gray.drawBox(x - numberOfPixelsToOffset - border2, y - border2 - lineYoffset, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight), ggl.gray.WHITE);
-    ggl.gray.drawFillFrame(x - numberOfPixelsToOffset - border2, y - border2 - lineYoffset, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight), ggl.gray.WHITE, ggl.gray.WHITE);
-    // u8g2.clearBuffer(); // -->
+
+    // Рисуем заполненную рамку
+    ggl.gray.drawFillFrame(x - numberOfPixelsToOffset - border2,
+        y - border2 - lineYoffset, border2 + border2 + numberOfPixels, 
+        border2 + border2 + (line * charHeight), 
+        ggl.gray.WHITE, 
+        ggl.gray.WHITE
+    );
+    
+    // Выводим текст
     _gfx.print(m_text, x - numberOfPixelsToOffset, y - lineYoffset, charHeight, charWidth);
-    //ggl.gray.writeLine(x - numberOfPixelsToOffset, y - lineYoffset, m_text, 10, 1, ggl.gray.BLACK);
-    // u8g2.drawFrame(x - numberOfPixelsToOffset - border + GLOBAL_X, y - charHeight - border + GLOBAL_Y - lineYoffset, border + border + numberOfPixels, border + border + (line * charHeight));
-    // u8g2.drawFrame(x - numberOfPixelsToOffset - border2 + GLOBAL_X, y - charHeight - border2 + GLOBAL_Y - lineYoffset, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight));
 
-    ggl.gray.drawFrame(x - numberOfPixelsToOffset - border, y - border - lineYoffset, border + border + numberOfPixels, border + border + (line * charHeight), ggl.gray.BLACK);
-    // ggl.gray.drawFrame(x - numberOfPixelsToOffset - border2, y - border2 - lineYoffset, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight), ggl.gray.BLACK);
-    // Shadow
-    ggl.gray.drawHLine(x - numberOfPixelsToOffset, y - lineYoffset + border + (line * charHeight), border + numberOfPixels, ggl.gray.DARK_GRAY, 3);
-    ggl.gray.drawVLine(x + numberOfPixelsToOffset + border2 + 2, y - lineYoffset, (line * charHeight) + border2, ggl.gray.DARK_GRAY, 3);
-    // u8g2.sendBuffer(); // <--
-    ggl.gray.sendBuffer();
+    // Рисуем внешнюю рамку
+    ggl.gray.drawFrame(x - numberOfPixelsToOffset - border, 
+        y - border - lineYoffset, 
+        border + border + numberOfPixels, 
+        border + border + (line * charHeight), 
+        ggl.gray.BLACK
+    );
 
-    delay(m_delay);
+    // Тень
+    ggl.gray.drawHLine(
+        x - numberOfPixelsToOffset - border + 3, // X: начало рамки
+        y - lineYoffset + border + (line * charHeight), // Y: нижняя граница рамки
+        border + numberOfPixels + border, // Длина: ширина рамки
+        ggl.gray.DARK_GRAY, 3
+    );
+
+    ggl.gray.drawVLine(
+        x - numberOfPixelsToOffset - border + (border + border + numberOfPixels), // X: начало рамки + ширина рамки + смещение
+        y - border - lineYoffset + 3, // Y: начало рамки
+        (line * charHeight) + border + border, // Высота: высота рамки
+        ggl.gray.DARK_GRAY, 3
+    );
+
+    ggl.gray.sendBuffer();  // <--
+
+    if (m_delay > 0) {
+        delay(m_delay);
+    }
 }
 
 
@@ -2656,11 +2682,13 @@ void _myDesktop()
     exForm *form0 = new exForm();
 
     eDesktop<TaskArguments> *desktop0 = new eDesktop<TaskArguments>(tasks);
-    ePicture *pic = new ePicture(sozos, 53, 80, 151, 23);
+    ePicture *pic = new ePicture(sozos, 53, 100, 151, 23);
+    // eBackground *bg0 = new eBackground(icon.pattern_1, 0, 0, 32, 32);
     
     form0->title = "Desktop";
     form0->eFormShowMode = FULLSCREEN;
     form0->addElement(pic);
+    // form0->addElement(bg0);
     form0->addElement(desktop0);
 
     formsStack.push(form0);
@@ -2976,7 +3004,6 @@ void _systemCursor()
     }
 }
 
-Icon icon;
 /*
     Task-dispatcher
     Dispatcher tasks, vector

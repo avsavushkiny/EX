@@ -394,6 +394,29 @@ private:
     int xForm, yForm, wForm, hForm;
     const uint8_t *m_bitmap;
 };
+/* Background */
+class eBackground : public eElement
+{
+public:
+    eBackground(const uint8_t *bitmap, int x, int y, int w, int h) : m_bitmap(bitmap), m_x(x), m_y(y), m_w(w), m_h(h) {}
+
+    void show() override;
+
+    void setPosition(int x, int y, int w, int h) override
+    {
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
+        this->wForm = 0;
+        this->hForm = 0;
+    }
+
+private:
+
+    int m_x, m_y, m_w, m_h;
+    int xForm, yForm, wForm, hForm;
+    const uint8_t *m_bitmap;
+};
+
 /* Desktop */
 template <typename T>
 class eDesktop : public eElement
