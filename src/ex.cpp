@@ -29,7 +29,7 @@
 
 //version Library and Text
 const int8_t VERSION_LIB[] = {0, 1, 5};
-const int8_t VERSION_GGL[] = {0, 1, 0};
+const int8_t VERSION_GGL[] = {0, 1, 1};
 
 GGL ggl; SystemIcon sysIcon; FPS fps;
 
@@ -169,8 +169,9 @@ void Graphics::initializationSystem()
     // u8g2.setContrast(143); //143//150
     // systems.setDisplayContrast(143);
 
+    systems.setDisplayContrast(240);
     systems.executeAllSystemElements();
-
+    
 
     /*
        Vector
@@ -181,23 +182,19 @@ void Graphics::initializationSystem()
     //_taskSystems.reserve(50); // reserve
     //int _ssize = td.sizeTasks(tasks);
 
-    /*
-        UI-begin
-        display detailed information
-    */
-    // u8g2.clearBuffer();
-    ggl.gray.clearBuffer();
-    // u8g2.drawXBMP(((W_LCD - image_width)/2), ((H_LCD - image_height)/2) - 7, image_width, image_height, ex_b/its);
-    String info = "Sozvezdiye OS\n\nExperiment board\n2024";
-    _textBox.textBox(info, _textBox.middle, _textBox.noBorder, 10, 6, 128, 80);
 
-    // _gfx.print(6, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2], 0, H_LCD, 10, 4);
-    ggl.gray.writeLine(0, 150, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2], 10, 1, ggl.gray.BLACK);
-    //_gfx.print(6, (String)_ssize, 0, 6, 10, 6);
-    // u8g2.sendBuffer();
+    ggl.gray.clearBuffer();
+
+    String text = "SozvezdiyeOs + GGL";
+    ggl.gray.writeLine(5, 123, (String)VERSION_LIB[0] + "." + (String)VERSION_LIB[1] + "." + (String)VERSION_LIB[2] + " " + text, 10, 1, ggl.gray.BLACK);
+    
+    ggl.gray.drawHLine(0, 135, 256, ggl.gray.LIGHT_GRAY, 5);
+    ggl.gray.drawHLine(0, 140, 256, ggl.gray.DARK_GRAY, 5);
+    ggl.gray.drawHLine(0, 145, 256, ggl.gray.BLACK, 5);
+
     ggl.gray.sendBuffer();
 
-    delay(1500);
+    delay(2500);
 }
 /* data render (full frame) */
 void Graphics::render(void (*f)(), int timeDelay)
@@ -339,7 +336,7 @@ bool Graphics::waitDisplay()
     // u8g2.sendBuffer(); return true;
 
     ggl.gray.clearBuffer();
-    ggl.gray.bitmap(((W_LCD - wait_width)/2), ((H_LCD - wait_height)/2), sysIcon.wait, sysIcon.wait_w, sysIcon.wait_h, ggl.gray.NOT_TRANSPARENT);
+    ggl.gray.bitmap(((W_LCD - sysIcon.wait_w)/2), ((H_LCD - sysIcon.wait_h)/2), sysIcon.wait, sysIcon.wait_w, sysIcon.wait_h, ggl.gray.NOT_TRANSPARENT);
     ggl.gray.sendBuffer();
     delay(150); return true;
 }
@@ -801,7 +798,7 @@ bool Shortcut::shortcut(const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(v
   u8g2.setBitmapMode(0);
   u8g2.drawXBMP(x, y, 32, 32, bitMap);
   //u8g2.drawXBMP(x, y + 24, 8, 8, icon_bits);
-  u8g2.drawXBMP(x, y + 21, 11, 11, shortcut_bits);
+//   u8g2.drawXBMP(x, y + 21, 11, 11, shortcut_bits);
 
   if ((xCursor >= x && xCursor <= (x + 32)) && (yCursor >= y && yCursor <= (y + 32)))
   {
@@ -834,7 +831,7 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
     // u8g2.drawFrame(x, y, 32, 32);
     ggl.gray.drawFrame(x, y, 32, 32, ggl.gray.BLACK);
 
-    textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 52);
+    textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 24);
     
     if (Joystick::pressKeyENTER() == true)
     {
@@ -845,7 +842,7 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
   }
   else
   {
-    textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 52);
+    textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 24);
   }
 
   return false;
@@ -1234,7 +1231,7 @@ void TextBox::textBox(String str, objectBoundary boundary, int sizeH, int sizeW,
     //_gfx.print((String)numberOfLines, 0, 30);
     //_gfx.print((String)numberOfLinesFrame, 0, 40);
 }
-/* [!] no Frame */
+/* [for Desktop name tasks] no Frame */
 void TextBox::textBox(String str, int sizeH, int sizeW, short charH, short charW, int x, int y)
 {
     short border{0}; short border2{0}; // size border
@@ -1254,9 +1251,11 @@ void TextBox::textBox(String str, int sizeH, int sizeW, short charH, short charW
     
     for (char c : str)
     {
-        u8g2.setFont(u8g2_font_6x10_tr);
-        u8g2.setCursor(xx + border, yy + charH + border);
-        u8g2.print(c);
+        // u8g2.setFont(u8g2_font_6x10_tr);
+        // u8g2.setCursor(xx + border, yy + charH + border);
+        // u8g2.print(c);
+
+        ggl.gray.writeChar(xx + border, yy + charH + border, c, 10, 1, ggl.gray.BLACK);
         
         xx += charW;
         ch++;
@@ -2217,7 +2216,29 @@ int exForm::showForm()
         // u8g2.setColorIndex(1); // вкл пиксели
         // u8g2.drawFrame(0, 12 /* height button (13px) - 1 */, 256, 148); // x, y, w, h
 
-        ggl.gray.drawFrame(0, 12, 256, 148, ggl.gray.BLACK);
+        switch (eFormBackground)
+        {
+            case TRANSPARENT:
+            ggl.gray.drawFrame(0, 12, 256, 148, ggl.gray.BLACK);
+            break;
+            case WHITE:
+            ggl.gray.drawFillFrame(0, 12, 256, 148, ggl.gray.BLACK, ggl.gray.WHITE);
+            break;
+            case LIGHT_GRAY:
+            ggl.gray.drawFillFrame(0, 12, 256, 148, ggl.gray.BLACK, ggl.gray.LIGHT_GRAY);
+            break;
+            case DARK_GRAY:
+            ggl.gray.drawFillFrame(0, 12, 256, 148, ggl.gray.BLACK, ggl.gray.DARK_GRAY);
+            break;
+            case BLACK:
+            ggl.gray.drawFillFrame(0, 12, 256, 148, ggl.gray.BLACK, ggl.gray.BLACK);
+            break;
+            default:
+            ggl.gray.drawFrame(0, 12, 256, 148, ggl.gray.BLACK);
+            break;
+        }
+
+        // ggl.gray.drawFrame(0, 12, 256, 148, ggl.gray.BLACK);
         _gfx.print(title, 5, 2, 10, 5); // size Font, text, x, y, lii, chi
         
         uint8_t xSizeStack{};
@@ -2244,7 +2265,29 @@ int exForm::showForm()
         // u8g2.setColorIndex(1); // вкл пиксели
         // u8g2.drawFrame(0, 12 /* height button - 1 */, 256, 137 /* 137 - 10px tray*/); // x, y, w, h
         
-        ggl.gray.drawFrame(0, 12, 256, 137, ggl.gray.BLACK);
+        switch (eFormBackground)
+        {
+            case TRANSPARENT:
+            ggl.gray.drawFrame(0, 12, 256, 137, ggl.gray.BLACK);
+            break;
+            case WHITE:
+            ggl.gray.drawFillFrame(0, 12, 256, 137, ggl.gray.BLACK, ggl.gray.WHITE);
+            break;
+            case LIGHT_GRAY:
+            ggl.gray.drawFillFrame(0, 12, 256, 137, ggl.gray.BLACK, ggl.gray.LIGHT_GRAY);
+            break;
+            case DARK_GRAY:
+            ggl.gray.drawFillFrame(0, 12, 256, 137, ggl.gray.BLACK, ggl.gray.DARK_GRAY);
+            break;
+            case BLACK:
+            ggl.gray.drawFillFrame(0, 12, 256, 137, ggl.gray.BLACK, ggl.gray.BLACK);
+            break;
+            default:
+            ggl.gray.drawFrame(0, 12, 256, 137, ggl.gray.BLACK);
+            break;
+        }
+        
+        // ggl.gray.drawFrame(0, 12, 256, 137, ggl.gray.BLACK);
         _gfx.print(title, 5, 2, 10, 5); // size Font, text, x, y, lii, chi
        
         uint8_t xSizeStack{};
@@ -2272,7 +2315,29 @@ int exForm::showForm()
         // u8g2.setColorIndex(1); // вкл пиксели
         // u8g2.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120); // x, y, w, h
 
-        ggl.gray.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120, ggl.gray.BLACK);
+        switch (eFormBackground)
+        {
+            case TRANSPARENT:
+            ggl.gray.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120, ggl.gray.BLACK);
+            break;
+            case WHITE:
+            ggl.gray.drawFillFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120, ggl.gray.BLACK, ggl.gray.WHITE);
+            break;
+            case LIGHT_GRAY:
+            ggl.gray.drawFillFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120, ggl.gray.BLACK, ggl.gray.LIGHT_GRAY);
+            break;
+            case DARK_GRAY:
+            ggl.gray.drawFillFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120, ggl.gray.BLACK, ggl.gray.DARK_GRAY);
+            break;
+            case BLACK:
+            ggl.gray.drawFillFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120, ggl.gray.BLACK, ggl.gray.BLACK);
+            break;
+            default:
+            ggl.gray.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120, ggl.gray.BLACK);
+            break;
+        }
+        
+        // ggl.gray.drawFrame(outerBoundaryForm, outerBoundaryForm + 6, 216, 120, ggl.gray.BLACK);
         _gfx.print(title, outerBoundaryForm + 5, outerBoundaryForm - 4, 10, 5);
         
         uint8_t xSizeStack{};
@@ -2337,6 +2402,7 @@ void ePowerSave::execute()
     {
         screenTiming = TIMER;
         // u8g2.setPowerSave(0);  //off powersave!!!
+        ggl.gray.setPowerMode(ggl.gray.OPERATING_MODE);
     }
     
     if ((TIMER - screenTiming > 60000) && (_joy.posY0 >= 150))
@@ -2350,6 +2416,7 @@ void ePowerSave::execute()
 
             systems.setBacklight(false);
             // u8g2.setPowerSave(1);         //off display!!!
+            ggl.gray.setPowerMode(ggl.gray.SLEEP_MODE);
             esp_deep_sleep_start();       //run powersave, DEEP
         }
     }
@@ -2365,6 +2432,7 @@ void ePowerSave::execute()
 
             systems.setBacklight(false);
             // u8g2.setPowerSave(0);          //on display!!!
+            ggl.gray.setPowerMode(ggl.gray.OPERATING_MODE);
             esp_light_sleep_start();       //run powersave, LIGHT
         }
     }
@@ -2432,7 +2500,7 @@ void InstantMessage::show()
     
     //--> Рисуем сетку на дисплее
     // u8g2.setDrawColor(1);
-    drawDotGrid(2); //1, 2, 4, 8, 16, 32,
+    // drawDotGrid(2); //1, 2, 4, 8, 16, 32,
     
     //--> выводим границы текста
     int numberOfPixels = maxChar * charWidth;               // the maximum number of pixels based on the number of characters in a line
@@ -2456,8 +2524,8 @@ void InstantMessage::show()
     // }
     // u8g2.setDrawColor(1);
     //<-- границы фрема
-    ggl.gray.drawBox(x - numberOfPixelsToOffset - border2, y - border2 - lineYoffset, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight), ggl.gray.WHITE);
-
+    // ggl.gray.drawBox(x - numberOfPixelsToOffset - border2, y - border2 - lineYoffset, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight), ggl.gray.WHITE);
+    ggl.gray.drawFillFrame(x - numberOfPixelsToOffset - border2, y - border2 - lineYoffset, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight), ggl.gray.WHITE, ggl.gray.WHITE);
     // u8g2.clearBuffer(); // -->
     _gfx.print(m_text, x - numberOfPixelsToOffset, y - lineYoffset, charHeight, charWidth);
     //ggl.gray.writeLine(x - numberOfPixelsToOffset, y - lineYoffset, m_text, 10, 1, ggl.gray.BLACK);
@@ -2465,10 +2533,12 @@ void InstantMessage::show()
     // u8g2.drawFrame(x - numberOfPixelsToOffset - border2 + GLOBAL_X, y - charHeight - border2 + GLOBAL_Y - lineYoffset, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight));
 
     ggl.gray.drawFrame(x - numberOfPixelsToOffset - border, y - border - lineYoffset, border + border + numberOfPixels, border + border + (line * charHeight), ggl.gray.BLACK);
-    ggl.gray.drawFrame(x - numberOfPixelsToOffset - border2, y - border2 - lineYoffset, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight), ggl.gray.BLACK);
-
+    // ggl.gray.drawFrame(x - numberOfPixelsToOffset - border2, y - border2 - lineYoffset, border2 + border2 + numberOfPixels, border2 + border2 + (line * charHeight), ggl.gray.BLACK);
+    // Shadow
+    ggl.gray.drawHLine(x - numberOfPixelsToOffset, y - lineYoffset + border + (line * charHeight), border + numberOfPixels, ggl.gray.DARK_GRAY, 3);
+    ggl.gray.drawVLine(x + numberOfPixelsToOffset + border2 + 2, y - lineYoffset, (line * charHeight) + border2, ggl.gray.DARK_GRAY, 3);
     // u8g2.sendBuffer(); // <--
-    ggl.gray.sendBuffer();   
+    ggl.gray.sendBuffer();
 
     delay(m_delay);
 }
@@ -2561,7 +2631,7 @@ void _graphicsTest3(int xG, int yG, int wG, int hG)
         for (int j = i + 1; j < numPoints; j++)
         {
             // u8g2.drawLine(points[i][0], points[i][1], points[j][0], points[j][1]);
-            ggl.gray.drawLine(points[i][0], points[i][1], points[j][0], points[j][1], ggl.gray.BLACK);
+            ggl.gray.drawLine(points[i][0], points[i][1], points[j][0], points[j][1], ggl.gray.WHITE);
         }
     }
 }
@@ -2572,6 +2642,7 @@ void _myGraphicsTest3()
 
     formGraphicsTest3->title = "Graphics test 3";
     formGraphicsTest3->eFormShowMode = FULLSCREEN;
+    formGraphicsTest3->eFormBackground = BLACK;
     formGraphicsTest3->addElement(graphicsTest3);
 
     formsStack.push(formGraphicsTest3);
@@ -2585,10 +2656,11 @@ void _myDesktop()
     exForm *form0 = new exForm();
 
     eDesktop<TaskArguments> *desktop0 = new eDesktop<TaskArguments>(tasks);
-
+    ePicture *pic = new ePicture(sozos, 53, 80, 151, 23);
+    
     form0->title = "Desktop";
     form0->eFormShowMode = FULLSCREEN;
-
+    form0->addElement(pic);
     form0->addElement(desktop0);
 
     formsStack.push(form0);
@@ -2617,7 +2689,7 @@ void _info()
     String text4 = "Phone: +7 (953) 034 4001\nE-mail: aeondc@gmail.com\n\nSozvezdiye platform\nRussia, Saransk, 2023-2025";
 
     eTextBox *textBoxInfo = new eTextBox(text1 + text2 + text3 + text4, BorderStyle::noBorder, 256, 150, 0, 0);
-    ePicture *pic1 = new ePicture(gigachat_bits, 160, 100, gigachat_w, gigachat_h);
+    ePicture *pic1 = new ePicture(giga, 160, 100, giga_w, giga_h);
 
     formInfoSystems->title = "Information";
     formInfoSystems->eFormShowMode = FULLSCREEN;
@@ -2652,7 +2724,7 @@ void _osHello()
 {
     exForm *oshello = new exForm;
 
-    ePicture *pic1 = new ePicture(alisa_5050_bits, 10, 35, alisa_5050_w, alisa_5050_h);
+    ePicture *pic1 = new ePicture(alisa_gray_5050, 10, 35, alisa_w, alisa_h);
     String text1 = "Hello, I am the operating system Sozvezdiye.\n\nI was created by students of the Children's Creativity Center 2.\n\nEnjoy!";
     eTextBox *textbox1 = new eTextBox(text1, BorderStyle::noBorder, 141, 120, 65, 10);
 
@@ -2677,6 +2749,7 @@ void _myForm1()
 
     form1->title = "Form 1";
     form1->eFormShowMode = NORMAL;
+    form1->eFormBackground = WHITE;
     form1->addElement(button1);
 
 
@@ -2700,6 +2773,7 @@ void _myForm2()
     form2->addElement(Line2);
 
     form2->eFormShowMode = FULLSCREEN;
+    form2->eFormBackground = LIGHT_GRAY;
 
     formsStack.push(form2);
 }
@@ -2717,6 +2791,7 @@ void _myForm3()
 
     form3->title = "Form 3";
     form3->eFormShowMode = NORMAL;
+    form3->eFormBackground = DARK_GRAY;
 
     form3->addElement(text3);
     form3->addElement(buttons3);
@@ -2848,6 +2923,7 @@ void _settingsForm()
     // --> Title, show mode Form
     settingsForm->title = "Settings";
     settingsForm->eFormShowMode = NORMAL;
+    settingsForm->eFormBackground = LIGHT_GRAY;
 
     // --> Add elements Form
     settingsForm->addElement(checkLED);
@@ -2912,15 +2988,15 @@ TaskArguments system0[] //0 systems, 1 desktop, 2 user
     {"fps", _myFps, NULL, SYSTEM, 0, false},
     {"desktop", _myDesktop, NULL, SYSTEM, 100, true},
     {"oshello", _osHello, NULL, SYSTEM, 101, true},
-    {"form1", _myForm1, sysIcon.task0, DESKTOP, 0, false},
-    {"form2", _myForm2, sysIcon.task0, DESKTOP, 0, false},
-    {"form3", _myForm3, sysIcon.task0, DESKTOP, 0, false},
-    {"graphics 1", _myGraphicsTest1, sysIcon.task0, DESKTOP, 0, false},
-    {"graphics 2", _myGraphicsTest2, sysIcon.task0, DESKTOP, 0, false},
-    {"dispatcher", _myDispatcher, sysIcon.task0, DESKTOP, 0, false},
-    {"graphics 3", _myGraphicsTest3, sysIcon.task0, DESKTOP, 0, false},
-    {"settings", _settingsForm, sysIcon.task0, DESKTOP, 0, false},
-    {"userdesktop", _userDesktop, sysIcon.task0, DESKTOP, 0, false},
+    {"form1", _myForm1, icon.window_abc, DESKTOP, 0, false},
+    {"form2", _myForm2, icon.window_shell_1, DESKTOP, 0, false},
+    {"form3", _myForm3, icon.window_shell_2, DESKTOP, 0, false},
+    {"graphics 1", _myGraphicsTest1, icon.window_graphics, DESKTOP, 0, false},
+    {"graphics 2", _myGraphicsTest2, icon.window_graphics, DESKTOP, 0, false},
+    {"dispatcher", _myDispatcher, icon.app_wizard, DESKTOP, 0, false},
+    {"graphics 3", _myGraphicsTest3, icon.window_graphics, DESKTOP, 0, false},
+    {"settings", _settingsForm, icon.technical_group, DESKTOP, 0, false},
+    {"userdesktop", _userDesktop, icon.program_manager, DESKTOP, 0, false},
     // [!] Last task
     {"cursor", _systemCursor, NULL, SYSTEM, 0, true}
 };

@@ -57,7 +57,7 @@ public:
     void clearBuffer();
     void display();
     void sendBuffer();
-    void setContrast(int16_t newContrast);
+    void setContrast(int newContrast);
     void setPowerMode(DisplayPowerSavingMode dpsm);
     
     /* Bitmap */

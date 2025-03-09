@@ -461,6 +461,7 @@ protected:
 };
 /* Implementation of a concrete class exForm */
 enum EFORMSHOWMODE { FULLSCREEN, MAXIMIZED, NORMAL, FLAT };
+enum EFORMBACKGROUND { TRANSPARENT, WHITE, LIGHT_GRAY, DARK_GRAY, BLACK };
 class exForm : public eForm
 {
 public:
@@ -468,6 +469,7 @@ public:
 
     String title = "Title form";
     EFORMSHOWMODE eFormShowMode;
+    EFORMBACKGROUND eFormBackground;
 private:
     int xForm, yForm;
     short outerBoundaryForm{20};
@@ -681,7 +683,7 @@ public:
     }
 
     // Методы установки контрастности дисплея
-    int VALUECONTRAST{143}; // 143 old value
+    int VALUECONTRAST{240}; // 143 old value
     void setDisplayContrast(int newValue)
     {
         displayContrast.setDisplayContrast(newValue);

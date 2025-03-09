@@ -140,12 +140,14 @@ void GRAY::sendBuffer()
     }
   }
 }
-void GRAY::setContrast(int16_t newContrast)
+void GRAY::setContrast(int newContrast)
 {
+  newContrast++;
+
   transferCommand(0x30); // 0011 0000 EC1
   transferCommand(0x81); // 1000 0001 Vop Control [21]
-  transferData(240 & 0x3F);
-  transferData((240 >> 6) & 0x07);
+  transferData(newContrast & 0x3F);
+  transferData((newContrast >> 6) & 0x07);
   transferCommand(0xaf); // 1010 1111 Display On [2]
 }
 void GRAY::setPowerMode(DisplayPowerSavingMode dpsm)

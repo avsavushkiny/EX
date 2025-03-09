@@ -1,10 +1,10 @@
 #include "ex.h"
-#include "user_xbm.h" 
+#include "ex_xbm.h" 
 #include "rxtx.h" // Подключаем библиотеку для работы с UART
 
 Graphics gfx;
 Terminal trm;
-TaskDispatcher dispatcher; UserIcon icons;
+TaskDispatcher dispatcher; Icon icons;
 
 struct Data
 {
@@ -38,7 +38,7 @@ void userTest()
 void setup()
 {  
     gfx.initializationSystem();
-    // dispatcher.addTask({"User test", userTest, icons.MyComPort, DESKTOP, 0, false});
+    dispatcher.addTask({"User test", userTest, icons.briefcase, DESKTOP, 0, false});
 }
 
 void loop()
