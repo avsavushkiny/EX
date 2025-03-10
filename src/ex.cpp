@@ -1572,7 +1572,7 @@ void _myDesktop()
     exForm *form0 = new exForm();
 
     eDesktop<TaskArguments> *desktop0 = new eDesktop<TaskArguments>(tasks);
-    ePicture *pic = new ePicture(sozos, 53, 100, 151, 23);
+    ePicture *pic = new ePicture(sozos, 25, 100, 207, 38);
     // eBackground *bg0 = new eBackground(icon.pattern_1, 0, 0, 32, 32);
     
     form0->title = "Desktop";
