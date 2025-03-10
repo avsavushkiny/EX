@@ -38,7 +38,6 @@
 #define EX_H
 
 /* We let the compiler know that the u8g2 object is defined in another file */
-// extern U8G2_ST75256_JLX256160_F_4W_HW_SPI u8g2;
 extern const int8_t PIN_BACKLIGHT_LCD;
 extern int H_LCD, W_LCD;
 
@@ -913,8 +912,6 @@ private:
     uint8_t _FPS = 0; uint8_t _fpsCounter = 0; long int _fpsTime = millis();
     int image_width{}, image_height{};
 public:
-    /* Turn on the backlight of the LCD screen. 1 enabled, 0 disabled. */
-    bool controlBacklight(bool state);
     /* Initial display setting. Sets Contrast to 0, analog DC at 12, sets port 8 to 1 */
     void initializationSystem();
     /* We send the void-function to the display buffer for output. 
@@ -925,25 +922,12 @@ public:
     void render(void (*f1)(), void (*f2)());
     /* Clearing the display buffer. */
     void clear();
-    /* Data output in x, y coordinates. Size font 5, 6, 7, 8, 10, 12, 13.
-       lii-line spacing (10 by default),
-       chi-character spacing (6 by default).
-       Line break is supported - '\n' */
-    void print(int8_t sizeFont, String text, int x, int y, int8_t lii, int8_t chi);
     /* Data output in x, y coordinates. lii-line spacing (10 by default),
        chi-character spacing (6 by default).
        Line break is supported - '\n' */
     void print(String text, int x, int y, int8_t lii, int8_t chi);
-    /* Data output in x, y coordinates. 
-       Line break is supported - '\n' */
-    void print(String text, int x, int y);
-    /* Runs a void-function with text-string and output x-y-coordinates parameters.
-       The interval-interval controls the output. */
-    bool winkPrint(void (*f)(String, int, int), String text, int x, int y, /*delay*/ int interval);
     /* Wait display */
     bool waitDisplay();
-    /* Рассчет кадров/сек */
-    int calculateFPS();
 };
 
 class Timer
@@ -956,7 +940,6 @@ public:
     void timer(void (*f)(void), int interval);
     bool timer(int interval);
     void timer(int (*f)(void), int interval);
-    void stopwatch(void (*f)(void), int interval);
 };
 
 class Interface : Joystick
@@ -965,14 +948,6 @@ private:
     uint8_t xBorder{};
     uint8_t yBorder{};
 public:
-    /* Output of a message to the user. Define the text-text and duration-duration.
-       Line break is supported - '\n'. */
-    void message(String text, int duration);
-    void popUpMessage(String label, String text, uint tDelay);
-    void popUpMessage(String label1, String label2, String text, uint tDelay);
-    void popUpMessage(String label, String text);
-    bool dialogueMessage(String label, String text);
-    bool dialogueMessage(String label, String text, void (*f1)(), void (*f2)());
 };
 
 class Button : Joystick
@@ -980,11 +955,6 @@ class Button : Joystick
 private:
     int xCursor, yCursor;
 public:
-    /* The button starts the void-function, define the button text-text and output x-y-coordinates.
-       xCursor-yCursor-coordinates of interaction with the cursor. */
-    bool button(String text, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor);
-    /* Return boolean state */
-    bool button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor);
     bool button2(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor);
 };
 
@@ -993,24 +963,14 @@ class Shortcut : Joystick
 private:
 public:
     /* A shortcut on the desktop to launch the void-function.
-       Define an icon-image with a resolution of 32x32 pixels, x-y-coordinates for output,
-       xCursor-yCursor-coordinates of interaction with the cursor. */
-    bool shortcut(const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor);
-    /* A shortcut on the desktop to launch the void-function.
        Define an icon-image with a resolution of 32x32 pixels + name */
     bool shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor);
-    bool shortcutFrame(String name, uint8_t w, uint8_t h, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor);
-
 };
 
 class Label : Joystick
 {
 private:
 public:
-    /* ? */
-    bool label(String text, uint8_t x, uint8_t y, void (*f)(void), uint8_t lii, uint8_t chi, int xCursor, int yCursor);
-    /* 010225 */
-    void label(String text, void (*f)(void), uint8_t x, uint8_t y);
 };
 
 class TextBox
@@ -1020,11 +980,7 @@ public:
     /* Properties Text-box */
     enum objectLocation {left, middle, right};
     enum objectBoundary {noBorder, oneLine, twoLine, shadow, shadowNoFrame};
-    /**/
-    //String textObject;
-    /* Text-box */
-    void textBox(String str, objectLocation location, objectBoundary boundary, short charH, short charW, int x, int y);
-    void textBox(String str, objectBoundary boundary, int sizeH, int sizeW, short charH, short charW, int x, int y);
+
     void textBox(String str, int sizeH, int sizeW, short charH, short charW, int x, int y);
 };
 
@@ -1035,7 +991,6 @@ public:
     /* Cursor. If the stateCursor status is 1 - visible, if 0 - not visible.
        Determine the coordinates of the Cursor to interact with the selected Stick. */
     bool cursor(bool stateCursor, int xCursor, int yCursor);
-    bool cursor(bool stateCursor);
 };
 
 class PowerSave : Joystick
@@ -1044,76 +999,18 @@ private:
     /* If joystick pressed ot moved - 0, else - 1 */
    //bool isTouched();    
 public:
-    /* Powersave - light mode */
-    void sleepLight(bool state, uint timeUntil);
-    /* Powersave - deep mode */
-    void sleepDeep(bool state, uint timeUntil);
-    /* Powersave - double mode */
-    //void powerSaveDeepSleep();
 };
 
 class Melody
 {
 private:
-    int8_t BEAT = 120;
-
-    uint songMakeGame[7][2] = {{330,77}, {2637,256}, {415,791}, {523,23}, {494,860}, {1865,105}, {2459,128}};
-   
-    uint songBang1[2][2] = {{100, 100}, {100, 100}};
-    uint songBang2[2][2] = {{300, 100}, {300, 100}};
-    uint songBang3[2][2] = {{600, 100}, {600, 100}};
-    uint songBang4[2][2] = {{900, 100}, {900, 100}};
-    uint songBang5[2][2] = {{1200, 100}, {1200, 100}};
-
-    uint songTone1[1][2] = {100, 100};
-    uint songTone2[1][2] = {300, 100};
-    uint songTone3[1][2] = {600, 100};
-    uint songTone4[1][2] = {900, 100};
-    uint songTone5[1][2] = {1200, 100};
-
-    /*uint songOk[][2] = {};
-    uint songCancel[][2] = {};
-    uint songError[][2] = {};
-    uint songClick[][2] = {};*/
 public:
-    enum listMelody
-    {
-        None,     // 0
-        MakeGame, // 1
-        
-        Bang1,    // 2
-        Bang2,    // 3
-        Bang3,    // 4
-        Bang4,    // 5
-        Bang5,    // 6
-
-        Tone1,    // 7
-        Tone2,    // 8
-        Tone3,    // 9
-        Tone4,    // 10
-        Tone5,    // 11
-
-        Ok,       // 12
-        Cancel,   // 13
-        Error,    // 14
-        Click,    // 15
-    };
-
-    listMelody lM;
-
-    void songCore();
-    void song(listMelody num);
-
 };
 
 class Terminal
 {
 private:
 public:
-    /* System terminal */
-    //void terminal();
-    void terminal2(); //vector only
-    //void terminal(void(*f)());
 };
 
 #endif
