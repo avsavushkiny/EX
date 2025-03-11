@@ -1537,7 +1537,6 @@ void _graphicsTest3(int xG, int yG, int wG, int hG)
     // draw points
     for (int i = 0; i < numPoints; i++)
     {
-        // u8g2.drawPixel(points[i][0], points[i][1]);
         ggl.gray.drawPixel(points[i][0], points[i][1], ggl.gray.BLACK);
     }
 
@@ -1546,8 +1545,7 @@ void _graphicsTest3(int xG, int yG, int wG, int hG)
     {
         for (int j = i + 1; j < numPoints; j++)
         {
-            // u8g2.drawLine(points[i][0], points[i][1], points[j][0], points[j][1]);
-            ggl.gray.drawLine(points[i][0], points[i][1], points[j][0], points[j][1], ggl.gray.WHITE);
+            ggl.gray.drawLine(points[i][0], points[i][1], points[j][0], points[j][1], ggl.gray.BLACK);
         }
     }
 }
@@ -1558,7 +1556,7 @@ void _myGraphicsTest3()
 
     formGraphicsTest3->title = "Graphics test 3";
     formGraphicsTest3->eFormShowMode = FULLSCREEN;
-    formGraphicsTest3->eFormBackground = BLACK;
+    formGraphicsTest3->eFormBackground = TRANSPARENT;
     formGraphicsTest3->addElement(graphicsTest3);
 
     formsStack.push(formGraphicsTest3);
@@ -1660,15 +1658,14 @@ void _osHello()
 void _myForm1()
 { 
     exForm *form1 = new exForm();
-    eButton *button1 = new eButton("Test message", [](){
-        InstantMessage message0("Hello world,\nhello, hello, hello\nw o r l d!\0", 3000);
-        message0.show();
-    }, 5, 5);
 
-    form1->title = "Form 1";
+    eTextBox *textbox1 = new eTextBox("I've missed more than 9000 shots in my career. I've lost almost 300 games. 26 times, I've been trusted to take the game winning shot and missed. I've failed over and over and over again in my life. And that is why I succeed.", 
+        BorderStyle::noBorder, 210, 100, 0, 0
+    );
+
+    form1->title = "Form 1. Output text";
     form1->eFormShowMode = NORMAL;
-    form1->eFormBackground = WHITE;
-    form1->addElement(button1);
+    form1->addElement(textbox1);
 
 
     formsStack.push(form1);
@@ -1691,7 +1688,6 @@ void _myForm2()
     form2->addElement(Line2);
 
     form2->eFormShowMode = FULLSCREEN;
-    form2->eFormBackground = LIGHT_GRAY;
 
     formsStack.push(form2);
 }
@@ -1709,7 +1705,6 @@ void _myForm3()
 
     form3->title = "Form 3";
     form3->eFormShowMode = NORMAL;
-    form3->eFormBackground = DARK_GRAY;
 
     form3->addElement(text3);
     form3->addElement(buttons3);
@@ -1829,19 +1824,10 @@ void _settingsForm()
                                      { label1->setText((String)systems.VALUECONTRAST); });
 
     eLabel *label2 = new eLabel("display contrast", x + 61, y + 23);
-
-    // --> RAW data Stick0
-    /* ! нужно захватить эти переменные по ссылке, используя &. */
-    // String rawDataStick;
-    // eFunction *func2 = new eFunction([&rawDataStick](){
-    //     rawDataStick = "RAW data Stick: X: " + String(_joy.RAW_DATA_X0) + " Y: " + String(_joy.RAW_DATA_Y0);
-    // });
-    // eLabel *label3 = new eLabel(rawDataStick, x + 5, y + 45);
-    
+   
     // --> Title, show mode Form
     settingsForm->title = "Settings";
     settingsForm->eFormShowMode = NORMAL;
-    settingsForm->eFormBackground = LIGHT_GRAY;
 
     // --> Add elements Form
     settingsForm->addElement(checkLED);
