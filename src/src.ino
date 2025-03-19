@@ -8,11 +8,11 @@ TaskDispatcher dispatcher; Icon icons;
 
 struct Data
 {
-    short a, b; char t[20];
-    bool s; bool d;
+    short a, b; char t[20]; bool s; bool d;
 };
 
 Data dt = {10, 20, "hello", true, true};
+Data rxd;
 
 void userTest()
 {
@@ -23,14 +23,24 @@ void userTest()
     DATATX transmitter;
     transmitter.sendData(dt, 0);
 
-
     InstantMessage message("Data sent!", 2000); message.show();
     }, 5, 5);
+
+    eFunction *func1 = new eFunction([]()
+                                     {
+    DATARX receiver;
+    if (receiver.receive(rxd, 0))
+    {
+        InstantMessage message("Data receive!", 2000);
+        message.show();
+    }
+    });
 
     userForm->title = "User form";
     userForm->eFormShowMode = FULLSCREEN;
 
     userForm->addElement(button1);
+    userForm->addElement(func1);
 
     formsStack.push(userForm);
 }
