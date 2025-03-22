@@ -1,54 +1,54 @@
 #include "ex.h"
 #include "ex_xbm.h" 
-#include "rxtx.h" // Подключаем библиотеку для работы с UART
+#include "rxtx.h"
 
 Graphics gfx;
-Terminal trm;
 TaskDispatcher dispatcher; Icon icons;
 
-struct Data
+struct Air
 {
-    short a, b; char t[20]; bool s; bool d;
+    short time_0, time_1;
+    bool state_air;
+    char name_air[20];
 };
 
-Data dt = {10, 20, "hello", true, true};
-Data rxd;
+Air air_tx, air_rx;
+short t_0, t_1;
 
-void userTest()
+void airplane()
 {
-    exForm *userForm = new exForm();
+    exForm *form_airplane = new exForm();
 
-    eButton *button1 = new eButton("Test DataPort", [](){
+    eButton *btn0 = new eButton("-", [](){}, 5, 5);
+    eButton *btn1 = new eButton("+", [](){}, 41, 5);
 
-    DATATX transmitter;
-    transmitter.sendData(dt, 0);
+    eButton *btn2 = new eButton("-", [](){}, 5, 23);
+    eButton *btn3 = new eButton("+", [](){}, 41, 23);
+    
+    eButton *btn4 = new eButton("RUN", [](){}, 5, 41);
 
-    InstantMessage message("Data sent!", 2000); message.show();
-    }, 5, 5);
+    eLabel *label0 = new eLabel("000", 21, 7);
+    eLabel *label1 = new eLabel("111", 21, 25);
+    //eLabel *label2 = new eLabel();
+    //eLabel *label3 = new eLabel();
 
-    eFunction *func1 = new eFunction([]()
-                                     {
-    DATARX receiver;
-    if (receiver.receive(rxd, 0))
-    {
-        InstantMessage message("Data receive!", 2000);
-        message.show();
-    }
-    });
+    eTextBox *txtBox0 = new eTextBox("Test", BorderStyle::noBorder, 80, 50, 26, 39);
 
-    userForm->title = "User form";
-    userForm->eFormShowMode = FULLSCREEN;
+    form_airplane->addElement(btn0); form_airplane->addElement(btn1); form_airplane->addElement(btn2);
+    form_airplane->addElement(btn3); form_airplane->addElement(btn4);
+    form_airplane->addElement(label0); form_airplane->addElement(label1);
+    form_airplane->addElement(txtBox0);
 
-    userForm->addElement(button1);
-    userForm->addElement(func1);
-
-    formsStack.push(userForm);
+    form_airplane->eFormShowMode = NORMAL;
+    form_airplane->title = "Airplane v.1";
+    
+    formsStack.push(form_airplane);
 }
 
 void setup()
 {  
     gfx.initializationSystem();
-    dispatcher.addTask({"User test", userTest, icons.briefcase, DESKTOP, 0, false});
+    dispatcher.addTask({"airplane", airplane, icons.processor, DESKTOP, 0, false});
 }
 
 void loop()
