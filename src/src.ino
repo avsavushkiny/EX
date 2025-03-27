@@ -45,10 +45,38 @@ void airplane()
     formsStack.push(form_airplane);
 }
 
+struct RxTxData
+{
+    short a; short b;
+};
+
+RxTxData rtd;
+
+void readDataPort()
+{
+    exForm *form0 = new exForm();
+    form0->eFormShowMode = NORMAL;
+    form0->title = "Read Data port";
+
+    eFunction *func0 = new eFunction([](){
+        DATARX r;
+        if (r.receive(rtd, 0))
+        {
+            String text = "Done!\n" + (String)rtd.a + "\n" + (String)rtd.b;
+            InstantMessage mess0(text, 2000); mess0.show();
+        }
+    });
+
+    form0->addElement(func0);
+
+    formsStack.push(form0);
+}
+
 void setup()
 {  
     gfx.initializationSystem();
     dispatcher.addTask({"airplane", airplane, icons.processor, DESKTOP, 0, false});
+    dispatcher.addTask({"Read dataPort", readDataPort, icons.processor, DESKTOP, 0, false});
 }
 
 void loop()
