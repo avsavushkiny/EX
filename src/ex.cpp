@@ -5,15 +5,11 @@
 */
 
 /*
-  Contains function settings for working with the display.
+  These guys from Pikabu contributed to the development of this console
+  in the form of donations!
+  Thanks to them!
 
-  [!] Required u8g2 library
-  [!] bmp to xbmp image converter https://www.online-utility.org/image/convert/to/XBM
-                                  https://windows87.github.io/xbm-viewer-converter/
-  [!] midi to arduino tones converter https://arduinomidi.netlify.app/
-      ntp client                  https://github.com/arduino-libraries/NTPClient
-  [!] u8g2 library reference      https://github.com/olikraus/u8g2/wiki/u8g2reference
-
+  @catincoat, @Azcol, @fddh543
 */
 
 #include <iostream>
@@ -76,6 +72,7 @@ int H_LCD{160}, W_LCD{256};
 
 /* Global coordinates */
 int GLOBAL_X{0}, GLOBAL_Y{0};
+bool stateEasterEgg = false;
 
 /* Analog-to-digital converter resolution (Chip ESP32). */
 const int8_t RESOLUTION_ADC{12};
@@ -1607,10 +1604,15 @@ void _info()
     eTextBox *textBoxInfo = new eTextBox(text1 + text2 + text3 + text4, BorderStyle::noBorder, 256, 150, 0, 0);
     ePicture *pic1 = new ePicture(giga, 160, 100, giga_w, giga_h);
 
+    eFunction *func1 = new eFunction([](){
+        if (stateEasterEgg == true) text4 = "@catincoat, @Azcol, @fddh543";
+    });
+
     formInfoSystems->title = "Information";
     formInfoSystems->eFormShowMode = FULLSCREEN;
     formInfoSystems->addElement(textBoxInfo);
     formInfoSystems->addElement(pic1);
+    formInfoSystems->addElement(func1);
 
     formsStack.push(formInfoSystems);
 }
@@ -1624,6 +1626,10 @@ void _myOSstartupForm()
     eButton *buttonReboot = new eButton("Reboot", _rebootBoard, 71, 102);
     eButton *buttonInfo = new eButton("Info", _info, 112, 102);
 
+    eFunction *func = new eFunction([](){
+        if ((_joy.pressKeyEX() == true) && (_joy.pressKeyENTER() == true)) stateEasterEgg = true;
+    });
+
     formMyOSstartup->title = "OS startup";
     formMyOSstartup->eFormShowMode = NORMAL;
 
@@ -1632,6 +1638,7 @@ void _myOSstartupForm()
     formMyOSstartup->addElement(button);
     formMyOSstartup->addElement(buttonReboot);
     formMyOSstartup->addElement(buttonInfo);
+    formMyOSstartup->addElement(func);
 
     formsStack.push(formMyOSstartup);
 }
