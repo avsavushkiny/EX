@@ -14,7 +14,7 @@
 
 #include <iostream>
 #include <Arduino.h>
-#include <U8g2lib.h> 
+//#include <U8g2lib.h> 
 #include "ex.h"
 #include "ex_xbm.h"
 #include "ggl.h"
@@ -1604,7 +1604,9 @@ void _info()
     eTextBox *textBoxInfo = new eTextBox(text1 + text2 + text3 + text4, BorderStyle::noBorder, 256, 150, 0, 0);
     ePicture *pic1 = new ePicture(giga, 160, 100, giga_w, giga_h);
 
-    eFunction *func1 = new eFunction([](){
+    // text4 необходимо захватить в лямба-функцию, поэтому её помещаем в [] скобки
+    
+    eFunction *func1 = new eFunction([&text4, &stateEasterEgg](){
         if (stateEasterEgg == true) text4 = "@catincoat, @Azcol, @fddh543";
     });
 
