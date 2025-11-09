@@ -1,7 +1,11 @@
 #pragma once
+
 #include <vector>
 #include <string>
 #include <Arduino.h>
+
+// Предварительное объявление
+struct TaskArguments;
 
 // Глобальный вектор задач
 extern std::vector<TaskArguments> tasks;

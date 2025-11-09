@@ -1,4 +1,7 @@
+#pragma once
+
 #include "taskDispatcher.h"
+#include "ex.h"
 #include <algorithm>
 
 // Определение глобального вектора
@@ -64,4 +67,46 @@ bool TaskDispatcher::runTask(const String &taskName)
         }
     }
     return false;
+}
+
+void runExFormStack()
+{
+    // if (!formsStack.empty())
+    // {
+    //     exForm *currentForm = formsStack.top();
+
+    //     int result = currentForm->showForm();
+
+    //     /*
+    //     The form's "Close" button returns 1
+    //     */
+
+    //     if (result == 1)
+    //     {
+    //         formsStack.pop();
+    //         delete currentForm;
+
+    //         delay(250);
+    //     }
+    // }
+    // if (formsStack.empty()) _myOSstartupForm();
+}
+
+void runTasksCore()
+{
+    for (TaskArguments &t : tasks)
+    {
+        if (t.activ)
+        {
+            runExFormStack();
+            t.f();
+        }
+    }
+
+    // systems.executeAllSystemElements();
+}
+
+bool TaskDispatcher::terminal()
+{
+    _GRF.render(runTasksCore);
 }

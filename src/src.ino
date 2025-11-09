@@ -1,8 +1,11 @@
 #include "ex.h"
 
-void setup() {}
+void setup()
+{
+    initializationSystem();
+}
 
 void loop()
 {
-    
+    _TD.terminal();
 }

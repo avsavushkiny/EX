@@ -1,8 +1,9 @@
-#ifndef CONFIG_H
-#define CONFIG_H
-
 #pragma once
+
 #include <stdint.h>
+
+// Version
+const String VERSION_EX = "0.2.0";
 
 // LCD resolution
 const int H_LCD = 160;
@@ -23,5 +24,3 @@ const int8_t PIN_BUTTON_B = 13;
 const int8_t PIN_BACKLIGHT_LCD = 0;
 const int8_t PIN_BUZZER = 26;
 const int8_t PIN_BATTERY = 39;
-
-#endif
