@@ -36,35 +36,35 @@ bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
 //   return false;
 // }
 
-// /* displaying a shortcut to a task-function */
-// bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
-// {
-//   ggl.gray.bitmap(x, y, bitMap, 32, 32, ggl.gray.NOT_TRANSPARENT);
+/* displaying a shortcut to a task-function */
+bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
+{
+  _GGL.gray.bitmap(x, y, bitMap, 32, 32, _GGL.gray.NOT_TRANSPARENT);
 
-//   ggl.gray.bitmap(x, y + 21, sysIcon.shortcut0, 11, 11, ggl.gray.NOT_TRANSPARENT);
+  _GGL.gray.bitmap(x, y + 21, _SICON.shortcut0, 11, 11, _GGL.gray.NOT_TRANSPARENT);
 
 //   TextBox textBoxNameTask;
 
-//   if ((xCursor >= x && xCursor <= (x + 32)) && (yCursor >= y && yCursor <= (y + 32)))
-//   {
-//     ggl.gray.drawFrame(x, y, 32, 32, ggl.gray.BLACK);
+  if ((xCursor >= x && xCursor <= (x + 32)) && (yCursor >= y && yCursor <= (y + 32)))
+  {
+    _GGL.gray.drawFrame(x, y, 32, 32, _GGL.gray.BLACK);
 
-//     textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 24);
+    // textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 24);
     
-//     if (Joystick::pressKeyENTER() == true)
-//     {
-//       _gfx.waitDisplay();
-//       f();
-//       return true;
-//     }
-//   }
-//   else
-//   {
-//     textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 24);
-//   }
+    if (Joystick::pressKeyENTER() == true)
+    {
+      _GRF.waitDisplay();
+      f();
+      return true;
+    }
+  }
+  else
+  {
+    // textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 24);
+  }
 
-//   return false;
-// }
+  return false;
+}
 
 // /* [for Desktop name tasks] no Frame */
 // void TextBox::textBox(String str, int sizeH, int sizeW, short charH, short charW, int x, int y)

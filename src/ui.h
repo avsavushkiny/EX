@@ -2,9 +2,12 @@
 
 #include "icon.h"
 #include "ggl.h"
+#include "input.h"
+#include "graphics.h"
 
 extern GGL _GGL;
 extern SystemIcon _SICON;
+extern Graphics _GRF;
 
 class Cursor
 {
@@ -15,14 +18,14 @@ public:
     bool cursor(bool stateCursor, int xCursor, int yCursor);
 };
 
-// class Shortcut : Joystick
-// {
-// private:
-// public:
-//     /* A shortcut on the desktop to launch the void-function.
-//        Define an icon-image with a resolution of 32x32 pixels + name */
-//     bool shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor);
-// };
+class Shortcut : Joystick
+{
+private:
+public:
+    /* A shortcut on the desktop to launch the void-function.
+       Define an icon-image with a resolution of 32x32 pixels + name */
+    bool shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor);
+};
 
 // class Label : Joystick
 // {
