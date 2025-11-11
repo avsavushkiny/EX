@@ -27,19 +27,40 @@ public:
     bool shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor);
 };
 
-// class Label : Joystick
-// {
-// private:
-// public:
-// };
+class TextBox
+{
+private:
+public:
+    /* Properties Text-box */
+    enum objectLocation {left, middle, right};
+    enum objectBoundary {noBorder, oneLine, twoLine, shadow, shadowNoFrame};
 
-// class TextBox
-// {
-// private:
-// public:
-//     /* Properties Text-box */
-//     enum objectLocation {left, middle, right};
-//     enum objectBoundary {noBorder, oneLine, twoLine, shadow, shadowNoFrame};
+    void textBox(String str, int sizeH, int sizeW, short charH, short charW, int x, int y);
+};
 
-//     void textBox(String str, int sizeH, int sizeW, short charH, short charW, int x, int y);
-// };
+class Button : Joystick
+{
+private:
+    int xCursor, yCursor;
+public:
+    bool button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor);
+};
+
+class Label : Joystick
+{
+private:
+public:
+    // Необходимо добавить реализацию нативного Label
+};
+
+class Timer
+{
+protected:
+private:
+    unsigned long prevTime{};
+public:
+    /* Starting a void-function on a interval-timer. */
+    void timer(void (*f)(void), int interval);
+    bool timer(int interval);
+    void timer(int (*f)(void), int interval);
+};

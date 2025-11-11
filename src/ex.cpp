@@ -6,6 +6,7 @@ TaskDispatcher _TD;
 GGL _GGL;
 Icon _ICON;
 SystemIcon _SICON;
+Joystick _JOY;
 
 // Глобальные функции
 void initializationSystem()

@@ -11,31 +11,6 @@ bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
     else
         return false;
 }
-
-/* button return boolean state */
-// bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor)
-// {
-//   uint8_t sizeText = text.length(); short border{3}; short charW{5};
-
-//   if ((xCursor >= x && xCursor <= (x + (sizeText * charW) + border + border)) && (yCursor >= y && yCursor <= y + 13))
-//   {
-//     ggl.gray.drawFillFrame(x, y, (sizeText * charW) + border + border, 13, ggl.gray.BLACK, ggl.gray.BLACK);
-//     ggl.gray.writeLine(x + border, y - 1/* font H */ + border, text, 10, 1, ggl.gray.WHITE);
-
-//     if (Joystick::pressKeyENTER() == true)
-//     {
-//       return true;
-//     }
-//   }
-//   else
-//   {
-//     ggl.gray.drawFillFrame(x, y, (sizeText * charW) + border + border, 13, ggl.gray.BLACK, ggl.gray.WHITE);
-//     ggl.gray.writeLine(x + border, y - 1/* font H */ + border, text, 10, 1, ggl.gray.BLACK);
-//   }
-  
-//   return false;
-// }
-
 /* displaying a shortcut to a task-function */
 bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
 {
@@ -65,40 +40,93 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
 
   return false;
 }
-
-// /* [for Desktop name tasks] no Frame */
-// void TextBox::textBox(String str, int sizeH, int sizeW, short charH, short charW, int x, int y)
-// {
-//     short border{0}; short border2{0}; // size border
-//     int count{0}; int countChars{0}; int maxChar{0}; // for counting characters
-//     int line{1}; // there will always be at least one line of text in the text
-//     int numberOfCharacters{0}; // количество символов
-//     int ch{0}, ln{0}; int xx{x}, yy{y};  
+/* [for Desktop name tasks] no Frame */
+void TextBox::textBox(String str, int sizeH, int sizeW, short charH, short charW, int x, int y)
+{
+    short border{0}; short border2{0}; // size border
+    int count{0}; int countChars{0}; int maxChar{0}; // for counting characters
+    int line{1}; // there will always be at least one line of text in the text
+    int numberOfCharacters{0}; // количество символов
+    int ch{0}, ln{0}; int xx{x}, yy{y};  
     
-//     for (char c : str)
-//     {
-//         numberOfCharacters++;
-//     }
+    for (char c : str)
+    {
+        numberOfCharacters++;
+    }
 
-//     int numberOfCharactersLineFrame = (sizeW - border - border) / charW; // количество символов в строчке Фрейма
-//     int numberOfLines = numberOfCharacters / numberOfCharactersLineFrame; // количество строк
-//     int numberOfLinesFrame = (sizeH - border - border) / charH; // количество строчек в Фрейме
+    int numberOfCharactersLineFrame = (sizeW - border - border) / charW; // количество символов в строчке Фрейма
+    int numberOfLines = numberOfCharacters / numberOfCharactersLineFrame; // количество строк
+    int numberOfLinesFrame = (sizeH - border - border) / charH; // количество строчек в Фрейме
     
-//     for (char c : str)
-//     {
-//         ggl.gray.writeChar(xx + border, yy + charH + border, c, 10, 1, ggl.gray.BLACK);
+    for (char c : str)
+    {
+        _GGL.gray.writeChar(xx + border, yy + charH + border, c, 10, 1, _GGL.gray.BLACK);
         
-//         xx += charW;
-//         ch++;
+        xx += charW;
+        ch++;
 
-//         if (ch >= numberOfCharactersLineFrame)
-//         {
-//             yy += charH; ch = 0; xx = x; ln++;
-//         }
+        if (ch >= numberOfCharactersLineFrame)
+        {
+            yy += charH; ch = 0; xx = x; ln++;
+        }
 
-//         if (ln >= numberOfLinesFrame)
-//         {
-//             break;
-//         }
-//     }
-// }
+        if (ln >= numberOfLinesFrame)
+        {
+            break;
+        }
+    }
+}
+/* button return boolean state */
+bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor)
+{
+  uint8_t sizeText = text.length(); short border{3}; short charW{5};
+
+  if ((xCursor >= x && xCursor <= (x + (sizeText * charW) + border + border)) && (yCursor >= y && yCursor <= y + 13))
+  {
+    _GGL.gray.drawFillFrame(x, y, (sizeText * charW) + border + border, 13, _GGL.gray.BLACK, _GGL.gray.BLACK);
+    _GGL.gray.writeLine(x + border, y - 1/* font H */ + border, text, 10, 1, _GGL.gray.WHITE);
+
+    if (Joystick::pressKeyENTER() == true)
+    {
+      return true;
+    }
+  }
+  else
+  {
+    _GGL.gray.drawFillFrame(x, y, (sizeText * charW) + border + border, 13, _GGL.gray.BLACK, _GGL.gray.WHITE);
+    _GGL.gray.writeLine(x + border, y - 1/* font H */ + border, text, 10, 1, _GGL.gray.BLACK);
+  }
+  
+  return false;
+}
+/* starting a task-function with an interval */
+void Timer::timer(void (*f)(void), int interval)
+{
+    unsigned long currTime = millis();
+    if (currTime - prevTime >= interval)
+    {
+        prevTime = currTime;
+        f();
+    }
+}
+/* starting a task-function with an interval */
+void Timer::timer(int (*f)(void), int interval)
+{
+    unsigned long currTime = millis();
+    if (currTime - prevTime >= interval)
+    {
+        prevTime = currTime;
+        f();
+    }
+}
+/* return value */
+bool Timer::timer(int interval)
+{
+    unsigned long currTime = millis();
+    if (currTime - prevTime >= interval)
+    {
+        prevTime = currTime;
+        return 1;
+    }
+    return 0;
+}
