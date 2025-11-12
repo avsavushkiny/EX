@@ -99,6 +99,90 @@ bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t 
   
   return false;
 }
+/* Draw show function */
+void InstantMessage::show()
+{
+    short border{5}, border2{8}, charHeight{10}, charWidth{5};
+    int count{0}, x{128}, y{80}, maxChar{0}, line{1};
+
+    for (char c : m_text) // Считаем символы в каждой строке
+    {
+        if (c == '\n')
+        {
+            if (count > maxChar)
+                maxChar = count;
+            count = 0;
+            line++;
+        }
+        else
+        {
+            count++;
+        }
+    }
+
+    // Проверяем последнюю строку, если она не заканчивается на '\n'
+    if (count > maxChar)
+    {
+        maxChar = count;
+    }
+
+    if (maxChar == 0 || line == 0) {
+        return; // Не отображаем ничего, если нет символов или строк
+    }
+
+    int lineYoffset = (line / 2) * 8;
+      
+    //--> выводим границы текста
+    int numberOfPixels = maxChar * charWidth;               // Максимальное количество пикселей на основе количества символов в строке
+    int numberOfPixelsToOffset = (maxChar / 2) * charWidth; // Смещение для центрирования текста
+
+    //--> границы фрейма
+    int frameX = x - numberOfPixelsToOffset - border2;
+    int frameY = y - charHeight - border2 - lineYoffset; //+?
+    int frameWidth = border2 + border2 + numberOfPixels;
+    int frameHeight = border2 + border2 + (line * charHeight);
+    //<-- границы фрема
+
+    // Рисуем заполненную рамку
+    _GGL.gray.drawFillFrame(x - numberOfPixelsToOffset - border2,
+        y - border2 - lineYoffset, border2 + border2 + numberOfPixels, 
+        border2 + border2 + (line * charHeight), 
+        _GGL.gray.WHITE, 
+        _GGL.gray.WHITE
+    );
+    
+    // Выводим текст
+    _GRF.print(m_text, x - numberOfPixelsToOffset, y - lineYoffset, charHeight, charWidth);
+
+    // Рисуем внешнюю рамку
+    _GGL.gray.drawFrame(x - numberOfPixelsToOffset - border, 
+        y - border - lineYoffset, 
+        border + border + numberOfPixels, 
+        border + border + (line * charHeight), 
+        _GGL.gray.BLACK
+    );
+
+    // Тень
+    _GGL.gray.drawHLine(
+        x - numberOfPixelsToOffset - border + 3, // X: начало рамки
+        y - lineYoffset + border + (line * charHeight), // Y: нижняя граница рамки
+        border + numberOfPixels + border, // Длина: ширина рамки
+        _GGL.gray.DARK_GRAY, 3
+    );
+
+    _GGL.gray.drawVLine(
+        x - numberOfPixelsToOffset - border + (border + border + numberOfPixels), // X: начало рамки + ширина рамки + смещение
+        y - border - lineYoffset + 3, // Y: начало рамки
+        (line * charHeight) + border + border, // Высота: высота рамки
+        _GGL.gray.DARK_GRAY, 3
+    );
+
+    _GGL.gray.sendBuffer();  // <--
+
+    if (m_delay > 0) {
+        delay(m_delay);
+    }
+}
 /* starting a task-function with an interval */
 void Timer::timer(void (*f)(void), int interval)
 {

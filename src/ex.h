@@ -9,6 +9,9 @@
 #include "ui.h"
 #include "input.h"
 
+/* [!] Объекты в объявлении через extern 
+       не должны содержать инициализацию! */
+
 // Глобальные объекты (объявляем как extern)
 extern Graphics _GRF;
 extern TaskDispatcher _TD;

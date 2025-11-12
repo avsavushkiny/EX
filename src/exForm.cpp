@@ -1,5 +1,7 @@
 #include "exForm.h"
 
+std::stack<exForm *> formsStack;
+
 void eButton::show()
 {
     uint8_t sizeText = m_label.length();
