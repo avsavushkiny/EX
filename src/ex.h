@@ -8,6 +8,7 @@
 #include "icon.h"
 #include "ui.h"
 #include "input.h"
+#include "exForm.h"
 
 /* [!] Объекты в объявлении через extern 
        не должны содержать инициализацию! */
@@ -19,6 +20,7 @@ extern GGL _GGL;
 extern Icon _ICON;
 extern SystemIcon _SICON;
 extern Joystick _JOY;
+extern Cursor _CRS;
 
 // Глобальные функции
 extern void initializationSystem();
