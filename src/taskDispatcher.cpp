@@ -1,11 +1,15 @@
 #pragma once
 
+#include <algorithm>
 #include "taskDispatcher.h"
 #include "ex.h"
-#include <algorithm>
+#include "task.h"
+
 
 // Определение глобального вектора
 std::vector<TaskArguments> tasks;
+std::vector<TaskArguments> userTasks;
+
 
 int TaskDispatcher::sizeTasks()
 {
@@ -71,25 +75,25 @@ bool TaskDispatcher::runTask(const String &taskName)
 
 void runExFormStack()
 {
-    // if (!formsStack.empty())
-    // {
-    //     exForm *currentForm = formsStack.top();
+    if (!formsStack.empty())
+    {
+        exForm *currentForm = formsStack.top();
 
-    //     int result = currentForm->showForm();
+        int result = currentForm->showForm();
 
-    //     /*
-    //     The form's "Close" button returns 1
-    //     */
+        /*
+        The form's "Close" button returns 1
+        */
 
-    //     if (result == 1)
-    //     {
-    //         formsStack.pop();
-    //         delete currentForm;
+        if (result == 1)
+        {
+            formsStack.pop();
+            delete currentForm;
 
-    //         delay(250);
-    //     }
-    // }
-    // if (formsStack.empty()) _myOSstartupForm();
+            delay(250);
+        }
+    }
+    if (formsStack.empty()) _myOSstartupForm();
 }
 
 void runTasksCore()

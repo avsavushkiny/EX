@@ -24,3 +24,4 @@ extern Cursor _CRS;
 
 // Глобальные функции
 extern void initializationSystem();
+extern void nullFunction();

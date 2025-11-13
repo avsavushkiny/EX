@@ -9,6 +9,7 @@ struct TaskArguments;
 
 // Глобальный вектор задач
 extern std::vector<TaskArguments> tasks;
+extern std::vector<TaskArguments> userTasks;
 
 enum TaskType
 {
