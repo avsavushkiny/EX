@@ -4,6 +4,7 @@
 #include "taskDispatcher.h"
 #include "ex.h"
 #include "task.h"
+#include "systems.h"
 
 
 // Определение глобального вектора
@@ -107,7 +108,7 @@ void runTasksCore()
         }
     }
 
-    // systems.executeAllSystemElements();
+    _SYS.executeAllSystemElements();
 }
 
 bool TaskDispatcher::terminal()

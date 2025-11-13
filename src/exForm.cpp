@@ -240,40 +240,40 @@ void eBackground::show()
     }
 }
 /* desktop */
-template <typename T>
-void eDesktop<T>::show()
-{
-    uint8_t border{4};
-    uint8_t xx{border};
-    uint8_t yy{16};
+// template <typename T>
+// void eDesktop<T>::show()
+// {
+//     uint8_t border{4};
+//     uint8_t xx{border};
+//     uint8_t yy{16};
 
-    Shortcut _shortcutDesktop;
+//     Shortcut _shortcutDesktop;
 
-    uint8_t countTask{1};
+//     uint8_t countTask{1};
 
-    for (TaskArguments &t : data_)
-    {
-        if ((t.activ == false) && (t.bitMap != NULL) && (t.type == DESKTOP))
-        {
-            _shortcutDesktop.shortcut(t.name, t.bitMap, xx, yy, t.f, _JOY.posX0, _JOY.posY0);
+//     for (TaskArguments &t : data_)
+//     {
+//         if ((t.activ == false) && (t.bitMap != NULL) && (t.type == DESKTOP))
+//         {
+//             _shortcutDesktop.shortcut(t.name, t.bitMap, xx, yy, t.f, _JOY.posX0, _JOY.posY0);
 
-            countTask++;
+//             countTask++;
 
-            xx += (32 + border);
+//             xx += (32 + border);
 
-            if (countTask > 7)
-            {
-                xx = 4;
-                yy += (32 + border + 16);
-                countTask = 0;
-            }
-        }
-        else
-        {
-            // "There are no tasks to output\nto the desktop."
-        }
-    }
-}
+//             if (countTask > 7)
+//             {
+//                 xx = 4;
+//                 yy += (32 + border + 16);
+//                 countTask = 0;
+//             }
+//         }
+//         else
+//         {
+//             // "There are no tasks to output\nto the desktop."
+//         }
+//     }
+// }
 /* exForm show */
 int exForm::showForm()
 {
