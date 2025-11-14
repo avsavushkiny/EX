@@ -74,28 +74,13 @@ bool TaskDispatcher::runTask(const String &taskName)
     return false;
 }
 
-// void runExFormStack()
-// {
-//     if (!formsStack.empty())
-//     {
-//         exForm *currentForm = formsStack.top();
-
-//         int result = currentForm->showForm();
-
-//         /*
-//         The form's "Close" button returns 1
-//         */
-
-//         if (result == 1)
-//         {
-//             formsStack.pop();
-//             delete currentForm;
-
-//             delay(250);
-//         }
-//     }
-//     if (formsStack.empty()) _myOSstartupForm();
-// }
+void TaskDispatcher::addTasksForSystems()
+{
+    for (TaskArguments &t : system0)
+    {
+        tasks.push_back(t);
+    }
+}
 
 void runExFormStack()
 {
@@ -119,11 +104,14 @@ void runExFormStack()
     }
 }
 
+/* Core tasks with debug */
 void runTasksCore()
 {
+#ifndef DEBUG_TASK_DISPATCHER
     for (TaskArguments &t : tasks)
     {
-        if (t.activ && t.f) // проверяем статус и наличие указателя
+        // проверяем статус и наличие указателя
+        if (t.activ && t.f)
         {
             // runExFormStack();
             t.f();
@@ -131,56 +119,44 @@ void runTasksCore()
     }
 
     // _SYS.executeAllSystemElements();
+#else
+    for (size_t i = 0; i < tasks.size(); ++i)
+    {
+        auto &t = tasks[i];
+        if (t.activ)
+        {
+            Serial.printf("Task %d: %s, f=%p", i, t.name.c_str(), t.f);
+            if (t.f)
+            {
+                Serial.println(" -> calling...");
+                t.f();
+            }
+            else
+            {
+                Serial.println(" -> NULL function pointer! Skip.");
+            }
+        }
+    }
+#endif
 }
 
-/* Debug runTaskCore */
-// void runTasksCore()
-// {
-//     for (size_t i = 0; i < tasks.size(); ++i)
-//     {
-//         auto &t = tasks[i];
-//         if (t.activ)
-//         {
-//             Serial.printf("Task %d: %s, f=%p", i, t.name.c_str(), t.f);
-//             if (t.f)
-//             {
-//                 Serial.println(" -> calling...");
-//                 t.f(); // вот здесь падает
-//             }
-//             else
-//             {
-//                 Serial.println(" -> NULL function pointer! Skip.");
-//             }
-//         }
-//     }
-// }
-
-
+/* Terminal with debug */
 bool TaskDispatcher::terminal()
 {
+#ifndef DEBUG_TASK_DISPATCHER
     _GRF.render(runTasksCore);
     return true;
-}
-
-void TaskDispatcher::addTasksForSystems()
-{
-    for (TaskArguments &t : system0)
+#else
+    Serial.printf("Total tasks: %d\n", tasks.size());
+    for (size_t i = 0; i < tasks.size(); ++i)
     {
-        tasks.push_back(t);
+        Serial.printf("Task %d: %s, active: %d, func: %p\n",
+                      i, tasks[i].name.c_str(), tasks[i].activ, tasks[i].f);
     }
+
+    _GRF.render(runTasksCore);
+    return true;
+#endif
 }
 
 void nullFunction(){};
-
-/* Debug terminal */
-// bool TaskDispatcher::terminal()
-// {
-//     Serial.printf("Total tasks: %d\n", tasks.size());
-//     for (size_t i = 0; i < tasks.size(); ++i) {
-//         Serial.printf("Task %d: %s, active: %d, func: %p\n", 
-//                      i, tasks[i].name.c_str(), tasks[i].activ, tasks[i].f);
-//     }
-    
-//     _GRF.render(runTasksCore);
-//     return true;
-// }
