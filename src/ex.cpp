@@ -50,14 +50,14 @@ void initializationSystem()
        moving system-task to the vector
        determine the number of tasks in the vector
     */
-    // addTasksForSystems();
+    _TD.addTasksForSystems();
 
     // Clear buffer LCD display
     _GGL.gray.clearBuffer(); // -->
 
     // output text
-    String text = "SozvezdiyeOs + GGL";
-    _GGL.gray.writeLine(5, 123, VERSION_EX, 10, 1, _GGL.gray.BLACK);
+    String text = "SozvezdiyeOS ";
+    _GGL.gray.writeLine(5, 123, text + VERSION_EX, 10, 1, _GGL.gray.BLACK);
     
     // draw gray-line
     _GGL.gray.drawHLine(0, 135, 256, _GGL.gray.LIGHT_GRAY, 5);
@@ -69,6 +69,3 @@ void initializationSystem()
 
     delay(2500);
 }
-/* Null function */
-void nullFunction() {}
-

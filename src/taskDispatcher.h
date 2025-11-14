@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <functional>
 #include <string>
 #include <Arduino.h>
 
@@ -21,6 +22,7 @@ enum TaskType
 struct TaskArguments
 {
     String name;
+    // std::function<void()> f;
     void (*f)(void);
     const uint8_t *bitMap;
     TaskType type;
@@ -37,5 +39,6 @@ public:
     bool removeTask(const String &taskName);
     bool removeTaskIndex(const int index);
     bool runTask(const String &taskName);
+    void addTasksForSystems();
     bool terminal();
 };

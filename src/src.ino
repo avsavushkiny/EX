@@ -14,8 +14,9 @@
 #include "user_xbm.h"
 #include "rxtx.h"
 
-Graphics gfx;
-TaskDispatcher dispatcher; Icon icons;
+// Graphics gfx;
+// TaskDispatcher dispatcher;
+// Icon icons;
 
 struct Air
 {
@@ -87,11 +88,11 @@ void readDataPort()
 void setup()
 {  
     initializationSystem();
-    dispatcher.addTask({"airplane", airplane, icons.processor, DESKTOP, 0, false});
-    dispatcher.addTask({"Read dataPort", readDataPort, icons.processor, DESKTOP, 0, false});
+    // _TD.addTask({"airplane", airplane, _ICON.processor, DESKTOP, 0, false});
+    // _TD.addTask({"Read dataPort", readDataPort, _ICON.processor, DESKTOP, 0, false});
 }
 
 void loop()
 {  
-    dispatcher.terminal();
+    _TD.terminal();
 }

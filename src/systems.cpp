@@ -1,4 +1,4 @@
 #include "systems.h"
 
 // Устанавливаем значения системы
-Systems _SYS(false, 143, true, true, false, 1);
+Systems _SYS(false, 173, true, true, false, 1); //143

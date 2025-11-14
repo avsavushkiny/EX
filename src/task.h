@@ -399,17 +399,17 @@ void _systemCursor()
 /**/
 TaskArguments system0[] //0 systems, 1 desktop, 2 user
 {
-    {"desktop", _myDesktop, NULL, SYSTEM, 100, true},
-    {"oshello", _osHello, NULL, SYSTEM, 101, true},
-    {"form1", _myForm1, _ICON.window_abc, DESKTOP, 0, false},
-    {"form2", _myForm2, _ICON.window_shell_1, DESKTOP, 0, false},
-    {"form3", _myForm3, _ICON.window_shell_2, DESKTOP, 0, false},
-    {"graphics 1", _myGraphicsTest1, _ICON.window_graphics, DESKTOP, 0, false},
-    {"graphics 2", _myGraphicsTest2, _ICON.window_graphics, DESKTOP, 0, false},
-    {"dispatcher", _myDispatcher, _ICON.app_wizard, DESKTOP, 0, false},
-    {"graphics 3", _myGraphicsTest3, _ICON.window_graphics, DESKTOP, 0, false},
-    // {"settings", _settingsForm, icon.technical_group, DESKTOP, 0, false},
-    {"userdesktop", _userDesktop, _ICON.program_manager, DESKTOP, 0, false},
+    // {"desktop", &_myDesktop, NULL, SYSTEM, 100, true},
+    // {"oshello", &_osHello, NULL, SYSTEM, 101, true},
+    // {"form1", &_myForm1, _ICON.window_abc, DESKTOP, 0, false},
+    // {"form2", &_myForm2, _ICON.window_shell_1, DESKTOP, 0, false},
+    // {"form3", &_myForm3, _ICON.window_shell_2, DESKTOP, 0, false},
+    // {"graphics 1", &_myGraphicsTest1, _ICON.window_graphics, DESKTOP, 0, false},
+    // {"graphics 2", &_myGraphicsTest2, _ICON.window_graphics, DESKTOP, 0, false},
+    // {"dispatcher", &_myDispatcher, _ICON.app_wizard, DESKTOP, 0, false},
+    // {"graphics 3", &_myGraphicsTest3, _ICON.window_graphics, DESKTOP, 0, false},
+    // // {"settings", _settingsForm, icon.technical_group, DESKTOP, 0, false},
+    // {"userdesktop", &_userDesktop, _ICON.program_manager, DESKTOP, 0, false},
     // [!] Last task
-    {"cursor", _systemCursor, NULL, SYSTEM, 0, true}
+    {"cursor", &_systemCursor, NULL, SYSTEM, 0, true}
 };
