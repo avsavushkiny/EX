@@ -1,100 +1,78 @@
-// #include "ex.h"
-
-// void setup()
-// {
-//     initializationSystem();
-// }
-
-// void loop()
-// {
-//     _TD.terminal();
-// }
-
 #include "ex.h"
-#include "user_xbm.h"
-#include "rxtx.h"
 
-// #define DEBUG_TASK_DISPATCHER
-
-// Graphics gfx;
-// TaskDispatcher dispatcher;
-// Icon icons;
-
-struct Air
+// === Функция задачи: показ формы с текстом ===
+void showHelloForm()
 {
-    short time_0, time_1;
-    bool state_air;
-    char name_air[20];
-};
-
-Air air_tx, air_rx;
-short t_0, t_1;
-
-void airplane()
-{
-    exForm *form_airplane = new exForm();
-
-    eButton *btn0 = new eButton("-", [](){}, 5, 5);
-    eButton *btn1 = new eButton("+", [](){}, 41, 5);
-
-    eButton *btn2 = new eButton("-", [](){}, 5, 23);
-    eButton *btn3 = new eButton("+", [](){}, 41, 23);
-    
-    eButton *btn4 = new eButton("RUN", [](){}, 5, 41);
-
-    eLabel *label0 = new eLabel("000", 21, 7);
-    eLabel *label1 = new eLabel("111", 21, 25);
-    //eLabel *label2 = new eLabel();
-    //eLabel *label3 = new eLabel();
-
-    eTextBox *txtBox0 = new eTextBox("Test", BorderStyle::noBorder, 80, 50, 26, 39);
-
-    form_airplane->addElement(btn0); form_airplane->addElement(btn1); form_airplane->addElement(btn2);
-    form_airplane->addElement(btn3); form_airplane->addElement(btn4);
-    form_airplane->addElement(label0); form_airplane->addElement(label1);
-    form_airplane->addElement(txtBox0);
-
-    form_airplane->eFormShowMode = NORMAL;
-    form_airplane->title = "Airplane v.1";
-    
-    formsStack.push(form_airplane);
-}
-
-struct RxTxData
-{
-    short a; short b;
-};
-
-RxTxData rtd;
-
-void readDataPort()
-{
-    exForm *form0 = new exForm();
-    form0->eFormShowMode = NORMAL;
-    form0->title = "Read Data port";
-
-    eFunction *func0 = new eFunction([](){
-        DATARX r;
-        if (r.receive(rtd, 0))
+    // Проверка: не открыта ли уже эта форма?
+    if (!formsStack.empty())
+    {
+        exForm *top = formsStack.top();
+        if (top->title == "Hello")
         {
-            String text = "Done!\n" + (String)rtd.a + "\n" + (String)rtd.b;
-            InstantMessage mess0(text, 2000); mess0.show();
+            return; // уже открыта
         }
-    });
+    }
 
-    form0->addElement(func0);
+    // Создаём новую форму
+    exForm *form = new exForm();
+    form->title = "Hello";
+    form->eFormShowMode = NORMAL;           // оконный режим
+    form->eFormBackground = LIGHT_GRAY;     // светлый фон
 
-    formsStack.push(form0);
+    // === Добавляем элементы ===
+
+    // Заголовок
+    form->addElement(new eLabel("Добро пожаловать!", 10, 20));
+
+    // Подзаголовок
+    form->addElement(new eLabel("Это первая форма", 10, 40));
+
+    // Длинный текст
+    form->addElement(new eLabel("Система готова.\n"
+                                "Нажмите 'Close' \n"
+                                "для выхода.", 10, 60));
+
+    // Кнопка "Закрыть"
+    // form->addElement(new eButton("Close", []()
+    // {
+    //     formsStack.pop();   // убираем из стека
+    //     delete form;        // удаляем из памяти
+    // }, 10, 110));
+
+    // Добавляем форму в стек
+    formsStack.push(form);
 }
+
 
 void setup()
-{  
+{
     initializationSystem();
-    _TD.addTask({"airplane", airplane, _ICON.processor, DESKTOP, 0, false});
-    _TD.addTask({"Read dataPort", readDataPort, _ICON.processor, DESKTOP, 0, false});
+    Serial.begin(115200);
+
+    // === Инициализация диспетчера задач ===
+    _TD.init();
+
+    // === Создаём задачу ===
+    TaskArguments helloTask = {
+        "HelloForm",          // имя
+        showHelloForm,        // функция
+        _ICON.app_wizard,              // bitmap (нет)
+        USER,                 // тип
+        100,                  // индекс
+        true                  // активна
+    };
+
+    // Добавляем задачу
+    _TD.addTask(helloTask);
+
+    // Запускаем диспетчер (в отдельной FreeRTOS-задаче)
+    // _TD.terminal();
+
+    // === Запускаем форму сразу ===
+    // _TD.runTask("HelloForm");
 }
 
 void loop()
-{  
+{
     _TD.terminal();
 }

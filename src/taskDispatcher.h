@@ -1,9 +1,10 @@
 #pragma once
 
 #include <vector>
-#include <functional>
-#include <string>
 #include <Arduino.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/semphr.h>
 
 // Предварительное объявление
 struct TaskArguments;
@@ -11,6 +12,7 @@ struct TaskArguments;
 // Глобальный вектор задач
 extern std::vector<TaskArguments> tasks;
 extern std::vector<TaskArguments> userTasks;
+extern SemaphoreHandle_t taskMutex;
 
 enum TaskType
 {
@@ -22,7 +24,6 @@ enum TaskType
 struct TaskArguments
 {
     String name;
-    // std::function<void()> f;
     void (*f)(void);
     const uint8_t *bitMap;
     TaskType type;
@@ -33,6 +34,7 @@ struct TaskArguments
 class TaskDispatcher
 {
 public:
+    static void init();                      // инициализация мьютекса
     int sizeTasks();
     void addTask(const TaskArguments &task);
     bool removeTaskVector(const String &taskName);
@@ -40,5 +42,5 @@ public:
     bool removeTaskIndex(const int index);
     bool runTask(const String &taskName);
     void addTasksForSystems();
-    bool terminal();
+    bool terminal(); // запускает FreeRTOS-задачу
 };

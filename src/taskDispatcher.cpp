@@ -1,87 +1,145 @@
-#pragma once
-
-#include <algorithm>
+#include <Arduino.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include "taskDispatcher.h"
 #include "ex.h"
 #include "task.h"
 #include "systems.h"
 
-
-// Определение глобального вектора
+// --- Глобальные переменные ---
 std::vector<TaskArguments> tasks;
 std::vector<TaskArguments> userTasks;
 
+// --- Мьютекс для синхронизации доступа к вектору задач ---
+SemaphoreHandle_t taskMutex = NULL;
 
+void nullFunction(){}
+
+// --- Инициализация мьютекса ---
+void TaskDispatcher::init()
+{
+    if (taskMutex == NULL)
+    {
+        taskMutex = xSemaphoreCreateMutex();
+    }
+}
+
+// --- Потокобезопасный размер ---
 int TaskDispatcher::sizeTasks()
 {
-    return tasks.size();
+    if (xSemaphoreTake(taskMutex, portMAX_DELAY) == pdTRUE)
+    {
+        int size = tasks.size();
+        xSemaphoreGive(taskMutex);
+        return size;
+    }
+    return 0;
 }
 
+// --- Потокобезопасное добавление ---
 void TaskDispatcher::addTask(const TaskArguments &task)
 {
-    tasks.push_back(task);
+    if (xSemaphoreTake(taskMutex, portMAX_DELAY) == pdTRUE)
+    {
+        tasks.push_back(task);
+        xSemaphoreGive(taskMutex);
+    }
 }
 
+// --- Удаление из вектора по имени (полное удаление) ---
 bool TaskDispatcher::removeTaskVector(const String &taskName)
 {
-    auto it = std::find_if(tasks.begin(), tasks.end(),
-                           [&taskName](const TaskArguments &t)
-                           { return t.name == taskName; });
-    if (it != tasks.end())
+    if (xSemaphoreTake(taskMutex, portMAX_DELAY) == pdTRUE)
     {
-        tasks.erase(it);
-        return true;
+        auto it = std::find_if(tasks.begin(), tasks.end(),
+                               [&taskName](const TaskArguments &t)
+                               { return t.name == taskName; });
+        if (it != tasks.end())
+        {
+            tasks.erase(it);
+            xSemaphoreGive(taskMutex);
+            return true;
+        }
+        xSemaphoreGive(taskMutex);
+        return false;
     }
     return false;
 }
 
+// --- Деактивация задачи по имени (не удаляя из вектора) ---
 bool TaskDispatcher::removeTask(const String &taskName)
 {
-    for (auto &t : tasks)
+    if (xSemaphoreTake(taskMutex, portMAX_DELAY) == pdTRUE)
     {
-        if (t.activ && t.name == taskName)
+        for (auto &t : tasks)
         {
-            t.activ = false;
-            return true;
+            if (t.activ && t.name == taskName)
+            {
+                t.activ = false;
+                xSemaphoreGive(taskMutex);
+                return true;
+            }
         }
+        xSemaphoreGive(taskMutex);
+        return false;
     }
     return false;
 }
 
+// --- Деактивация по индексу ---
 bool TaskDispatcher::removeTaskIndex(const int index)
 {
-    for (auto &t : tasks)
+    if (xSemaphoreTake(taskMutex, portMAX_DELAY) == pdTRUE)
     {
-        if (t.activ && t.index == index)
+        for (auto &t : tasks)
         {
-            t.activ = false;
-            return true;
+            if (t.activ && t.index == index)
+            {
+                t.activ = false;
+                xSemaphoreGive(taskMutex);
+                return true;
+            }
         }
+        xSemaphoreGive(taskMutex);
+        return false;
     }
     return false;
 }
 
+// --- Активация задачи ---
 bool TaskDispatcher::runTask(const String &taskName)
 {
-    for (auto &t : tasks)
+    if (xSemaphoreTake(taskMutex, portMAX_DELAY) == pdTRUE)
     {
-        if (!t.activ && t.name == taskName)
+        for (auto &t : tasks)
         {
-            t.activ = true;
-            return true;
+            if (!t.activ && t.name == taskName)
+            {
+                t.activ = true;
+                xSemaphoreGive(taskMutex);
+                return true;
+            }
         }
+        xSemaphoreGive(taskMutex);
+        return false;
     }
     return false;
 }
 
+// --- Добавление системных задач ---
 void TaskDispatcher::addTasksForSystems()
 {
-    for (TaskArguments &t : system0)
+    if (xSemaphoreTake(taskMutex, portMAX_DELAY) == pdTRUE)
     {
-        tasks.push_back(t);
+        for (TaskArguments &t : system0)
+        {
+            tasks.push_back(t);
+        }
+        xSemaphoreGive(taskMutex);
     }
 }
 
+// --- Управление стеком форм ---
 void runExFormStack()
 {
     if (!formsStack.empty())
@@ -104,59 +162,68 @@ void runExFormStack()
     }
 }
 
-/* Core tasks with debug */
-void runTasksCore()
+// --- Основной цикл выполнения задач (вызывается из задачи FreeRTOS) ---
+void runTasksCore(void *pvParameters)
 {
-#ifndef DEBUG_TASK_DISPATCHER
-    for (TaskArguments &t : tasks)
+    while (1)
     {
-        // проверяем статус и наличие указателя
-        if (t.activ && t.f)
+        if (xSemaphoreTake(taskMutex, 10) == pdTRUE)
         {
-            runExFormStack();
-            t.f();
+#ifdef DEBUG_TASK_DISPATCHER
+            Serial.printf("[TaskCore] Running %d tasks...\n", tasks.size());
+#endif
+
+            for (auto &t : tasks)
+            {
+                if (t.activ && t.f)
+                {
+#ifdef DEBUG_TASK_DISPATCHER
+                    Serial.printf("[Task] Executing: %s\n", t.name.c_str());
+#endif
+                    t.f();
+                }
+            }
+
+            xSemaphoreGive(taskMutex);
         }
 
-        // _SYS.executeAllSystemElements();
+        // Короткая задержка, чтобы не грузить ядро
+        vTaskDelay(pdMS_TO_TICKS(10));
     }
-#else
-    for (size_t i = 0; i < tasks.size(); ++i)
-    {
-        auto &t = tasks[i];
-        if (t.activ)
-        {
-            Serial.printf("Task %d: %s, f=%p", i, t.name.c_str(), t.f);
-            if (t.f)
-            {
-                Serial.println(" -> calling...");
-                t.f();
-            }
-            else
-            {
-                Serial.println(" -> NULL function pointer! Skip.");
-            }
-        }
-    }
-#endif
 }
 
-/* Terminal with debug */
+// --- Запуск задачи FreeRTOS на ESP32 ---
 bool TaskDispatcher::terminal()
 {
-#ifndef DEBUG_TASK_DISPATCHER
-    _GRF.render(runTasksCore);
-    return true;
+    init(); // Инициализация мьютекса
+
+    // Запускаем `runTasksCore` как отдельную задачу FreeRTOS
+    // На ESP32 можно указать ядро, например: xTaskCreatePinnedToCore
+#ifdef ESP32
+    xTaskCreatePinnedToCore(
+        runTasksCore,      // функция
+        "TaskCore",        // имя
+        8192,              // стек
+        nullptr,           // параметры
+        1,                 // приоритет
+        nullptr,           // handle
+        0                  // ядро 0
+    );
 #else
-    Serial.printf("Total tasks: %d\n", tasks.size());
-    for (size_t i = 0; i < tasks.size(); ++i)
-    {
-        Serial.printf("Task %d: %s, active: %d, func: %p\n",
-                      i, tasks[i].name.c_str(), tasks[i].activ, tasks[i].f);
-    }
-
-    _GRF.render(runTasksCore);
-    return true;
+    xTaskCreate(
+        runTasksCore,
+        "TaskCore",
+        4096,
+        nullptr,
+        1,
+        nullptr
+    );
 #endif
-}
 
-void nullFunction(){};
+    // Основной цикл продолжает работать (например, отрисовка GUI)
+    _GRF.render([]()
+                { /* Пустой — задачи выполняются в отдельном потоке */
+                });
+
+    return true;
+}
