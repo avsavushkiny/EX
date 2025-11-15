@@ -220,7 +220,6 @@ void _myForm1()
     form1->eFormShowMode = NORMAL;
     form1->addElement(textbox1);
 
-
     formsStack.push(form1);
 }
 /* Form. Test 2 */
