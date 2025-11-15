@@ -111,13 +111,13 @@ void runTasksCore()
     for (TaskArguments &t : tasks)
     {
         // проверяем статус и наличие указателя
-        if (t.activ)
+        if (t.activ && t.f)
         {
             runExFormStack();
             t.f();
         }
 
-        _SYS.executeAllSystemElements();
+        // _SYS.executeAllSystemElements();
     }
 #else
     for (size_t i = 0; i < tasks.size(); ++i)

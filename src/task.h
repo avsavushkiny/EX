@@ -411,5 +411,5 @@ TaskArguments system0[] //0 systems, 1 desktop, 2 user
     // // {"settings", _settingsForm, icon.technical_group, DESKTOP, 0, false},
     // {"userdesktop", &_userDesktop, _ICON.program_manager, DESKTOP, 0, false},
     // [!] Last task
-    // {"cursor", &_systemCursor, NULL, SYSTEM, 0, true}
+    {"cursor", &_systemCursor, NULL, SYSTEM, 0, true}
 };
