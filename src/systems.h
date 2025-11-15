@@ -14,7 +14,7 @@ public:
             powerSave.setSystem(this);
         }
 
-    // Методы для управления подсветкой
+    // Методы для управления lcd
     bool STATEBACKLIGHT;
     void setBacklight(bool newState)
     {
@@ -39,17 +39,17 @@ public:
     // Методы для выполнения задач всех подсистем
     void executeAllSystemElements()
     {
-        backlight.execute();
-        displayContrast.execute();
-        powerSave.execute();
+        // backlight.execute();
+        // displayContrast.execute();
+        // powerSave.execute();
         cursor.execute();
-        dataPort.execute();
+        // dataPort.execute();
     }
 
 private:
-    eBacklight backlight;             // Управление подсветкой
-    eDisplayContrast displayContrast; // Установка контрастности дисплея
-    ePowerSave powerSave;             // Управление режимами энергосбережения
-    eCursor cursor;                   // Управление курсором
-    eDataPort dataPort;               // Управление портом данных
+    eBacklight backlight{true};             // Управление подсветкой
+    eDisplayContrast displayContrast{143};  // Установка контрастности дисплея
+    ePowerSave powerSave{true};             // Управление режимами энергосбережения
+    eCursor cursor{true};                   // Управление курсором
+    eDataPort dataPort{true, 0};            // Управление портом данных
 };

@@ -1,6 +1,7 @@
 #include "eSystems.h"
 #include "systems.h"
 
+
 /* eBacklight */
 void eBacklight::execute()
 {
@@ -77,10 +78,11 @@ void ePowerSave::execute()
 }
 
 /* eCursor */
-void eCursor::execute()
-{
-
-}
+// void eCursor::execute()
+// {
+//     _JOY.updatePositionXY(20);
+//     _CRS.cursor(true, _JOY.posX0, _JOY.posY0);
+// }
 /* eDataPort */
 void eDataPort::execute()
 {

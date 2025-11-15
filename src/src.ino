@@ -14,6 +14,8 @@
 #include "user_xbm.h"
 #include "rxtx.h"
 
+// #define DEBUG_TASK_DISPATCHER
+
 // Graphics gfx;
 // TaskDispatcher dispatcher;
 // Icon icons;
@@ -88,8 +90,8 @@ void readDataPort()
 void setup()
 {  
     initializationSystem();
-    // _TD.addTask({"airplane", airplane, _ICON.processor, DESKTOP, 0, false});
-    // _TD.addTask({"Read dataPort", readDataPort, _ICON.processor, DESKTOP, 0, false});
+    _TD.addTask({"airplane", airplane, _ICON.processor, DESKTOP, 0, false});
+    _TD.addTask({"Read dataPort", readDataPort, _ICON.processor, DESKTOP, 0, false});
 }
 
 void loop()

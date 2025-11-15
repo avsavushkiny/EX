@@ -63,7 +63,7 @@ public:
     }
 
 private:
-    int m_valueContrast;
+    int m_valueContrast = 143;
 };
 /* Управление режимами энергосбережения*/
 class ePowerSave : public eSystemElement
@@ -88,7 +88,11 @@ class eCursor : public eSystemElement
 public:
     eCursor(bool stateCursor) : m_stateCursor(stateCursor) {}
 
-    void execute() override;
+    void execute() override
+    {
+        _JOY.updatePositionXY(20);
+        _CRS.cursor(true, _JOY.posX0, _JOY.posY0);
+    }
 
 private:
     bool m_stateCursor;
