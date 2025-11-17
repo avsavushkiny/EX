@@ -56,8 +56,7 @@ void initializationSystem()
     _GGL.gray.clearBuffer(); // -->
 
     // output text
-    String text = "SozvezdiyeOS ";
-    _GGL.gray.writeLine(5, 123, text + VERSION_EX, 10, 1, _GGL.gray.BLACK);
+    _GGL.gray.writeLine(5, 123, _NAME_OS + " " + _VERSION_CORE, 10, 1, _GGL.gray.BLACK);
     
     // draw gray-line
     _GGL.gray.drawHLine(0, 135, 256, _GGL.gray.LIGHT_GRAY, 5);

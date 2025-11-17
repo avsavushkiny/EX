@@ -7,6 +7,7 @@
 extern GGL _GGL;
 extern TaskDispatcher _TD;
 extern Cursor _CRS;
+extern void runExFormStack();
 
 /* Form's */
 /* Form. Graphics test #1 */
@@ -419,7 +420,7 @@ TaskArguments createTask(String name, void (*f)(void), const uint8_t *bitMap,
 /* Tasklist */
 TaskArguments system0[] 
 {
-    createTask("desktop", &_myDesktop, NULL, SYSTEM, 100, true, PRIORITY_CRITICAL, false, 1),
+    createTask("desktop", &_myDesktop, NULL, SYSTEM, 100, true, PRIORITY_NORMAL, false, 1),
     // createTask("oshello", &_osHello, NULL, SYSTEM, 101, true, PRIORITY_NORMAL),
     createTask("form1", &_myForm1, _ICON.window_abc, DESKTOP, 0, false, PRIORITY_NORMAL),
     createTask("form2", &_myForm2, _ICON.window_shell_1, DESKTOP, 0, false, PRIORITY_NORMAL),
@@ -431,7 +432,8 @@ TaskArguments system0[]
     // // createTask("settings", _settingsForm, icon.technical_group, DESKTOP, 0, false, PRIORITY_NORMAL),
     // createTask("userdesktop", &_userDesktop, _ICON.program_manager, DESKTOP, 0, false, PRIORITY_NORMAL),
     // [!] Last task - курсор должен иметь высокий приоритет для плавного отклика
-    createTask("cursor", &_systemCursor, NULL, SYSTEM, 0, true, PRIORITY_CRITICAL, false, 1)
+    createTask("stackform", &runExFormStack, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 1),
+    createTask("cursor", &_systemCursor, NULL, SYSTEM, 0, true, PRIORITY_LOW, false, 1)
 };
 
 /*

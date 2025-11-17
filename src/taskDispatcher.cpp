@@ -164,7 +164,7 @@ void runTasksCore()
 {
 #ifndef DEBUG_TASK_DISPATCHER
     _TD.tick(); // Используем новый тиковый диспетчер
-    runExFormStack();
+    // runExFormStack();
 #else
     Serial.printf("Total tasks: %d\n", tasks.size());
     for (size_t i = 0; i < tasks.size(); ++i)
