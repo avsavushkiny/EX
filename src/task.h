@@ -395,20 +395,52 @@ void _systemCursor()
     // }
 }
 
-/**/
-TaskArguments system0[] //0 systems, 1 desktop, 2 user
+// Вспомогательная функция для создания задач с параметрами по умолчанию
+TaskArguments createTask(String name, void (*f)(void), const uint8_t *bitMap, 
+                        TaskType type, int index, bool activ, 
+                        TaskPriority priority = PRIORITY_NORMAL, 
+                        bool oneShot = false, unsigned long interval = 1)
 {
-    {"desktop", &_myDesktop, NULL, SYSTEM, 100, true},
-    // {"oshello", &_osHello, NULL, SYSTEM, 101, true},
-    {"form1", &_myForm1, _ICON.window_abc, DESKTOP, 0, false},
-    {"form2", &_myForm2, _ICON.window_shell_1, DESKTOP, 0, false},
-    {"form3", &_myForm3, _ICON.window_shell_2, DESKTOP, 0, false},
-    {"graphics 1", &_myGraphicsTest1, _ICON.window_graphics, DESKTOP, 0, false},
-    {"graphics 2", &_myGraphicsTest2, _ICON.window_graphics, DESKTOP, 0, false},
-    // {"dispatcher", &_myDispatcher, _ICON.app_wizard, DESKTOP, 0, false},
-    // {"graphics 3", &_myGraphicsTest3, _ICON.window_graphics, DESKTOP, 0, false},
-    // // {"settings", _settingsForm, icon.technical_group, DESKTOP, 0, false},
-    // {"userdesktop", &_userDesktop, _ICON.program_manager, DESKTOP, 0, false},
-    // [!] Last task
-    {"cursor", &_systemCursor, NULL, SYSTEM, 0, true}
+    TaskArguments task;
+    task.name = name;
+    task.f = f;
+    task.bitMap = bitMap;
+    task.type = type;
+    task.index = index;
+    task.activ = activ;
+    task.priority = priority;
+    task.oneShot = oneShot;
+    task.interval = interval;
+    task.lastRunTime = 0;
+    task.nextRunTime = 0;
+    return task;
+}
+
+/* Tasklist */
+TaskArguments system0[] 
+{
+    createTask("desktop", &_myDesktop, NULL, SYSTEM, 100, true, PRIORITY_CRITICAL, false, 1),
+    // createTask("oshello", &_osHello, NULL, SYSTEM, 101, true, PRIORITY_NORMAL),
+    createTask("form1", &_myForm1, _ICON.window_abc, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("form2", &_myForm2, _ICON.window_shell_1, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("form3", &_myForm3, _ICON.window_shell_2, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("graphics 1", &_myGraphicsTest1, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("graphics 2", &_myGraphicsTest2, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
+    // createTask("dispatcher", &_myDispatcher, _ICON.app_wizard, DESKTOP, 0, false, PRIORITY_NORMAL),
+    // createTask("graphics 3", &_myGraphicsTest3, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
+    // // createTask("settings", _settingsForm, icon.technical_group, DESKTOP, 0, false, PRIORITY_NORMAL),
+    // createTask("userdesktop", &_userDesktop, _ICON.program_manager, DESKTOP, 0, false, PRIORITY_NORMAL),
+    // [!] Last task - курсор должен иметь высокий приоритет для плавного отклика
+    createTask("cursor", &_systemCursor, NULL, SYSTEM, 0, true, PRIORITY_CRITICAL, false, 1)
 };
+
+/*
+Одноразовая задача:
+createTask("init", &initFunction, NULL, SYSTEM, 0, true, PRIORITY_HIGH, true)
+
+Периодическая задача с интервалом:
+createTask("sensor", &readSensor, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 10) // выполняется каждые 10 тиков
+
+Критическая задача:
+createTask("emergency", &emergencyHandler, NULL, SYSTEM, 0, true, PRIORITY_CRITICAL, false, 1)
+*/

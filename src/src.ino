@@ -19,7 +19,7 @@ void form_test()
 void setup()
 {  
     initializationSystem();
-    _TD.addTask({"airplane", &form_test, _ICON.processor, DESKTOP, 0, false});
+    // _TD.addTask({"airplane", &form_test, _ICON.processor, DESKTOP, 0, false});
 }
 
 void loop()

@@ -82,6 +82,61 @@ void TaskDispatcher::addTasksForSystems()
     }
 }
 
+void TaskDispatcher::tick()
+{
+    systemTicks++;
+    
+    // Сортируем задачи по приоритету (критические задачи выполняются первыми)
+    std::vector<TaskArguments*> sortedTasks;
+    for (auto &task : tasks)
+    {
+        if (task.activ && task.f)
+        {
+            sortedTasks.push_back(&task);
+        }
+    }
+    
+    // Сортировка по приоритету (от высокого к низкому)
+    std::sort(sortedTasks.begin(), sortedTasks.end(), 
+              [](const TaskArguments* a, const TaskArguments* b) {
+                  return a->priority > b->priority;
+              });
+    
+    // Выполняем задачи в порядке приоритета
+    for (auto taskPtr : sortedTasks)
+    {
+        auto &task = *taskPtr;
+        
+        // Проверяем, нужно ли выполнять задачу в этом тике
+        if (systemTicks >= task.nextRunTime)
+        {
+            // Выполняем задачу
+            if (task.f)
+            {
+                task.f();
+            }
+            
+            task.lastRunTime = systemTicks;
+            
+            // Обновляем время следующего выполнения
+            if (task.interval > 0)
+            {
+                task.nextRunTime = systemTicks + task.interval;
+            }
+            else
+            {
+                task.nextRunTime = systemTicks + 1; // Минимальный интервал
+            }
+            
+            // Если задача одноразовая, деактивируем её
+            if (task.oneShot)
+            {
+                task.activ = false;
+            }
+        }
+    }
+}
+
 void runExFormStack()
 {
     if (!formsStack.empty())
@@ -108,35 +163,18 @@ void runExFormStack()
 void runTasksCore()
 {
 #ifndef DEBUG_TASK_DISPATCHER
-    for (TaskArguments &t : tasks)
-    {
-        // проверяем статус и наличие указателя
-        if (t.activ && t.f)
-        {
-            runExFormStack();
-            t.f();
-        }
-
-        // _SYS.executeAllSystemElements();
-    }
+    _TD.tick(); // Используем новый тиковый диспетчер
+    runExFormStack();
 #else
+    Serial.printf("Total tasks: %d\n", tasks.size());
     for (size_t i = 0; i < tasks.size(); ++i)
     {
-        auto &t = tasks[i];
-        if (t.activ)
-        {
-            Serial.printf("Task %d: %s, f=%p", i, t.name.c_str(), t.f);
-            if (t.f)
-            {
-                Serial.println(" -> calling...");
-                t.f();
-            }
-            else
-            {
-                Serial.println(" -> NULL function pointer! Skip.");
-            }
-        }
+        Serial.printf("Task %d: %s, active: %d, priority: %d, oneShot: %d, interval: %lu\n",
+                      i, tasks[i].name.c_str(), tasks[i].activ, 
+                      tasks[i].priority, tasks[i].oneShot, tasks[i].interval);
     }
+
+    _TD.tick(); // Используем новый тиковый диспетчер
 #endif
 }
 
