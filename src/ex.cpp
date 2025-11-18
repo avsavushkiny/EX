@@ -41,6 +41,7 @@ void initializationSystem()
     pinMode(PIN_BATTERY,      INPUT);
 
     /* Contrast & run system element */
+    _GGL.gray.setContrast(250);
     // systems.setDisplayContrast(240);
     // systems.executeAllSystemElements();
     

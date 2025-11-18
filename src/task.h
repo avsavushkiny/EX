@@ -121,7 +121,7 @@ void _myDesktop()
     form0->addElement(desktop0);
 
     formsStack.push(form0);
-    _TD.removeTaskIndex(100);
+    // _TD.removeTaskIndex(100);
 }
 /* Form. User Desktop */
 void _userDesktop()
@@ -420,7 +420,8 @@ TaskArguments createTask(String name, void (*f)(void), const uint8_t *bitMap,
 /* Tasklist */
 TaskArguments system0[] 
 {
-    createTask("desktop", &_myDesktop, NULL, SYSTEM, 100, true, PRIORITY_NORMAL, false, 1),
+    //        (название, функция, bitmap, тип, индекс, статус, ПРИОРИТЕТ, oneshot, тик)
+    createTask("desktop", &_myDesktop, NULL, SYSTEM, 100, true, PRIORITY_NORMAL, true, 1),
     // createTask("oshello", &_osHello, NULL, SYSTEM, 101, true, PRIORITY_NORMAL),
     createTask("form1", &_myForm1, _ICON.window_abc, DESKTOP, 0, false, PRIORITY_NORMAL),
     createTask("form2", &_myForm2, _ICON.window_shell_1, DESKTOP, 0, false, PRIORITY_NORMAL),
