@@ -9,6 +9,8 @@ extern TaskDispatcher _TD;
 extern Cursor _CRS;
 extern void runExFormStack();
 
+short _LOAD_CPU{};
+
 /* Form's */
 /* Form. Graphics test #1 */
 void _graphicsTest1(int xG, int yG, int wG, int hG)
@@ -386,6 +388,8 @@ void _systemCursor()
     _JOY.updatePositionXY(20);
     _CRS.cursor(true, _JOY.posX0, _JOY.posY0);
 
+    _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0 + 10, (String)_LOAD_CPU, 10, 1, _GGL.gray.BLACK);
+
     // if ((_JOY.pressKeyEX() == true) && (_JOY.pressKeyENTER() == true))
     // {
     //     // Debug. Print coordinate
@@ -396,6 +400,13 @@ void _systemCursor()
     // }
 }
 
+/* CPU load */
+void monitorTask()
+{
+    _LOAD_CPU = _TD.getCPULoad();
+}
+
+/**/
 // Вспомогательная функция для создания задач с параметрами по умолчанию
 TaskArguments createTask(String name, void (*f)(void), const uint8_t *bitMap, 
                         TaskType type, int index, bool activ, 
@@ -432,8 +443,10 @@ TaskArguments system0[]
     // createTask("graphics 3", &_myGraphicsTest3, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
     // // createTask("settings", _settingsForm, icon.technical_group, DESKTOP, 0, false, PRIORITY_NORMAL),
     // createTask("userdesktop", &_userDesktop, _ICON.program_manager, DESKTOP, 0, false, PRIORITY_NORMAL),
-    // [!] Last task - курсор должен иметь высокий приоритет для плавного отклика
     createTask("stackform", &runExFormStack, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 1),
+    // Добавление задачи мониторинга
+    createTask("monitor", &monitorTask, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 100),
+    // Cursor
     createTask("cursor", &_systemCursor, NULL, SYSTEM, 0, true, PRIORITY_LOW, false, 1)
 };
 

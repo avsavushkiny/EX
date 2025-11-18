@@ -4,6 +4,7 @@
 #include <functional>
 #include <string>
 #include <Arduino.h>
+#include <map>
 
 // Предварительное объявление
 struct TaskArguments;
@@ -54,7 +55,27 @@ public:
     void addTasksForSystems();
     bool terminal();
     void tick();  // Основной тик диспетчера задач
+
+    // Метод для расчета загрузки процессора
+    int getCPULoad();
+    // Метод для сбора статистики выполнения задач
+    void updateTaskStatistics(const String& taskName, unsigned long executionTime);  
     
 private:
     unsigned long systemTicks = 0;  // Счетчик тиков системы
+
+    // Для статистики
+    unsigned long totalExecutionTime = 0;    // Общее время выполнения за период
+    unsigned long lastMeasurementTime = 0;   // Время последнего измерения
+    unsigned long measurementWindow = 1000;  // Окно измерения в миллисекундах
+    
+    // Структура для статистики по задачам
+    struct TaskStats
+    {
+        unsigned long totalExecutionTime;
+        unsigned long callCount;
+        unsigned long lastExecutionTime;
+    };
+    
+    std::map<String, TaskStats> taskStatistics;
 };

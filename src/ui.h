@@ -79,3 +79,12 @@ public:
     bool timer(int interval);
     void timer(int (*f)(void), int interval);
 };
+
+// class Toolbar : Joystick
+// {
+// public:
+//     Toolbar() {}
+
+//     int8_t show();
+// private:
+// }
