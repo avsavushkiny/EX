@@ -144,73 +144,75 @@ void TaskDispatcher::addTasksForSystems()
 // Со статистикой
 void TaskDispatcher::tick()
 {
+    unsigned long currentRealTime = millis();
+    
+    // Рассчитываем реальное время с последнего тика (для интервалов)
+    unsigned long realTimeDelta = currentRealTime - lastTickRealTime;
+    lastTickRealTime = currentRealTime;
+    
     systemTicks++;
     
-    // Сортируем задачи по приоритету (критические задачи выполняются первыми)
+    // Сортируем и выполняем задачи...
     std::vector<TaskArguments*> sortedTasks;
-    for (auto &task : tasks)
-    {
-        if (task.activ && task.f)
-        {
+    for (auto &task : tasks) {
+        if (task.activ && task.f) {
             sortedTasks.push_back(&task);
         }
     }
     
-    // Сортировка по приоритету (от высокого к низкому)
     std::sort(sortedTasks.begin(), sortedTasks.end(), 
               [](const TaskArguments* a, const TaskArguments* b) {
                   return a->priority > b->priority;
               });
     
-    // Выполняем задачи в порядке приоритета
-    for (auto taskPtr : sortedTasks)
-    {
+    // Выполняем задачи
+    for (auto taskPtr : sortedTasks) {
         auto &task = *taskPtr;
         
-        // Проверяем, нужно ли выполнять задачу в этом тике
-        if (systemTicks >= task.nextRunTime)
-        {
-            // Измеряем время выполнения задачи
+        // ⚠️ ИЗМЕНЕНИЕ: Используем реальное время для планирования
+        bool shouldRun = false;
+        if (task.interval > 0) {
+            // Для периодических задач используем реальное время
+            shouldRun = (currentRealTime >= task.nextRunTime);
+        } else {
+            // Для задач без интервала используем системные тики
+            shouldRun = (systemTicks >= task.nextRunTime);
+        }
+        
+        if (shouldRun) {
             unsigned long startTime = micros();
             currentTaskName = task.name;
             
             // Выполняем задачу
-            if (task.f)
-            {
+            if (task.f) {
                 task.f();
             }
             
-            // Рассчитываем время выполнения
             unsigned long endTime = micros();
             unsigned long executionTime = endTime - startTime;
             
-            // Обновляем статистику (переводим в миллисекунды)
-            updateTaskStatistics(task.name, executionTime / 1000);
+            // Обновляем статистику
+            updateTaskStatistics(task.name, executionTime);
             
             task.lastRunTime = systemTicks;
             
-            // Обновляем время следующего выполнения
-            if (task.interval > 0)
-            {
-                task.nextRunTime = systemTicks + task.interval;
-            }
-            else
-            {
-                task.nextRunTime = systemTicks + 1; // Минимальный интервал
+            // Планируем следующее выполнение в реальном времени
+            if (task.interval > 0) {
+                task.nextRunTime = currentRealTime + task.interval;
+            } else {
+                task.nextRunTime = systemTicks + 1;
             }
             
-            // Если задача одноразовая, деактивируем её
-            if (task.oneShot)
-            {
+            if (task.oneShot) {
                 task.activ = false;
             }
         }
     }
     
-    // Периодически сбрасываем статистику (каждые 10 секунд)
-    if (systemTicks % 10000 == 0) {
+    // Сброс статистики каждую секунду
+    if (currentRealTime - measurementStartTime >= MEASUREMENT_WINDOW) {
+        measurementStartTime = currentRealTime;
         totalExecutionTime = 0;
-        taskStatistics.clear();
     }
 }
 
@@ -293,31 +295,24 @@ void TaskDispatcher::updateTaskStatistics(const String& taskName, unsigned long 
 int TaskDispatcher::getCPULoad()
 {
     unsigned long currentTime = millis();
-    unsigned long windowSize = currentTime - lastMeasurementTime;
+    unsigned long windowSize = currentTime - measurementStartTime;
     
-    // Если окно измерения слишком маленькое, возвращаем предыдущее значение
     if (windowSize < 100) {
-        // Возвращаем последнее рассчитанное значение или 0
+        // Слишком маленькое окно измерения
         static int lastLoad = 0;
         return lastLoad;
     }
     
-    // Рассчитываем загрузку CPU в процентах
-    // totalExecutionTime - суммарное время выполнения задач за период
-    // windowSize - длительность периода измерения
-    
+    // Рассчитываем загрузку CPU
+    // totalExecutionTime в микросекундах, windowSize в миллисекундах
+    unsigned long maxPossibleTime = windowSize * 1000; // Максимальное время в мкс
     int cpuLoad = 0;
-    if (windowSize > 0) {
-        cpuLoad = (totalExecutionTime * 100) / windowSize;
-        
-        // Ограничиваем значение 0-100%
-        if (cpuLoad > 100) cpuLoad = 100;
-        if (cpuLoad < 0) cpuLoad = 0;
-    }
     
-    // Сбрасываем статистику для нового периода измерения
-    totalExecutionTime = 0;
-    lastMeasurementTime = currentTime;
+    if (maxPossibleTime > 0) {
+        cpuLoad = (totalExecutionTime * 100) / maxPossibleTime;
+        cpuLoad = (cpuLoad > 100) ? 100 : cpuLoad;
+        cpuLoad = (cpuLoad < 0) ? 0 : cpuLoad;
+    }
     
     return cpuLoad;
 }

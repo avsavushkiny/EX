@@ -62,13 +62,14 @@ public:
     void updateTaskStatistics(const String& taskName, unsigned long executionTime);  
     
 private:
-    unsigned long systemTicks = 0;  // Счетчик тиков системы
-
-    // Для статистики
-    unsigned long totalExecutionTime = 0;    // Общее время выполнения за период
-    unsigned long lastMeasurementTime = 0;   // Время последнего измерения
-    unsigned long measurementWindow = 1000;  // Окно измерения в миллисекундах
+    unsigned long systemTicks = 0;
+    unsigned long lastTickRealTime = 0;    // Реальное время последнего тика
+    unsigned long totalExecutionTime = 0;  // Время выполнения задач за период (мкс)
+    unsigned long measurementStartTime = 0;// Начало периода измерения (мс)
     
+    // Константы для расчета
+    static const unsigned long MEASUREMENT_WINDOW = 1000; // Окно измерения 1 секунда
+
     // Структура для статистики по задачам
     struct TaskStats
     {

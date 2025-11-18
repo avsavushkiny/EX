@@ -388,6 +388,7 @@ void _systemCursor()
     _JOY.updatePositionXY(20);
     _CRS.cursor(true, _JOY.posX0, _JOY.posY0);
 
+    // Выводим загрузку CPU
     _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0 + 10, (String)_LOAD_CPU, 10, 1, _GGL.gray.BLACK);
 
     // if ((_JOY.pressKeyEX() == true) && (_JOY.pressKeyENTER() == true))
