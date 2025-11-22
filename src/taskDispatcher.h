@@ -59,7 +59,12 @@ public:
     // Метод для расчета загрузки процессора
     int getCPULoad();
     // Метод для сбора статистики выполнения задач
-    void updateTaskStatistics(const String& taskName, unsigned long executionTime);  
+    void updateTaskStatistics(const String& taskName, unsigned long executionTime);
+    
+    // Hardware timer
+    static void initHardwareTimer();
+    static void stopHardwareTimer();
+    static unsigned long getHardwareTicks();
     
 private:
     unsigned long systemTicks = 0;

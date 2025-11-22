@@ -13,59 +13,66 @@ Cursor _CRS;
 /* Initialization systems */
 void initializationSystem()
 {
-    /* 
-       GPIO release from sleep
+   /*
+      GPIO release from sleep
 
-       esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, 1);
-       esp_sleep_enable_ext0_wakeup(GPIO_NUM_39, 1); 
-       esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, 1); // Stick 0
-       esp_sleep_enable_ext0_wakeup(GPIO_NUM_14, 1); // EX button
-    */
-    esp_sleep_enable_ext0_wakeup(GPIO_NUM_32, 1);    // Stick 0
-    
-    /* setting the operating system state */
-    Serial.begin(9600);
-    _GGL.gray.begin();
+      esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, 1);
+      esp_sleep_enable_ext0_wakeup(GPIO_NUM_39, 1);
+      esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, 1); // Stick 0
+      esp_sleep_enable_ext0_wakeup(GPIO_NUM_14, 1); // EX button
+   */
+   esp_sleep_enable_ext0_wakeup(GPIO_NUM_32, 1); // Stick 0
 
-    /* setting the resolution of the analog-to-digital converter */
-    analogReadResolution(RESOLUTION_ADC);
+   /* setting the operating system state */
+   Serial.begin(9600);
+   _GGL.gray.begin();
 
-    /* determine the backlight-port mode */
-    pinMode(PIN_BACKLIGHT_LCD, OUTPUT);;
-    
-    /* determine the operating modes of digital ports */
-    pinMode(PIN_BUTTON_ENTER, INPUT);
-    pinMode(PIN_BUTTON_EX,    INPUT);
-    pinMode(PIN_BUTTON_A,     INPUT);
-    pinMode(PIN_BUTTON_B,     INPUT);
-    pinMode(PIN_BATTERY,      INPUT);
+   /* setting the resolution of the analog-to-digital converter */
+   analogReadResolution(RESOLUTION_ADC);
 
-    /* Contrast & run system element */
-    _GGL.gray.setContrast(250);
-    // systems.setDisplayContrast(240);
-    // systems.executeAllSystemElements();
-    
+   /* determine the backlight-port mode */
+   pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
 
-    /*
-       Vector
-       moving system-task to the vector
-       determine the number of tasks in the vector
-    */
-    _TD.addTasksForSystems();
+   /* determine the operating modes of digital ports */
+   pinMode(PIN_BUTTON_ENTER, INPUT);
+   pinMode(PIN_BUTTON_EX, INPUT);
+   pinMode(PIN_BUTTON_A, INPUT);
+   pinMode(PIN_BUTTON_B, INPUT);
+   pinMode(PIN_BATTERY, INPUT);
 
-    // Clear buffer LCD display
-    _GGL.gray.clearBuffer(); // -->
+   /* Contrast & run system element */
+   _GGL.gray.setContrast(250);
+   // systems.setDisplayContrast(240);
+   // systems.executeAllSystemElements();
 
-    // output text
-    _GGL.gray.writeLine(5, 123, _NAME_OS + " " + _VERSION_CORE, 10, 1, _GGL.gray.BLACK);
-    
-    // draw gray-line
-    _GGL.gray.drawHLine(0, 135, 256, _GGL.gray.LIGHT_GRAY, 5);
-    _GGL.gray.drawHLine(0, 140, 256, _GGL.gray.DARK_GRAY, 5);
-    _GGL.gray.drawHLine(0, 145, 256, _GGL.gray.BLACK, 5);
+   /* Инициализация аппоратного таймера */
+   _TD.initHardwareTimer();
+   //  При завершении работы
+   //  _TD.stopHardwareTimer();
 
-    // send data to display
-    _GGL.gray.sendBuffer(); // <--
+   /* Energy saving */
+   // EnergySaving::begin();
 
-    delay(2500);
+   /*
+      Vector
+      moving system-task to the vector
+      determine the number of tasks in the vector
+   */
+   _TD.addTasksForSystems();
+
+   // Clear buffer LCD display
+   _GGL.gray.clearBuffer(); // -->
+
+   // output text
+   _GGL.gray.writeLine(5, 123, _NAME_OS + " " + _VERSION_CORE, 10, 1, _GGL.gray.BLACK);
+
+   // draw gray-line
+   _GGL.gray.drawHLine(0, 135, 256, _GGL.gray.LIGHT_GRAY, 5);
+   _GGL.gray.drawHLine(0, 140, 256, _GGL.gray.DARK_GRAY, 5);
+   _GGL.gray.drawHLine(0, 145, 256, _GGL.gray.BLACK, 5);
+
+   // send data to display
+   _GGL.gray.sendBuffer(); // <--
+
+   delay(2500);
 }

@@ -30,6 +30,8 @@ public:
     int posX0{}, posY0{}, posX1{}, posY1{};
 
     int indexX0{}, indexY0{}, indexX1{}, indexY1{};
+
+    int lastPosX0 = 0, lastPosY0 = 0;
     
     /* Generates 1 or 0 if the button is pressed or not. */
     bool pressKeyENTER();

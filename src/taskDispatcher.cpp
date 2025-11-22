@@ -5,7 +5,7 @@
 #include "ex.h"
 #include "task.h"
 #include "systems.h"
-
+#include "esp_timer.h"
 
 // Определение глобального вектора
 std::vector<TaskArguments> tasks;
@@ -14,6 +14,56 @@ std::vector<TaskArguments> userTasks;
 static unsigned long taskStartTime = 0;
 static String currentTaskName = "";
 
+// Добавляем переменные для аппаратного таймера
+static esp_timer_handle_t system_timer = nullptr;
+static volatile unsigned long hardwareTicks = 0;
+static const unsigned long TIMER_INTERVAL_US = 1000; // 1ms в микросекундах
+
+// Callback для аппаратного таймера
+void system_timer_callback(void* arg) {
+    hardwareTicks++;
+}
+
+// Инициализация аппаратного таймера
+void TaskDispatcher::initHardwareTimer() {
+    if (system_timer != nullptr) {
+        return; // Таймер уже инициализирован
+    }
+    
+    esp_timer_create_args_t timer_args = {
+        .callback = &system_timer_callback,
+        .arg = nullptr,
+        .dispatch_method = ESP_TIMER_TASK,
+        .name = "system_tick"
+    };
+    
+    esp_err_t ret = esp_timer_create(&timer_args, &system_timer);
+    if (ret != ESP_OK) {
+        // Обработка ошибки создания таймера
+        return;
+    }
+    
+    ret = esp_timer_start_periodic(system_timer, TIMER_INTERVAL_US);
+    if (ret != ESP_OK) {
+        // Обработка ошибки запуска таймера
+        esp_timer_delete(system_timer);
+        system_timer = nullptr;
+    }
+}
+
+// Остановка аппаратного таймера
+void TaskDispatcher::stopHardwareTimer() {
+    if (system_timer != nullptr) {
+        esp_timer_stop(system_timer);
+        esp_timer_delete(system_timer);
+        system_timer = nullptr;
+    }
+}
+
+// Получение тиков из аппаратного таймера
+unsigned long TaskDispatcher::getHardwareTicks() {
+    return hardwareTicks;
+}
 
 int TaskDispatcher::sizeTasks()
 {
@@ -78,79 +128,24 @@ bool TaskDispatcher::runTask(const String &taskName)
 }
 
 void TaskDispatcher::addTasksForSystems()
-{
+{  
     for (TaskArguments &t : system0)
     {
         tasks.push_back(t);
     }
 }
 
-// Без статистики
-// void TaskDispatcher::tick()
-// {
-//     systemTicks++;
-    
-//     // Сортируем задачи по приоритету (критические задачи выполняются первыми)
-//     std::vector<TaskArguments*> sortedTasks;
-//     for (auto &task : tasks)
-//     {
-//         if (task.activ && task.f)
-//         {
-//             sortedTasks.push_back(&task);
-//         }
-//     }
-    
-//     // Сортировка по приоритету (от высокого к низкому)
-//     std::sort(sortedTasks.begin(), sortedTasks.end(), 
-//               [](const TaskArguments* a, const TaskArguments* b) {
-//                   return a->priority > b->priority;
-//               });
-    
-//     // Выполняем задачи в порядке приоритета
-//     for (auto taskPtr : sortedTasks)
-//     {
-//         auto &task = *taskPtr;
-        
-//         // Проверяем, нужно ли выполнять задачу в этом тике
-//         if (systemTicks >= task.nextRunTime)
-//         {
-//             // Выполняем задачу
-//             if (task.f)
-//             {
-//                 task.f();
-//             }
-            
-//             task.lastRunTime = systemTicks;
-            
-//             // Обновляем время следующего выполнения
-//             if (task.interval > 0)
-//             {
-//                 task.nextRunTime = systemTicks + task.interval;
-//             }
-//             else
-//             {
-//                 task.nextRunTime = systemTicks + 1; // Минимальный интервал
-//             }
-            
-//             // Если задача одноразовая, деактивируем её
-//             if (task.oneShot)
-//             {
-//                 task.activ = false;
-//             }
-//         }
-//     }
-// }
-
-// Со статистикой
+// Модифицированная версия tick() с использованием аппаратного таймера
 void TaskDispatcher::tick()
 {
     unsigned long currentRealTime = millis();
     
+    // Используем аппаратные тики вместо systemTicks++
+    unsigned long currentHardwareTicks = getHardwareTicks();
+    
     // Рассчитываем реальное время с последнего тика (для интервалов)
     unsigned long realTimeDelta = currentRealTime - lastTickRealTime;
     lastTickRealTime = currentRealTime;
-    
-    systemTicks++;
     
     // Сортируем и выполняем задачи...
     std::vector<TaskArguments*> sortedTasks;
@@ -169,14 +164,14 @@ void TaskDispatcher::tick()
     for (auto taskPtr : sortedTasks) {
         auto &task = *taskPtr;
         
-        // ⚠️ ИЗМЕНЕНИЕ: Используем реальное время для планирования
+        // Используем аппаратные тики для планирования
         bool shouldRun = false;
         if (task.interval > 0) {
             // Для периодических задач используем реальное время
             shouldRun = (currentRealTime >= task.nextRunTime);
         } else {
-            // Для задач без интервала используем системные тики
-            shouldRun = (systemTicks >= task.nextRunTime);
+            // Для задач без интервала используем аппаратные тики
+            shouldRun = (currentHardwareTicks >= task.nextRunTime);
         }
         
         if (shouldRun) {
@@ -194,13 +189,13 @@ void TaskDispatcher::tick()
             // Обновляем статистику
             updateTaskStatistics(task.name, executionTime);
             
-            task.lastRunTime = systemTicks;
+            task.lastRunTime = currentHardwareTicks;
             
-            // Планируем следующее выполнение в реальном времени
+            // Планируем следующее выполнение
             if (task.interval > 0) {
                 task.nextRunTime = currentRealTime + task.interval;
             } else {
-                task.nextRunTime = systemTicks + 1;
+                task.nextRunTime = currentHardwareTicks + 1;
             }
             
             if (task.oneShot) {
@@ -242,10 +237,11 @@ void runExFormStack()
 void runTasksCore()
 {
 #ifndef DEBUG_TASK_DISPATCHER
-    _TD.tick(); // Используем новый тиковый диспетчер
+    _TD.tick(); // Используем новый тиковый диспетчер с аппаратным таймером
     // runExFormStack();
 #else
     Serial.printf("Total tasks: %d\n", tasks.size());
+    Serial.printf("Hardware ticks: %lu\n", _TD.getHardwareTicks());
     for (size_t i = 0; i < tasks.size(); ++i)
     {
         Serial.printf("Task %d: %s, active: %d, priority: %d, oneShot: %d, interval: %lu\n",
@@ -253,7 +249,7 @@ void runTasksCore()
                       tasks[i].priority, tasks[i].oneShot, tasks[i].interval);
     }
 
-    _TD.tick(); // Используем новый тиковый диспетчер
+    _TD.tick(); // Используем новый тиковый диспетчер с аппаратным таймером
 #endif
 }
 
@@ -265,6 +261,7 @@ bool TaskDispatcher::terminal()
     return true;
 #else
     Serial.printf("Total tasks: %d\n", tasks.size());
+    Serial.printf("Hardware ticks: %lu\n", getHardwareTicks());
     for (size_t i = 0; i < tasks.size(); ++i)
     {
         Serial.printf("Task %d: %s, active: %d, func: %p\n",
@@ -291,6 +288,7 @@ void TaskDispatcher::updateTaskStatistics(const String& taskName, unsigned long 
     
     totalExecutionTime += executionTime;
 }
+
 // Статистика
 int TaskDispatcher::getCPULoad()
 {

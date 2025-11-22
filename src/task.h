@@ -336,6 +336,7 @@ void _myDispatcher()
     formsStack.push(formMyDispatcher);
 }
 
+/* Form. Settings */
 // settings Form
 // void _settingsForm()
 // {
@@ -444,6 +445,8 @@ TaskArguments system0[]
     // createTask("graphics 3", &_myGraphicsTest3, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
     // // createTask("settings", _settingsForm, icon.technical_group, DESKTOP, 0, false, PRIORITY_NORMAL),
     // createTask("userdesktop", &_userDesktop, _ICON.program_manager, DESKTOP, 0, false, PRIORITY_NORMAL),
+    //
+    // Stack forms
     createTask("stackform", &runExFormStack, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 1),
     // Добавление задачи мониторинга
     createTask("monitor", &monitorTask, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 100),
