@@ -38,7 +38,7 @@ void ePowerSave::execute()
     
     String text = "The console has entered\nhibernation mode.\n\nTo exit this mode,\nmove the stick upwards.";
     
-    _GGL.gray.writeLine(17, 150, "SLEEP LINE", 10, 1, _GGL.gray.LIGHT_GRAY);
+    // _GGL.gray.writeLine(17, 150, "SLEEP LINE", 10, 1, _GGL.gray.LIGHT_GRAY);
     
     if (isTouched() == true)
     {

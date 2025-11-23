@@ -60,8 +60,8 @@ public:
     int getCPULoad();
     // Метод для сбора статистики выполнения задач
     void updateTaskStatistics(const String& taskName, unsigned long executionTime);
-    
-    // Hardware timer
+
+    // Методы аппаратного таймера таймера
     static void initHardwareTimer();
     static void stopHardwareTimer();
     static unsigned long getHardwareTicks();
