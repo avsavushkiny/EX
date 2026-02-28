@@ -6,6 +6,38 @@ int _DISPLAY_ROTATE;
 
 int _LCD_BUFFER[256 * 160 / 4]; // 10240 // 256 in 40
 
+int _LCD_BUFFER_A[256 * 40] = {0};
+int _LCD_BUFFER_B[256 * 40] = {0};
+
+int* _frontBuffer = _LCD_BUFFER_A;  // Сначала A — фронт
+int* _backBuffer = _LCD_BUFFER_B;   // B — бэк
+
+volatile bool bufferReadyToSend = false;
+volatile bool bufferSending = false;
+
+// 280226
+// Флаги синхронизации
+volatile bool bufferSent = true;
+volatile bool sendRequest = false;
+
+// Указатель на экземпляр (если нужно)
+GRAY* grayInstance = nullptr;
+
+// Задача для второго ядра
+void IRAM_ATTR sendBufferTask(void *parameter)
+{
+    for (;;)
+    {
+        if (bufferReadyToSend && grayInstance && !bufferSending)
+        {
+            grayInstance->sendBuffer();
+        }
+        vTaskDelay(1);
+    }
+}
+
+// end 280226
+
 /* Gray mode */
 // Settings
 void GRAY::begin()
@@ -22,6 +54,23 @@ void GRAY::begin()
   // SPI.setClockDivider(SPI_CLOCK_DIV128);
   SPI.begin();
   SPI.beginTransaction(SPISettings(40000000, MSBFIRST, SPI_MODE0)); // 8000000 // 80Mhz clock
+
+  // 280226
+  // Инициализация многопоточности
+if (!grayInstance)
+{
+    grayInstance = this;
+    xTaskCreatePinnedToCore(
+        sendBufferTask,
+        "SendTask",
+        2048,
+        NULL,
+        1,
+        NULL,
+        1  // Core 1
+    );
+}
+  // end 280226
 
   digitalWrite(LCD_CS, LOW);
   digitalWrite(LCD_RST, HIGH);
@@ -86,24 +135,13 @@ void GRAY::clear()
   int i;
   for (i = 0; i <= _WIDTH * (_HEIGHT / 4); i++)
   {
-    _LCD_BUFFER[i] = 0;
+    _backBuffer[i] = 0;
   }
 }
-void GRAY::clearBuffer() //+
+void GRAY::clearBuffer()
 {
-  size_t cnt;
-  cnt = _WIDTH;
-  cnt *= 20;
-  cnt *= 8;
-  memset(_LCD_BUFFER, 0, cnt);
-  // int page, i;
-  // for (page = 0; page < 41; page++) // 160/4 = 40
-  // {
-  //   for (i = 0; i < 256; i++)
-  //   {
-  //     transferData(0x00);
-  //   }
-  // }
+    size_t size = _WIDTH * (_HEIGHT / 4); // 256 * 40 = 10240
+    memset(_backBuffer, 0, size * sizeof(int));
 }
 void GRAY::display()
 {
@@ -128,18 +166,55 @@ void GRAY::display()
     }
   }
 }
+// void GRAY::sendBuffer()
+// {
+//   int page, i;
+//   transferCommand(0x5c); // 0101 1100 Write data to DDRAM
+//   for (page = 0; page < 160 / 4; page++)
+//   {
+//     for (i = 0; i < 256; i++)
+//     {
+//       transferData(_LCD_BUFFER[i + (page * 256)]); // Write data
+//     }
+//   }
+// }
+
 void GRAY::sendBuffer()
 {
-  int page, i;
-  transferCommand(0x5c); // 0101 1100 Write data to DDRAM
-  for (page = 0; page < 160 / 4; page++)
-  {
-    for (i = 0; i < 256; i++)
+    if (bufferReadyToSend)
     {
-      transferData(_LCD_BUFFER[i + (page * 256)]); // Write data
+        bufferReadyToSend = false;
+        bufferSending = true;
+
+        transferCommand(0x5c); // Write data to DDRAM
+
+        for (int page = 0; page < 40; page++)
+        {
+            for (int i = 0; i < 256; i++)
+            {
+                transferData(_frontBuffer[i + (page * 256)]);
+            }
+        }
+
+        bufferSending = false;
     }
-  }
 }
+
+void GRAY::swapBuffers()
+{
+    // Меняем местами указатели — очень быстро!
+    int* temp = _frontBuffer;
+    _frontBuffer = _backBuffer;
+    _backBuffer = temp;
+
+    // Запрашиваем отправку нового фронт-буфера
+    if (!bufferSending && !bufferReadyToSend)
+    {
+        bufferReadyToSend = true;
+    }
+}
+
+
 void GRAY::setContrast(int newContrast)
 {
   newContrast++;
@@ -217,13 +292,13 @@ void GRAY::SPIWrite_byte(int dat)
 // Bitmap
 void GRAY::pixel(short x, short y, char color)
 {
-  // GRAY::rotate(ROTATE_0);                           // Поворачиваем экран на 0 градусов
-  if (x > 256 || y > 256 * 2)                       // Если координаты пикселя находятся за пределами экрана
-    return;                                         // Выходим из функции
-  if (color)                                        // Если цвет пикселя не равен 0
-    _LCD_BUFFER[x + (y / 8) * 256] |= 1 << (y % 8); // Устанавливаем бит в буфере экрана
-  else
-    _LCD_BUFFER[x + (y / 8) * 256] &= ~(1 << (y % 8)); // Сбрасываем бит в буфере экрана
+    if (x >= _WIDTH || y >= _HEIGHT * 2) return;
+
+    int index = x + (y / 8) * 256;
+    if (color)
+        _backBuffer[index] |= (1 << (y % 8));
+    else
+        _backBuffer[index] &= ~(1 << (y % 8));
 }
 
 void GRAY::bitmap(short x, short y, const uint8_t *pBmp, short chWidth, short chHeight, BitmapMode bm)

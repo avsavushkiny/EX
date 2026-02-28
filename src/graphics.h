@@ -16,6 +16,7 @@ public:
         _GGL.gray.clearBuffer();
         f();
         _GGL.gray.sendBuffer();
+        _GGL.gray.swapBuffers();
     }
 
     void print(String text, int x, int y, int8_t lii, int8_t chi)
