@@ -177,7 +177,8 @@ void InstantMessage::show()
         _GGL.gray.DARK_GRAY, 3
     );
 
-    _GGL.gray.sendBuffer();  // <--
+    // _GGL.gray.sendBuffer();  // <--
+    _GGL.gray.swapBuffers();
 
     if (m_delay > 0) {
         delay(m_delay);

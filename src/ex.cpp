@@ -72,7 +72,8 @@ void initializationSystem()
    _GGL.gray.drawHLine(0, 145, 256, _GGL.gray.BLACK, 5);
 
    // send data to display
-   _GGL.gray.sendBuffer(); // <--
+   // _GGL.gray.sendBuffer(); // <--
+   _GGL.gray.swapBuffers();
 
    delay(2500);
 }

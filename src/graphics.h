@@ -15,7 +15,7 @@ public:
     {
         _GGL.gray.clearBuffer();
         f();
-        _GGL.gray.sendBuffer();
+        // _GGL.gray.sendBuffer();
         _GGL.gray.swapBuffers();
     }
 
@@ -40,7 +40,8 @@ public:
     {
         _GGL.gray.clearBuffer(); // -->
         _GGL.gray.bitmap(((W_LCD - _SICON.wait_w) / 2), ((H_LCD - _SICON.wait_h) / 2), _SICON.wait, _SICON.wait_w, _SICON.wait_h, _GGL.gray.NOT_TRANSPARENT);
-        _GGL.gray.sendBuffer(); // <--
+        // _GGL.gray.sendBuffer(); // <--
+        _GGL.gray.swapBuffers();
         delay(150);
         return true;
     }
