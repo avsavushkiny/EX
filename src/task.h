@@ -406,6 +406,7 @@ void _systemCursor()
     // }
 }
 
+
 /* CPU load */
 void monitorTask()
 {
@@ -440,7 +441,7 @@ TaskArguments system0[]
     //        (название, функция, bitmap, тип, индекс, статус, ПРИОРИТЕТ, oneshot, тик)
     createTask("desktop", &_myDesktop, NULL, SYSTEM, 100, true, PRIORITY_NORMAL, true, 1),
     createTask("initSleepTimerTask", &initSleepTimerTask, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, true, 1),
-    createTask("energySave", &energySave, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, 0, 10),
+    createTask("energySave", &energySave, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, 0, 100), // было 10
     // createTask("oshello", &_osHello, NULL, SYSTEM, 101, true, PRIORITY_NORMAL),
     createTask("form1", &_myForm1, _ICON.window_abc, DESKTOP, 0, false, PRIORITY_NORMAL),
     createTask("form2", &_myForm2, _ICON.window_shell_1, DESKTOP, 0, false, PRIORITY_NORMAL),
@@ -457,7 +458,7 @@ TaskArguments system0[]
     // Добавление задачи мониторинга
     createTask("monitor", &monitorTask, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 100),
     // Cursor
-    createTask("cursor", &_systemCursor, NULL, SYSTEM, 0, true, PRIORITY_LOW, false, 1)
+    createTask("cursor", &_systemCursor, NULL, SYSTEM, 0, true, PRIORITY_LOW, false, 30) // было 1
 };
 
 /*

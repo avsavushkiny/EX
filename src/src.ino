@@ -26,3 +26,16 @@ void loop()
 {  
     _TD.terminal();
 }
+
+// unsigned long lastToggle = 0;
+
+// void loop()
+// {
+//     if (millis() - lastToggle > 500)
+//     {
+//         digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+//         lastToggle = millis();
+//     }
+
+//     _TD.terminal();
+// }
