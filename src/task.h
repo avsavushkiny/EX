@@ -9,6 +9,7 @@ extern GGL _GGL;
 extern TaskDispatcher _TD;
 extern Cursor _CRS;
 extern void runExFormStack();
+extern FPS _FPS;
 
 short _LOAD_CPU{};
 
@@ -392,6 +393,7 @@ void _systemCursor()
 
     // Выводим загрузку CPU
     _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0 + 10, (String)_LOAD_CPU, 10, 1, _GGL.gray.BLACK);
+    _FPS.drawGrayFPS(_JOY.posX0 + 10, _JOY.posY0 + 20, _GGL.gray.DARK_GRAY);
 
     // if ((_JOY.pressKeyEX() == true) && (_JOY.pressKeyENTER() == true))
     // {
@@ -437,7 +439,7 @@ TaskArguments system0[]
     //        (название, функция, bitmap, тип, индекс, статус, ПРИОРИТЕТ, oneshot, тик)
     createTask("desktop", &_myDesktop, NULL, SYSTEM, 100, true, PRIORITY_NORMAL, true, 1),
     createTask("initSleepTimerTask", &initSleepTimerTask, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, true, 1),
-    createTask("energySave", &energySave, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, 0, 10),
+    createTask("energySave", &energySave, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, 0, 100), // было 10
     // createTask("oshello", &_osHello, NULL, SYSTEM, 101, true, PRIORITY_NORMAL),
     createTask("form1", &_myForm1, _ICON.window_abc, DESKTOP, 0, false, PRIORITY_NORMAL),
     createTask("form2", &_myForm2, _ICON.window_shell_1, DESKTOP, 0, false, PRIORITY_NORMAL),
@@ -454,7 +456,7 @@ TaskArguments system0[]
     // Добавление задачи мониторинга
     createTask("monitor", &monitorTask, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 100),
     // Cursor
-    createTask("cursor", &_systemCursor, NULL, SYSTEM, 0, true, PRIORITY_LOW, false, 1)
+    createTask("cursor", &_systemCursor, NULL, SYSTEM, 0, true, PRIORITY_LOW, false, 30) // было 1
 };
 
 /*

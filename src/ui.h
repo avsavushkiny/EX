@@ -44,6 +44,7 @@ private:
     int xCursor, yCursor;
 public:
     bool button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor);
+    // bool button(const uint8_t *bitMap, uint8_t h, uint8_t w, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor);
 };
 
 class Label : Joystick
