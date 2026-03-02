@@ -9,6 +9,7 @@ extern GGL _GGL;
 extern TaskDispatcher _TD;
 extern Cursor _CRS;
 extern void runExFormStack();
+extern FPS _FPS;
 
 short _LOAD_CPU{};
 
@@ -392,6 +393,8 @@ void _systemCursor()
 
     // Выводим загрузку CPU
     _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0 + 10, (String)_LOAD_CPU, 10, 1, _GGL.gray.BLACK);
+    // Выводим FPS
+    _FPS.drawGrayFPS(_JOY.posX0 + 10, _JOY.posY0 + 21, _GGL.gray.DARK_GRAY);
 
     // if ((_JOY.pressKeyEX() == true) && (_JOY.pressKeyENTER() == true))
     // {

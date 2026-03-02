@@ -57,7 +57,6 @@ public:
     void clearBuffer();
     void display();
     void sendBuffer();
-    void sendBufferDirect(); // Новый метод для отправки буфера
     void swapBuffers();
     void setContrast(int newContrast);
     void setPowerMode(DisplayPowerSavingMode dpsm);

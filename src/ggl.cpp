@@ -20,17 +20,18 @@ volatile bool bufferSending = false;
 volatile bool bufferSent = true;
 volatile bool sendRequest = false;
 
-// Указатель на экземпляр (если нужно)
-GRAY* grayInstance = nullptr;
+// Указатель на экземпляр
+GRAY* grayInstance = nullptr; FPS _FPS;
 
 // Задача для второго ядра
+// Функция находится в оперативной памяти (IRAM)
 void IRAM_ATTR sendBufferTask(void *parameter)
 {
     for (;;)
     {
         if (bufferReadyToSend && grayInstance && !bufferSending)
         {
-            grayInstance->sendBuffer();
+            grayInstance->sendBuffer(); _FPS.updateFPS();
         }
         vTaskDelay(1);
     }
@@ -65,7 +66,7 @@ if (!grayInstance)
         "SendTask",
         2048,
         NULL,
-        1,
+        24,
         NULL,
         1  // Core 1
     );
