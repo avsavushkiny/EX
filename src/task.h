@@ -456,7 +456,7 @@ TaskArguments system0[]
     // Добавление задачи мониторинга
     createTask("monitor", &monitorTask, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 100),
     // Cursor
-    createTask("cursor", &_systemCursor, NULL, SYSTEM, 0, true, PRIORITY_LOW, false, 30) // было 1
+    createTask("cursor", &_systemCursor, NULL, SYSTEM, 0, true, PRIORITY_LOW, false, 10) // было 1
 };
 
 /*

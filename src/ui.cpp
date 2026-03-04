@@ -106,11 +106,12 @@ bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t 
 /* button-image return boolean state */
 bool Button::button(const uint8_t *bitMap, uint8_t w, uint8_t h, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor)
 {
-  _GGL.gray.bitmap(x, y, bitMap, w, h, _GGL.gray.NOT_TRANSPARENT);
+  _GGL.gray.bitmap(x, y, bitMap, w, h, _GGL.gray.TRANSPARENT);
 
   if ((xCursor >= x && xCursor <= (x + w)) && (yCursor >= y && yCursor <= (y + h)))
   {
-    // _GGL.gray.drawFrame(x, y, 32, 32, _GGL.gray.BLACK); // вывод фрема
+    _GGL.gray.drawFillFrame(x, y, w, h, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
+    _GGL.gray.bitmap(x, y, bitMap, w, h, _GGL.gray.TRANSPARENT);
     
     if (Joystick::pressKeyENTER() == true)
     {
