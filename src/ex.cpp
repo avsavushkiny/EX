@@ -50,8 +50,19 @@ void initializationSystem()
    //  При завершении работы
    //  _TD.stopHardwareTimer();
 
-   /* Energy saving */
-   // EnergySaving::begin();
+
+   //-
+   // Создание задачи для второго ядра
+// xTaskCreatePinnedToCore(
+//     taskWatchdogOnCore1,
+//     "TaskWatchdog",
+//     4096,
+//     nullptr,
+//     1,
+//     nullptr,
+//     1  // Ядро 1
+// );
+   //--
 
    /*
       Vector
