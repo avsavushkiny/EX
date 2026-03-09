@@ -121,20 +121,6 @@ bool TaskDispatcher::removeTaskIndex(const int index)
     return false;
 }
 
-bool TaskDispatcher::clearVectorTasks()
-{
-    if (tasks.size() > 0)
-    {
-        for (auto &t : tasks)
-        {
-            if (t.activ) 
-            {
-                t.activ = false;
-            }
-        }
-    }
-}
-
 bool TaskDispatcher::runTask(const String &taskName)
 {
     for (auto &t : tasks)
@@ -263,6 +249,16 @@ void TaskDispatcher::tick()
     {
         measurementStartTime = currentRealTime;
         totalExecutionTime = 0;
+    }
+}
+
+void TaskDispatcher::clearExFormsStack()
+{
+    while (!formsStack.empty())
+    {
+        exForm* form = formsStack.top();
+        delete form;           // Освобождаем память
+        formsStack.pop();      // Удаляем указатель из стека
     }
 }
 

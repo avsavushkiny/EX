@@ -8,7 +8,6 @@
 
 extern GGL _GGL;
 extern TaskDispatcher _TD;
-extern void _myDesktop();
 
 // Глобальная структура для отслеживания запущенной задачи
 RunningTaskInfo runningTaskInfo = {"", 0, false};
@@ -61,7 +60,8 @@ void taskWatchdogOnCore1(void *parameter)
                 // Serial.println("[WATCHDOG] Killed task: " + runningTaskInfo.name);
 
                 delay(5000);
-                ESP.restart();
+                _TD.clearExFormsStack();
+                // ESP.restart();
             }
         }
 
