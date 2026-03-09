@@ -7,5 +7,8 @@ struct RunningTaskInfo
     bool isActive;
 };
 
+// #ifndef WATCHDOG
+// #else
 extern RunningTaskInfo runningTaskInfo;
 extern void taskWatchdogOnCore1(void *parameter);
+// #endif

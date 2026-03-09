@@ -121,6 +121,20 @@ bool TaskDispatcher::removeTaskIndex(const int index)
     return false;
 }
 
+bool TaskDispatcher::clearVectorTasks()
+{
+    if (tasks.size() > 0)
+    {
+        for (auto &t : tasks)
+        {
+            if (t.activ) 
+            {
+                t.activ = false;
+            }
+        }
+    }
+}
+
 bool TaskDispatcher::runTask(const String &taskName)
 {
     for (auto &t : tasks)
@@ -193,26 +207,31 @@ void TaskDispatcher::tick()
             unsigned long startTime = micros();
             currentTaskName = task.name;
 
-// //-
 // Код для диспетчера задач, реализация tick
 // Фиксируем начало выполнения задачи
-noInterrupts();
-runningTaskInfo.name = task.name;
-runningTaskInfo.startTime = millis();
-runningTaskInfo.isActive = true;
-interrupts();
+// #ifndef WATCHDOG
+// #else
+            noInterrupts();
+            runningTaskInfo.name = task.name;
+            runningTaskInfo.startTime = millis();
+            runningTaskInfo.isActive = true;
+            interrupts();
+// #endif
 
-// Выполняем задачу
-if (task.f)
-{
-    task.f();
-}
+            // Выполняем задачу
+            if (task.f)
+            {
+                task.f();
+            }
 
-// Задача завершилась — сбрасываем флаг
-noInterrupts();
-runningTaskInfo.isActive = false;
-interrupts();
-//--
+// #ifndef WATCHDOG
+// #else
+            // Задача завершилась — сбрасываем флаг
+            noInterrupts();
+            runningTaskInfo.isActive = false;
+            interrupts();
+// #endif
+            //--
 
             unsigned long endTime = micros();
             unsigned long executionTime = endTime - startTime;

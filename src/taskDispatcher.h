@@ -52,6 +52,7 @@ public:
     bool removeTask(const String &taskName);
     bool removeTaskIndex(const int index);
     bool runTask(const String &taskName);
+    bool clearVectorTasks();
     void addTasksForSystems();
     bool terminal();
     void tick();  // Основной тик диспетчера задач

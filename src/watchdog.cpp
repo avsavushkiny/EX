@@ -7,11 +7,13 @@
 #include "ggl.h"
 
 extern GGL _GGL;
+extern TaskDispatcher _TD;
+extern void _myDesktop();
 
 // Глобальная структура для отслеживания запущенной задачи
 RunningTaskInfo runningTaskInfo = {"", 0, false};
 
-//
+// Вывод сообщения об ошибке
 void showError(String message)
 {
     _GGL.gray.clearBuffer();
@@ -19,7 +21,9 @@ void showError(String message)
     _GGL.gray.sendBuffer();
 }
 
-//
+// #ifndef WATCHDOG
+// #else
+// Задача watchdog для второго ядра (core 1)
 void taskWatchdogOnCore1(void *parameter)
 {
     (void)parameter;
@@ -29,7 +33,7 @@ void taskWatchdogOnCore1(void *parameter)
     while (true)
     {
         // Проверяем только если какая-то задача активна
-        if (runningTaskInfo.isActive)
+        if (runningTaskInfo.isActive && (runningTaskInfo.name != "energySave"))
         {
             unsigned long elapsed = millis() - runningTaskInfo.startTime;
 
@@ -65,3 +69,4 @@ void taskWatchdogOnCore1(void *parameter)
         vTaskDelay(pdMS_TO_TICKS(100)); // Проверяем каждые 100 мс
     }
 }
+// #endif
