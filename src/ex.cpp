@@ -51,18 +51,16 @@ void initializationSystem()
    //  _TD.stopHardwareTimer();
 
 
-   //-
    // Создание задачи для второго ядра
-// xTaskCreatePinnedToCore(
-//     taskWatchdogOnCore1,
-//     "TaskWatchdog",
-//     4096,
-//     nullptr,
-//     1,
-//     nullptr,
-//     1  // Ядро 1
-// );
-   //--
+   xTaskCreatePinnedToCore(
+       taskWatchdogOnCore1,
+       "TaskWatchdog",
+       4096,
+       nullptr,
+       20,
+       nullptr,
+       1 // Ядро 1
+   );
 
    /*
       Vector

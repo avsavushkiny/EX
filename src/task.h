@@ -411,6 +411,13 @@ void monitorTask()
     _LOAD_CPU = _TD.getCPULoad();
 }
 
+/* Задача с ошибкой */
+void testErrorTask()
+{
+    for(;;)
+    {}
+}
+
 /**/
 // Вспомогательная функция для создания задач с параметрами по умолчанию
 TaskArguments createTask(String name, void (*f)(void), const uint8_t *bitMap, 
@@ -451,6 +458,8 @@ TaskArguments system0[]
     // // createTask("settings", _settingsForm, icon.technical_group, DESKTOP, 0, false, PRIORITY_NORMAL),
     // createTask("userdesktop", &_userDesktop, _ICON.program_manager, DESKTOP, 0, false, PRIORITY_NORMAL),
     //
+    // Error task
+    createTask("error", &testErrorTask, _ICON.chip_ram, DESKTOP, 0, false, PRIORITY_NORMAL),
     // Stack forms
     createTask("stackform", &runExFormStack, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 1),
     // Добавление задачи мониторинга

@@ -7,18 +7,6 @@
 #include "systems.h"
 #include "esp_timer.h"
 
-//-
-struct RunningTaskInfo
-{
-    String name;
-    unsigned long startTime;
-    bool isActive;
-};
-
-// Глобальная структура для отслеживания запущенной задачи
-volatile RunningTaskInfo runningTaskInfo = {"", 0, false};
-//--
-
 // Определение глобального вектора
 std::vector<TaskArguments> tasks;
 std::vector<TaskArguments> userTasks;
@@ -206,15 +194,13 @@ void TaskDispatcher::tick()
             currentTaskName = task.name;
 
 // //-
-// // Код для диспетчера задач, реализация tick
-// // Фиксируем начало выполнения задачи
-// noInterrupts();
-// runningTaskInfo.name = task.name;
-// runningTaskInfo.startTime = millis();
-// runningTaskInfo.isActive = true;
-// interrupts();
-
-// unsigned long startTime = micros();
+// Код для диспетчера задач, реализация tick
+// Фиксируем начало выполнения задачи
+noInterrupts();
+runningTaskInfo.name = task.name;
+runningTaskInfo.startTime = millis();
+runningTaskInfo.isActive = true;
+interrupts();
 
 // Выполняем задачу
 if (task.f)
@@ -222,11 +208,11 @@ if (task.f)
     task.f();
 }
 
-// // Задача завершилась — сбрасываем флаг
-// noInterrupts();
-// runningTaskInfo.isActive = false;
-// interrupts();
-// //--
+// Задача завершилась — сбрасываем флаг
+noInterrupts();
+runningTaskInfo.isActive = false;
+interrupts();
+//--
 
             unsigned long endTime = micros();
             unsigned long executionTime = endTime - startTime;

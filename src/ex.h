@@ -9,7 +9,7 @@
 #include "ui.h"
 #include "input.h"
 #include "exForm.h"
-// #include "watchdog.h"
+#include "watchdog.h"
 
 /* [!] Объекты в объявлении через extern 
        не должны содержать инициализацию! */
@@ -26,4 +26,3 @@ extern Cursor _CRS;
 // Глобальные функции
 extern void initializationSystem();
 extern void nullFunction();
-// extern void taskWatchdogOnCore1(void *parameter);
