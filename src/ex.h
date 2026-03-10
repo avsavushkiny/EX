@@ -9,6 +9,7 @@
 #include "ui.h"
 #include "input.h"
 #include "exForm.h"
+#include "watchdog.h"
 
 /* [!] Объекты в объявлении через extern 
        не должны содержать инициализацию! */

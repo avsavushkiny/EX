@@ -11,6 +11,7 @@ bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
     else
         return false;
 }
+
 /* displaying a shortcut to a task-function */
 bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
 {
@@ -40,6 +41,7 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
 
   return false;
 }
+
 /* [for Desktop name tasks] no Frame */
 void TextBox::textBox(String str, int sizeH, int sizeW, short charH, short charW, int x, int y)
 {
@@ -76,7 +78,8 @@ void TextBox::textBox(String str, int sizeH, int sizeW, short charH, short charW
         }
     }
 }
-/* button return boolean state */
+
+/* button return boolean state (h 13px)*/
 bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor)
 {
   uint8_t sizeText = text.length(); short border{3}; short charW{5};
@@ -99,6 +102,32 @@ bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t 
   
   return false;
 }
+
+/* button-image return boolean state */
+bool Button::button(const uint8_t *bitMap, uint8_t w, uint8_t h, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor)
+{
+  _GGL.gray.bitmap(x, y, bitMap, w, h, _GGL.gray.TRANSPARENT);
+
+  if ((xCursor >= x && xCursor <= (x + w)) && (yCursor >= y && yCursor <= (y + h)))
+  {
+    _GGL.gray.drawFillFrame(x, y, w, h, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
+    _GGL.gray.bitmap(x, y, bitMap, w, h, _GGL.gray.TRANSPARENT);
+    
+    if (Joystick::pressKeyENTER() == true)
+    {
+    //   _GRF.waitDisplay();
+    //   f();
+      return true;
+    }
+  }
+  else
+  {
+    // textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 24);
+  }
+
+  return false;
+}
+
 /* Draw show function */
 void InstantMessage::show()
 {
@@ -183,6 +212,7 @@ void InstantMessage::show()
         delay(m_delay);
     }
 }
+
 /* starting a task-function with an interval */
 void Timer::timer(void (*f)(void), int interval)
 {
@@ -193,6 +223,7 @@ void Timer::timer(void (*f)(void), int interval)
         f();
     }
 }
+
 /* starting a task-function with an interval */
 void Timer::timer(int (*f)(void), int interval)
 {
@@ -203,6 +234,7 @@ void Timer::timer(int (*f)(void), int interval)
         f();
     }
 }
+ 
 /* return value */
 bool Timer::timer(int interval)
 {

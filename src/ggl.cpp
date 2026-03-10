@@ -6,6 +6,8 @@ int _DISPLAY_ROTATE;
 
 int _LCD_BUFFER[256 * 160 / 4]; // 10240 // 256 in 40
 
+FPS _FPS;
+
 /* Gray mode */
 // Settings
 void GRAY::begin()
@@ -128,6 +130,7 @@ void GRAY::display()
     }
   }
 }
+
 void GRAY::sendBuffer()
 {
   int page, i;
@@ -139,7 +142,10 @@ void GRAY::sendBuffer()
       transferData(_LCD_BUFFER[i + (page * 256)]); // Write data
     }
   }
+
+  _FPS.updateFPS();
 }
+
 void GRAY::setContrast(int newContrast)
 {
   newContrast++;
@@ -150,6 +156,7 @@ void GRAY::setContrast(int newContrast)
   transferData((newContrast >> 6) & 0x07);
   transferCommand(0xaf); // 1010 1111 Display On [2]
 }
+
 void GRAY::setPowerMode(DisplayPowerSavingMode dpsm)
 {
   if (dpsm == OPERATING_MODE)

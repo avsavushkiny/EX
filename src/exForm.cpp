@@ -308,7 +308,12 @@ int exForm::showForm()
 
     if (eFormShowMode == FULLSCREEN)
     {
-        if (closeForm.button("CLOSE", 225, 0, _JOY.posX0, _JOY.posY0))
+        // if (closeForm.button("CLOSE", 225, 0, _JOY.posX0, _JOY.posY0))
+        // {
+        //     return 1; // 1 - exit and delete form from stack
+        // }
+
+        if (closeForm.button(_SICON.close_13x13, _SICON.close_13x13_w, _SICON.close_13x13_h, 243, 0, _JOY.posX0, _JOY.posY0))
         {
             return 1; // 1 - exit and delete form from stack
         }
@@ -354,7 +359,7 @@ int exForm::showForm()
 
     if (eFormShowMode == MAXIMIZED)
     {
-        if (closeForm.button("CLOSE", 225, 0, _JOY.posX0, _JOY.posY0))
+        if (closeForm.button(_SICON.close_13x13, _SICON.close_13x13_w, _SICON.close_13x13_h, 243, 0, _JOY.posX0, _JOY.posY0))
         {
             return 1; // 1 - exit and delete form from stack
         }
@@ -400,8 +405,8 @@ int exForm::showForm()
 
     if (eFormShowMode == NORMAL)
     {
-
-        if (closeForm.button("CLOSE", 205, outerBoundaryForm - 12 + 6, _JOY.posX0, _JOY.posY0))
+        // if (closeForm.button("CLOSE", 205, outerBoundaryForm - 12 + 6, _JOY.posX0, _JOY.posY0))
+        if (closeForm.button(_SICON.close_13x13, _SICON.close_13x13_w, _SICON.close_13x13_h, 223, outerBoundaryForm - 12 + 6, _JOY.posX0, _JOY.posY0))
         {
             return 1; // 1 - exit and delete form from stack
         }

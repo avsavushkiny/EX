@@ -3,10 +3,15 @@
 #include "exForm.h"
 #include "taskDispatcher.h"
 #include "ui.h"
+#include "energySave.h"
 
 extern GGL _GGL;
 extern TaskDispatcher _TD;
 extern Cursor _CRS;
+extern void runExFormStack();
+extern FPS _FPS;
+
+short _LOAD_CPU{};
 
 /* Form's */
 /* Form. Graphics test #1 */
@@ -120,7 +125,7 @@ void _myDesktop()
     form0->addElement(desktop0);
 
     formsStack.push(form0);
-    _TD.removeTaskIndex(100);
+    // _TD.removeTaskIndex(100);
 }
 /* Form. User Desktop */
 void _userDesktop()
@@ -219,7 +224,6 @@ void _myForm1()
     form1->title = "Form 1. Output text";
     form1->eFormShowMode = NORMAL;
     form1->addElement(textbox1);
-
 
     formsStack.push(form1);
 }
@@ -334,6 +338,7 @@ void _myDispatcher()
     formsStack.push(formMyDispatcher);
 }
 
+/* Form. Settings */
 // settings Form
 // void _settingsForm()
 // {
@@ -386,6 +391,10 @@ void _systemCursor()
     _JOY.updatePositionXY(20);
     _CRS.cursor(true, _JOY.posX0, _JOY.posY0);
 
+    // Выводим загрузку CPU
+    _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0 + 10, (String)_LOAD_CPU, 10, 1, _GGL.gray.BLACK);
+    _FPS.drawGrayFPS(_JOY.posX0 + 10, _JOY.posY0 + 20, _GGL.gray.DARK_GRAY);
+
     // if ((_JOY.pressKeyEX() == true) && (_JOY.pressKeyENTER() == true))
     // {
     //     // Debug. Print coordinate
@@ -396,20 +405,76 @@ void _systemCursor()
     // }
 }
 
-/**/
-TaskArguments system0[] //0 systems, 1 desktop, 2 user
+/* CPU load */
+void monitorTask()
 {
-    {"desktop", &_myDesktop, NULL, SYSTEM, 100, true},
-    // {"oshello", &_osHello, NULL, SYSTEM, 101, true},
-    {"form1", &_myForm1, _ICON.window_abc, DESKTOP, 0, false},
-    {"form2", &_myForm2, _ICON.window_shell_1, DESKTOP, 0, false},
-    {"form3", &_myForm3, _ICON.window_shell_2, DESKTOP, 0, false},
-    {"graphics 1", &_myGraphicsTest1, _ICON.window_graphics, DESKTOP, 0, false},
-    {"graphics 2", &_myGraphicsTest2, _ICON.window_graphics, DESKTOP, 0, false},
-    // {"dispatcher", &_myDispatcher, _ICON.app_wizard, DESKTOP, 0, false},
-    // {"graphics 3", &_myGraphicsTest3, _ICON.window_graphics, DESKTOP, 0, false},
-    // // {"settings", _settingsForm, icon.technical_group, DESKTOP, 0, false},
-    // {"userdesktop", &_userDesktop, _ICON.program_manager, DESKTOP, 0, false},
-    // [!] Last task
-    {"cursor", &_systemCursor, NULL, SYSTEM, 0, true}
+    _LOAD_CPU = _TD.getCPULoad();
+}
+
+/* Задача с ошибкой */
+void testErrorTask()
+{
+    for(;;)
+    {}
+}
+
+/**/
+// Вспомогательная функция для создания задач с параметрами по умолчанию
+TaskArguments createTask(String name, void (*f)(void), const uint8_t *bitMap, 
+                        TaskType type, int index, bool activ, 
+                        TaskPriority priority = PRIORITY_NORMAL, 
+                        bool oneShot = false, unsigned long interval = 1)
+{
+    TaskArguments task;
+    task.name = name;
+    task.f = f;
+    task.bitMap = bitMap;
+    task.type = type;
+    task.index = index;
+    task.activ = activ;
+    task.priority = priority;
+    task.oneShot = oneShot;
+    task.interval = interval;
+    task.lastRunTime = 0;
+    task.nextRunTime = 0;
+    return task;
+}
+
+/* Tasklist */
+TaskArguments system0[] 
+{
+    //        (название, функция, bitmap, тип, индекс, статус, ПРИОРИТЕТ, oneshot, тик)
+    createTask("desktop", &_myDesktop, NULL, SYSTEM, 100, true, PRIORITY_NORMAL, true, 1),
+    createTask("initSleepTimerTask", &initSleepTimerTask, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, true, 1),
+    createTask("energySave", &energySave, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, 0, 100), // было 10
+    // createTask("oshello", &_osHello, NULL, SYSTEM, 101, true, PRIORITY_NORMAL),
+    createTask("form1", &_myForm1, _ICON.window_abc, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("form2", &_myForm2, _ICON.window_shell_1, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("form3", &_myForm3, _ICON.window_shell_2, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("graphics1", &_myGraphicsTest1, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("graphics2", &_myGraphicsTest2, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
+    // createTask("dispatcher", &_myDispatcher, _ICON.app_wizard, DESKTOP, 0, false, PRIORITY_NORMAL),
+    // createTask("graphics 3", &_myGraphicsTest3, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
+    // // createTask("settings", _settingsForm, icon.technical_group, DESKTOP, 0, false, PRIORITY_NORMAL),
+    // createTask("userdesktop", &_userDesktop, _ICON.program_manager, DESKTOP, 0, false, PRIORITY_NORMAL),
+    //
+    // Error task
+    createTask("error", &testErrorTask, _ICON.chip_ram, DESKTOP, 0, false, PRIORITY_NORMAL),
+    // Stack forms
+    createTask("stackform", &runExFormStack, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 1),
+    // Добавление задачи мониторинга
+    createTask("monitor", &monitorTask, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 100),
+    // Cursor
+    createTask("cursor", &_systemCursor, NULL, SYSTEM, 0, true, PRIORITY_LOW, false, 10) // было 1
 };
+
+/*
+Одноразовая задача:
+createTask("init", &initFunction, NULL, SYSTEM, 0, true, PRIORITY_HIGH, true)
+
+Периодическая задача с интервалом:
+createTask("sensor", &readSensor, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 10) // выполняется каждые 10 тиков
+
+Критическая задача:
+createTask("emergency", &emergencyHandler, NULL, SYSTEM, 0, true, PRIORITY_CRITICAL, false, 1)
+*/

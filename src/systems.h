@@ -26,7 +26,7 @@ public:
     }
 
     // Методы установки контрастности дисплея
-    int VALUECONTRAST{240}; // 143 old value
+    int VALUECONTRAST{240};
     void setDisplayContrast(int newValue)
     {
         displayContrast.setDisplayContrast(newValue);
@@ -48,7 +48,7 @@ public:
 
 private:
     eBacklight backlight{true};             // Управление подсветкой
-    eDisplayContrast displayContrast{143};  // Установка контрастности дисплея
+    eDisplayContrast displayContrast{240};  // Установка контрастности дисплея
     ePowerSave powerSave{true};             // Управление режимами энергосбережения
     eCursor cursor{true};                   // Управление курсором
     eDataPort dataPort{true, 0};            // Управление портом данных
