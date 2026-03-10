@@ -60,8 +60,7 @@ void taskWatchdogOnCore1(void *parameter)
                 // Serial.println("[WATCHDOG] Killed task: " + runningTaskInfo.name);
 
                 delay(5000);
-                _TD.clearExFormsStack();
-                // ESP.restart();
+                ESP.restart();
             }
         }
 
