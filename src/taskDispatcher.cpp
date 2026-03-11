@@ -120,7 +120,7 @@ bool TaskDispatcher::removeTaskIndex(const int index)
     }
     return false;
 }
-
+ 
 bool TaskDispatcher::runTask(const String &taskName)
 {
     for (auto &t : tasks)
