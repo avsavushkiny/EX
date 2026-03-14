@@ -394,15 +394,6 @@ void _systemCursor()
     // Выводим загрузку CPU
     _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0 + 10, (String)_LOAD_CPU, 10, 1, _GGL.gray.BLACK);
     _FPS.drawGrayFPS(_JOY.posX0 + 10, _JOY.posY0 + 20, _GGL.gray.DARK_GRAY);
-
-    // if ((_JOY.pressKeyEX() == true) && (_JOY.pressKeyENTER() == true))
-    // {
-    //     // Debug. Print coordinate
-    //     // u8g2.setCursor(_joy.posX0 + 10, _joy.posY0 + 10); !!!
-    //     // u8g2.print(_joy.posX0);
-    //     // u8g2.setCursor(_joy.posX0 + 10, _joy.posY0 + 20);
-    //     // u8g2.print(_joy.posY0);
-    // }
 }
 
 /* CPU load */
