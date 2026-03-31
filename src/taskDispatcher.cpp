@@ -6,6 +6,10 @@
 #include "task.h"
 #include "systems.h"
 #include "esp_timer.h"
+#include <queue>
+
+// Глобальный экземпляр многозадачного диспетчера
+MultiTaskingDispatcher MTD;
 
 // Определение глобального вектора
 std::vector<TaskArguments> tasks;
@@ -368,3 +372,423 @@ int TaskDispatcher::getCPULoad()
 
     return cpuLoad;
 }
+
+/* MTD */
+// Реализация методов TaskScheduler
+void TaskScheduler::setStrategy(ScheduleStrategy strategy)
+{
+    currentStrategy = strategy;
+}
+
+void TaskScheduler::setTimeSlice(unsigned long microseconds)
+{
+    timeSlice = microseconds;
+}
+
+void TaskScheduler::yield()
+{
+    // Просто флаг для планировщика
+    // Фактическое переключение происходит в tick()
+}
+
+// Реализация MultiTaskingDispatcher
+void MultiTaskingDispatcher::updateActiveTasksCache()
+{
+    activeTasks.clear();
+    for (auto &task : tasks)
+    {
+        if (task.activ && task.f)
+        {
+            activeTasks.push_back(&task);
+        }
+    }
+
+    // Сортируем по приоритету для PRIORITY_BASED стратегии
+    std::sort(activeTasks.begin(), activeTasks.end(),
+              [](const TaskArguments *a, const TaskArguments *b)
+              {
+                  return a->priority > b->priority;
+              });
+}
+
+void MultiTaskingDispatcher::executeTask(TaskArguments &task)
+{
+    unsigned long startTime = micros();
+    currentTaskName = task.name;
+
+    // Сохраняем контекст
+    auto &ctx = taskContexts[task.name];
+    ctx.lastYieldTime = startTime;
+    ctx.needsYield = false;
+
+    // Устанавливаем флаг выполнения
+    noInterrupts();
+    runningTaskInfo.name = task.name;
+    runningTaskInfo.startTime = millis();
+    runningTaskInfo.isActive = true;
+    interrupts();
+
+    // Выполняем задачу
+    if (task.f)
+    {
+        task.f();
+    }
+
+    // Проверяем, не была ли задача прервана по таймауту
+    if (!ctx.needsYield)
+    {
+        unsigned long endTime = micros();
+        unsigned long executionTime = endTime - startTime;
+
+        // Обновляем статистику
+        updateTaskStatistics(task.name, executionTime);
+        ctx.totalExecutionTime += executionTime;
+        ctx.yieldCount++;
+
+        task.lastRunTime = getHardwareTicks();
+
+        // Планируем следующее выполнение
+        if (task.interval > 0)
+        {
+            task.nextRunTime = millis() + task.interval;
+        }
+        else
+        {
+            task.nextRunTime = getHardwareTicks() + 1;
+        }
+
+        if (task.oneShot)
+        {
+            task.activ = false;
+        }
+    }
+
+    // Сбрасываем флаг выполнения
+    noInterrupts();
+    runningTaskInfo.isActive = false;
+    interrupts();
+}
+
+bool MultiTaskingDispatcher::checkTaskTimeout(const String &taskName, unsigned long startTime)
+{
+    auto &ctx = taskContexts[taskName];
+    unsigned long currentTime = micros();
+
+    // Проверяем превышение кванта времени для TIME_SLICING
+    if (scheduler.currentStrategy == TaskScheduler::TIME_SLICING)
+    {
+        if (currentTime - startTime > scheduler.timeSlice)
+        {
+            ctx.needsYield = true;
+            return true;
+        }
+    }
+
+    // Проверяем превышение максимального времени выполнения
+    if (ctx.maxExecutionTime > 0 && currentTime - startTime > ctx.maxExecutionTime)
+    {
+        Serial.printf("Warning: Task %s exceeded max execution time\n", taskName.c_str());
+        ctx.needsYield = true;
+        return true;
+    }
+
+    return false;
+}
+
+void MultiTaskingDispatcher::tick()
+{
+    unsigned long currentHardwareTicks = getHardwareTicks();
+    unsigned long currentRealTime = millis();
+
+    // Обновляем кэш активных задач
+    updateActiveTasksCache();
+
+    if (activeTasks.empty())
+    {
+        return;
+    }
+
+    switch (scheduler.currentStrategy)
+    {
+    case TaskScheduler::ROUND_ROBIN:
+    {
+        // Циклическое выполнение по одной задаче за тик
+        if (scheduler.currentTaskIndex >= activeTasks.size())
+        {
+            scheduler.currentTaskIndex = 0;
+        }
+
+        auto taskPtr = activeTasks[scheduler.currentTaskIndex];
+        bool shouldRun = false;
+
+        if (taskPtr->interval > 0)
+        {
+            shouldRun = (currentRealTime >= taskPtr->nextRunTime);
+        }
+        else
+        {
+            shouldRun = (currentHardwareTicks >= taskPtr->nextRunTime);
+        }
+
+        if (shouldRun)
+        {
+            executeTask(*taskPtr);
+        }
+
+        scheduler.currentTaskIndex = (scheduler.currentTaskIndex + 1) % activeTasks.size();
+        break;
+    }
+
+    case TaskScheduler::PRIORITY_BASED:
+    {
+        // Выполняем задачи по приоритетам (уже отсортированы)
+        for (auto taskPtr : activeTasks)
+        {
+            bool shouldRun = false;
+
+            if (taskPtr->interval > 0)
+            {
+                shouldRun = (currentRealTime >= taskPtr->nextRunTime);
+            }
+            else
+            {
+                shouldRun = (currentHardwareTicks >= taskPtr->nextRunTime);
+            }
+
+            if (shouldRun)
+            {
+                executeTask(*taskPtr);
+                break; // Выполняем только одну задачу за тик
+            }
+        }
+        break;
+    }
+
+    case TaskScheduler::TIME_SLICING:
+    {
+        // Квантование времени - выполняем задачи пока не истечет квант
+        unsigned long sliceStartTime = micros();
+
+        while ((micros() - sliceStartTime) < scheduler.timeSlice)
+        {
+            bool taskExecuted = false;
+
+            for (auto taskPtr : activeTasks)
+            {
+                bool shouldRun = false;
+
+                if (taskPtr->interval > 0)
+                {
+                    shouldRun = (currentRealTime >= taskPtr->nextRunTime);
+                }
+                else
+                {
+                    shouldRun = (currentHardwareTicks >= taskPtr->nextRunTime);
+                }
+
+                if (shouldRun)
+                {
+                    // Проверяем, не превышен ли квант перед выполнением
+                    if ((micros() - sliceStartTime) >= scheduler.timeSlice)
+                    {
+                        return;
+                    }
+
+                    executeTask(*taskPtr);
+                    taskExecuted = true;
+                    break; // Выполнили одну задачу
+                }
+            }
+
+            // Если нет готовых задач, выходим
+            if (!taskExecuted)
+            {
+                break;
+            }
+        }
+        break;
+    }
+
+    case TaskScheduler::COOPERATIVE:
+    default:
+    {
+        // Оригинальное поведение - выполняем все готовые задачи
+        for (auto taskPtr : activeTasks)
+        {
+            bool shouldRun = false;
+
+            if (taskPtr->interval > 0)
+            {
+                shouldRun = (currentRealTime >= taskPtr->nextRunTime);
+            }
+            else
+            {
+                shouldRun = (currentHardwareTicks >= taskPtr->nextRunTime);
+            }
+
+            if (shouldRun)
+            {
+                executeTask(*taskPtr);
+            }
+        }
+        break;
+    }
+    }
+
+    // Сброс статистики каждую секунду
+    if (currentRealTime - measurementStartTime >= MEASUREMENT_WINDOW)
+    {
+        measurementStartTime = currentRealTime;
+        totalExecutionTime = 0;
+    }
+}
+
+void MultiTaskingDispatcher::runMultiTasking()
+{
+    while (true)
+    {
+        tick();
+
+        // Небольшая задержка для предотвращения 100% загрузки CPU
+        // Можно настроить в зависимости от требований
+        delayMicroseconds(100);
+    }
+}
+
+void MultiTaskingDispatcher::yield()
+{
+    // Сохраняем контекст текущей задачи
+    if (!currentTaskName.isEmpty())
+    {
+        taskContexts[currentTaskName].needsYield = true;
+    }
+}
+
+bool MultiTaskingDispatcher::suspendTask(const String &taskName)
+{
+    for (auto &t : tasks)
+    {
+        if (t.activ && t.name == taskName)
+        {
+            t.activ = false;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool MultiTaskingDispatcher::resumeTask(const String &taskName)
+{
+    for (auto &t : tasks)
+    {
+        if (!t.activ && t.name == taskName)
+        {
+            t.activ = true;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool MultiTaskingDispatcher::setTaskPriority(const String &taskName, TaskPriority priority)
+{
+    for (auto &t : tasks)
+    {
+        if (t.name == taskName)
+        {
+            t.priority = priority;
+            return true;
+        }
+    }
+    return false;
+}
+
+void MultiTaskingDispatcher::setSchedulerStrategy(TaskScheduler::ScheduleStrategy strategy)
+{
+    scheduler.setStrategy(strategy);
+}
+
+void MultiTaskingDispatcher::setTimeSlice(unsigned long microseconds)
+{
+    scheduler.setTimeSlice(microseconds);
+}
+
+// Модифицируем существующую функцию runTasksCore для использования многозадачности
+void runTasksCore()
+{
+#ifndef DEBUG_TASK_DISPATCHER
+    MTD.tick(); // Используем многозадачный диспетчер
+#else
+    Serial.printf("Total tasks: %d\n", tasks.size());
+    Serial.printf("Active tasks: %d\n", MTD.activeTasks.size());
+    Serial.printf("Hardware ticks: %lu\n", _TD.getHardwareTicks());
+    Serial.printf("Scheduler strategy: %d\n", MTD.scheduler.currentStrategy);
+
+    for (size_t i = 0; i < tasks.size(); ++i)
+    {
+        Serial.printf("Task %d: %s, active: %d, priority: %d, oneShot: %d, interval: %lu\n",
+                      i, tasks[i].name.c_str(), tasks[i].activ,
+                      tasks[i].priority, tasks[i].oneShot, tasks[i].interval);
+    }
+
+    MTD.tick();
+#endif
+}
+
+// Добавляем вспомогательные функции для создания задач
+namespace TaskFactory
+{
+    TaskArguments createTask(const String &name, void (*f)(void),
+                             TaskPriority priority = PRIORITY_NORMAL,
+                             unsigned long interval = 0,
+                             bool oneShot = false)
+    {
+        TaskArguments task;
+        task.name = name;
+        task.f = f;
+        task.priority = priority;
+        task.interval = interval;
+        task.oneShot = oneShot;
+        task.activ = true;
+        task.type = USER;
+        task.nextRunTime = 0;
+        task.lastRunTime = 0;
+        return task;
+    }
+
+    TaskArguments createOneShotTask(const String &name, void (*f)(void),
+                                    TaskPriority priority = PRIORITY_NORMAL)
+    {
+        return createTask(name, f, priority, 0, true);
+    }
+
+    TaskArguments createPeriodicTask(const String &name, void (*f)(void),
+                                     unsigned long intervalMs,
+                                     TaskPriority priority = PRIORITY_NORMAL)
+    {
+        return createTask(name, f, priority, intervalMs, false);
+    }
+}
+
+// Пример использования: MTD
+// void setup()
+// {
+//     MTD.initHardwareTimer();
+
+//     // Создаем задачи
+//     auto task1 = TaskFactory::createPeriodicTask("LED", blinkLED, 500, PRIORITY_LOW);
+//     auto task2 = TaskFactory::createOneShotTask("INIT", initializeSensor, PRIORITY_HIGH);
+
+//     MTD.addTask(task1);
+//     MTD.addTask(task2);
+
+//     // Настраиваем планировщик
+//     MTD.setSchedulerStrategy(TaskScheduler::TIME_SLICING);
+//     MTD.setTimeSlice(10000); // 10 мс квант
+// }
+
+// void loop()
+// {
+//     MTD.tick();
+//     // или MTD.runMultiTasking(); // бесконечный цикл
+// }
