@@ -9,4 +9,4 @@
 const String _NAME_OS = "MOSAIC";
 const String _VERSION_CORE = "0.2.0";
 const String _AUTOR = "Savushkin Alexander";
-const String _DESCRIPTION = "7/30/26 EN\nMOSAIC watchdog";
+const String _DESCRIPTION = "7/30/26\nMOSAIC OTA server";
