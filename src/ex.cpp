@@ -76,6 +76,7 @@ void initializationSystem()
    _GGL.gray.clearBuffer(); // -->
 
    // output text
+   _GGL.gray.writeLine(5, 10, _DESCRIPTION, 10, 1, _GGL.gray.DARK_GRAY);
    _GGL.gray.writeLine(5, 123, _NAME_OS + " " + _VERSION_CORE, 10, 1, _GGL.gray.BLACK);
 
    // draw gray-line
