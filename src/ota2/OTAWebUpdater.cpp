@@ -4,7 +4,7 @@
 // Конструктор
 OTAWebUpdater::OTAWebUpdater()
     : _server(nullptr),
-      _apSSID("ESP32-OTA"),
+      _apSSID("EX-OTA"),
       _lastStatus("Ready")
 {
 }
