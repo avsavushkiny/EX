@@ -4,7 +4,7 @@ int _WIDTH = 256;
 int _HEIGHT = 160;
 int _DISPLAY_ROTATE;
 
-int _LCD_BUFFER[256 * 160 / 4]; // 10240 // 256 in 40
+int _LCD_BUFFER[(256 * 160 / 4) + 256]; // 10240 // 256 in 40
 
 FPS _FPS;
 

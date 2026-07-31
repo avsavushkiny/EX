@@ -54,15 +54,15 @@ void initializationSystem()
    // Создание задачи для второго ядра
    // #ifndef WATCHDOG
    // #else
-   xTaskCreatePinnedToCore(
-       taskWatchdogOnCore1,
-       "TaskWatchdog",
-       4096,
-       nullptr,
-       20,
-       nullptr,
-       1 // Ядро 1
-   );
+   // xTaskCreatePinnedToCore(
+   //     taskWatchdogOnCore1,
+   //     "TaskWatchdog",
+   //     4096,
+   //     nullptr,
+   //     20,
+   //     nullptr,
+   //     1 // Ядро 1
+   // );
    // #endif
 
    /*
