@@ -274,17 +274,25 @@ void _myForm3()
     formsStack.push(form3);
 }
 
-/* Form. OTA update*/
+/* Form. OTA mode*/
 void _formOTAUpdate()
 {
     exForm* formOTAupdate = new exForm();
     
-    eTextBox *textBox1 = new eTextBox("Connect to the Console via Wi-Fi.\nOpen your browser.", BorderStyle::noBorder, 200, 30, 0, 0);
+    eTextBox *textBox1 = new eTextBox("You can download the new firmware via\nWi-Fi using a web browser on your phone\nor computer.", BorderStyle::noBorder, 210, 30, 0, 0);
+    eLabel *label1 = new eLabel("IP: 192.168.0.4", 0, 40);
+    
+    eButton *button1 = new eButton("Start OTA mode", nullFunction, 5, 55);
+    eButton *button2 = new eButton("Stop OTA mode", nullFunction, 5, 72);
 
-    formOTAupdate->title = "OTA update";
+    formOTAupdate->title = "Update center";
     formOTAupdate->eFormShowMode = NORMAL;
 
     formOTAupdate->addElement(textBox1);
+    formOTAupdate->addElement(button1);
+    formOTAupdate->addElement(button2);
+    formOTAupdate->addElement(label1);
+
     formsStack.push(formOTAupdate);
 }
 

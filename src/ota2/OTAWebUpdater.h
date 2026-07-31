@@ -14,7 +14,7 @@ public:
     ~OTAWebUpdater();
 
     // Инициализация как WiFi точка доступа
-    bool begin(const char *apSSID = "ESP32-OTA", const char *apPassword = "");
+    bool begin(const char *apSSID = "EX-Update-OTA", const char *apPassword = "");
 
     // Запуск веб-сервера
     void startWebServer(int port = 80);
