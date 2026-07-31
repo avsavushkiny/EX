@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EX OTA · Terminal</title>
+    <style>
+        /* ----- RESET & BASE ----- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #1a1a1f;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-family: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            color: #cccccc;
+            line-height: 1.6;
+        }
+
+        /* ----- TERMINAL WINDOW (Windows 11 style) ----- */
+        .terminal {
+            max-width: 780px;
+            width: 100%;
+            background: rgba(30, 30, 35, 0.92);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.8),
+                0 0 0 1px rgba(255, 255, 255, 0.03) inset;
+            padding: 0;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+
+        /* ----- TITLE BAR (Windows 11 style) ----- */
+        .title-bar {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            background: rgba(20, 20, 25, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            user-select: none;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+            margin-right: 14px;
+        }
+
+        .window-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.15s, opacity 0.15s;
+            position: relative;
+        }
+
+        .window-btn:hover {
+            transform: scale(1.15);
+        }
+
+        .window-btn.close {
+            background: #ff5f57;
+        }
+        .window-btn.close:hover {
+            background: #ff3b30;
+        }
+
+        .window-btn.minimize {
+            background: #ffbd2e;
+        }
+        .window-btn.minimize:hover {
+            background: #ffa500;
+        }
+
+        .window-btn.maximize {
+            background: #28c840;
+        }
+        .window-btn.maximize:hover {
+            background: #1dbd30;
+        }
+
+        .window-title {
+            flex: 1;
+            font-size: 12px;
+            font-weight: 400;
+            color: #9a9a9a;
+            letter-spacing: 0.2px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .window-title .icon {
+            font-size: 14px;
+            opacity: 0.6;
+        }
+
+        .window-title .path {
+            color: #5a8ad4;
+        }
+
+        .window-title .cursor-blink {
+            display: inline-block;
+            width: 8px;
+            height: 16px;
+            background: #5a8ad4;
+            vertical-align: text-bottom;
+            margin-left: 4px;
+            animation: blink 1s step-end infinite;
+            opacity: 0.7;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+
+        /* ----- TERMINAL CONTENT ----- */
+        .terminal-content {
+            padding: 24px 28px 28px;
+        }
+
+        @media (max-width: 540px) {
+            .terminal-content {
+                padding: 18px 16px 20px;
+            }
+        }
+
+        /* ----- HEADER ----- */
+        .header {
+            margin-bottom: 24px;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 500;
+            color: #e8e8e8;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.2px;
+        }
+
+        .header h1 .prompt-symbol {
+            color: #5a8ad4;
+            font-weight: 400;
+            font-size: 18px;
+        }
+
+        .header p {
+            font-size: 13px;
+            color: #7a7a8a;
+            margin-top: 2px;
+            font-weight: 350;
+        }
+
+        .header p .cmd-highlight {
+            color: #5a8ad4;
+            background: rgba(90, 138, 212, 0.08);
+            padding: 0 8px;
+            border-radius: 3px;
+        }
+
+        /* ----- DIVIDER ----- */
+        .divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.05);
+            margin: 20px 0 22px;
+        }
+
+        /* ----- INFO GRID (Windows 11 style) ----- */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        @media (max-width: 480px) {
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .info-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 10px 14px;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .info-item:hover {
+            border-color: rgba(90, 138, 212, 0.25);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .info-item .label {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #5a5a6a;
+            display: block;
+            font-weight: 500;
+        }
+
+        .info-item .value {
+            font-size: 14px;
+            color: #d0d0d0;
+            font-weight: 400;
+            word-break: break-word;
+            margin-top: 1px;
+        }
+
+        .info-item .value.mono {
+            font-family: inherit;
+            font-size: 13px;
+            color: #a0b0c8;
+        }
+
+        .info-item .value .accent {
+            color: #5a8ad4;
+        }
+
+        /* ----- UPLOAD BOX (Windows 11 style) ----- */
+        .upload-section {
+            margin: 16px 0 4px;
+        }
+
+        .upload-box {
+            border: 2px dashed rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 28px 20px 26px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+            background: rgba(255, 255, 255, 0.02);
+            position: relative;
+        }
+
+        .upload-box:hover {
+            border-color: rgba(90, 138, 212, 0.3);
+            background: rgba(255, 255, 255, 0.04);
+            box-shadow: 0 0 30px rgba(90, 138, 212, 0.02);
+        }
+
+        .upload-box.dragover {
+            border-color: #5a8ad4;
+            background: rgba(90, 138, 212, 0.05);
+            box-shadow: 0 0 0 2px rgba(90, 138, 212, 0.08);
+        }
+
+        .upload-box input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 26px;
+            display: block;
+            margin-bottom: 6px;
+            opacity: 0.5;
+        }
+
+        .upload-text {
+            font-size: 14px;
+            font-weight: 400;
+            color: #b0b0c0;
+        }
+
+        .upload-text .cmd {
+            color: #5a8ad4;
+            background: rgba(90, 138, 212, 0.06);
+            padding: 0 10px;
+            border-radius: 4px;
+            border: 1px solid rgba(90, 138, 212, 0.1);
+        }
+
+        .upload-hint {
+            font-size: 11px;
+            color: #5a5a6a;
+            margin-top: 4px;
+        }
+
+        .file-name {
+            display: none;
+            margin-top: 12px;
+            padding: 5px 16px;
+            background: rgba(90, 138, 212, 0.06);
+            border: 1px solid rgba(90, 138, 212, 0.12);
+            border-radius: 20px;
+            font-size: 12px;
+            color: #7a9ad4;
+            letter-spacing: 0.2px;
+        }
+
+        .file-name.show {
+            display: inline-block;
+        }
+
+        /* ----- BUTTONS (Windows 11 style) ----- */
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 22px;
+        }
+
+        .btn {
+            padding: 8px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 450;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.03);
+            color: #c0c0d0;
+            letter-spacing: 0.2px;
+        }
+
+        .btn:active {
+            transform: scale(0.97);
+        }
+
+        .btn-primary {
+            background: rgba(90, 138, 212, 0.12);
+            border-color: rgba(90, 138, 212, 0.2);
+            color: #8ab0f0;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: rgba(90, 138, 212, 0.18);
+            border-color: rgba(90, 138, 212, 0.35);
+            color: #aac4f5;
+            box-shadow: 0 0 20px rgba(90, 138, 212, 0.05);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.02);
+            border-color: rgba(255, 255, 255, 0.05);
+            color: #7a7a8a;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #a0a0b0;
+        }
+
+        .btn-danger {
+            background: rgba(255, 95, 87, 0.08);
+            border-color: rgba(255, 95, 87, 0.12);
+            color: #e07a7a;
+        }
+
+        .btn-danger:hover {
+            background: rgba(255, 95, 87, 0.14);
+            border-color: rgba(255, 95, 87, 0.2);
+            color: #f09a9a;
+        }
+
+        @media (max-width: 480px) {
+            .actions {
+                flex-direction: column;
+            }
+            .btn {
+                justify-content: center;
+                padding: 10px 20px;
+            }
+        }
+
+        /* ----- STATUS (Windows 11 style) ----- */
+        .status {
+            margin-top: 18px;
+            padding: 10px 16px;
+            border-radius: 6px;
+            display: none;
+            font-size: 12px;
+            font-weight: 400;
+            border-left: 3px solid transparent;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .status.show {
+            display: block;
+        }
+
+        .status-success {
+            border-left-color: #28c840;
+            color: #8cd4a0;
+            background: rgba(40, 200, 64, 0.04);
+        }
+
+        .status-error {
+            border-left-color: #ff5f57;
+            color: #f0a0a0;
+            background: rgba(255, 95, 87, 0.04);
+        }
+
+        .status-info {
+            border-left-color: #5a8ad4;
+            color: #8ab0f0;
+            background: rgba(90, 138, 212, 0.04);
+        }
+
+        /* ----- PROGRESS (Windows 11 style) ----- */
+        .progress-container {
+            margin-top: 16px;
+            display: none;
+        }
+
+        .progress-container.show {
+            display: block;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-bar .fill {
+            height: 100%;
+            background: linear-gradient(90deg, #5a8ad4, #7aade0);
+            width: 0%;
+            transition: width 0.25s ease;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(90, 138, 212, 0.15);
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #5a5a6a;
+            margin-top: 5px;
+            letter-spacing: 0.2px;
+        }
+
+        .progress-label .percent {
+            color: #7a9ad4;
+        }
+
+        /* ----- SCROLLBAR (Windows 11 style) ----- */
+        ::-webkit-scrollbar {
+            width: 4px;
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        /* ----- Focus & selection ----- */
+        ::selection {
+            background: rgba(90, 138, 212, 0.2);
+            color: #e8e8e8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="terminal">
+
+        <!-- Title Bar (Windows 11 style) -->
+        <div class="title-bar">
+            <div class="window-controls">
+                <button class="window-btn close" aria-label="Close"></button>
+                <button class="window-btn minimize" aria-label="Minimize"></button>
+                <button class="window-btn maximize" aria-label="Maximize"></button>
+            </div>
+            <div class="window-title">
+                <span class="icon">⬡</span>
+                <span>EX OTA</span>
+                <span style="color:#5a5a6a;">·</span>
+                <span class="path">~/update</span>
+                <span class="cursor-blink"></span>
+            </div>
+        </div>
+
+        <!-- Terminal Content -->
+        <div class="terminal-content">
+
+            <!-- Header -->
+            <div class="header">
+                <h1>
+                    <span class="prompt-symbol">❯</span> Update Console
+                </h1>
+                <p>
+                    <span class="cmd-highlight">upload</span> firmware · device ready
+                </p>
+            </div>
+
+            <!-- Divider -->
+            <div class="divider"></div>
+
+            <!-- Info Grid -->
+            <div class="info-grid">
+                <div class="info-item">
+                    <span class="label">● device</span>
+                    <span class="value">)rawliteral" + _apSSID + R"rawliteral(</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">● ip</span>
+                    <span class="value mono">)rawliteral" + _localIP.toString() + R"rawliteral(</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">● firmware</span>
+                    <span class="value mono" id="firmwareVersion">)rawliteral" + ESP.getSketchMD5().substring(0, 16) + R"rawliteral(</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">● memory</span>
+                    <span class="value mono">)rawliteral" + String(ESP.getFreeHeap() / 1024) + R"rawliteral( <span style="color:#5a5a6a;">KB</span></span>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Upload Form -->
+            <form id="uploadForm" method="POST" action="/update" enctype="multipart/form-data">
+
+                <div class="upload-section">
+                    <div class="upload-box" id="uploadBox">
+                        <span class="upload-icon">📂</span>
+                        <div class="upload-text">
+                            <span class="cmd">drop</span> or <span class="cmd">browse</span> for .bin
+                        </div>
+                        <div class="upload-hint">max 4 MB · drag &amp; drop supported</div>
+                        <span class="file-name" id="fileName"></span>
+                        <input type="file" id="fileInput" name="firmware" accept=".bin" />
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="btn btn-primary" id="uploadBtn" disabled>
+                        <span>⤒</span> Upload
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="location.reload()">
+                        ⟳ Refresh
+                    </button>
+                    <button type="button" class="btn btn-danger" onclick="resetDevice()">
+                        ↺ Reset
+                    </button>
+                </div>
+
+            </form>
+
+            <!-- Status -->
+            <div class="status" id="statusMessage"></div>
+
+            <!-- Progress -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-bar">
+                    <div class="fill" id="progressFill"></div>
+                </div>
+                <div class="progress-label">
+                    <span id="progressText">uploading…</span>
+                    <span class="percent" id="progressPercent">0%</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const fileInput = document.getElementById('fileInput');
+            const uploadBox = document.getElementById('uploadBox');
+            const fileName = document.getElementById('fileName');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const statusMsg = document.getElementById('statusMessage');
+            const progressContainer = document.getElementById('progressContainer');
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const progressPercent = document.getElementById('progressPercent');
+            const form = document.getElementById('uploadForm');
+
+            // ----- Helpers -----
+            function showStatus(message, type) {
+                statusMsg.className = 'status show status-' + type;
+                statusMsg.textContent = message;
+            }
+
+            function hideStatus() {
+                statusMsg.className = 'status';
+                statusMsg.textContent = '';
+            }
+
+            function showProgress(percent, text) {
+                progressContainer.classList.add('show');
+                const p = Math.min(100, Math.max(0, percent));
+                progressFill.style.width = p + '%';
+                progressPercent.textContent = p + '%';
+                if (text) progressText.textContent = text;
+            }
+
+            function hideProgress() {
+                progressContainer.classList.remove('show');
+                progressFill.style.width = '0%';
+                progressPercent.textContent = '0%';
+            }
+
+            function resetFileUI() {
+                fileInput.value = '';
+                fileName.classList.remove('show');
+                fileName.textContent = '';
+                uploadBtn.disabled = true;
+            }
+
+            // ----- File selection -----
+            fileInput.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const file = this.files[0];
+                    const sizeKB = (file.size / 1024).toFixed(1);
+                    fileName.textContent = '📄 ' + file.name + '  (' + sizeKB + ' KB)';
+                    fileName.classList.add('show');
+                    uploadBtn.disabled = false;
+                    hideStatus();
+                } else {
+                    resetFileUI();
+                }
+            });
+
+            // ----- Drag & Drop -----
+            uploadBox.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                this.classList.add('dragover');
+            });
+
+            uploadBox.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+            });
+
+            uploadBox.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('dragover');
+                if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    fileInput.files = e.dataTransfer.files;
+                    fileInput.dispatchEvent(new Event('change'));
+                }
+            });
+
+            uploadBox.addEventListener('click', function() {
+                fileInput.click();
+            });
+
+            // ----- Submit -----
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                if (!fileInput.files || !fileInput.files[0]) {
+                    showStatus('⚠ no file selected', 'error');
+                    return;
+                }
+
+                const file = fileInput.files[0];
+                if (!file.name.toLowerCase().endsWith('.bin')) {
+                    showStatus('⚠ expected .bin file', 'error');
+                    return;
+                }
+
+                uploadBtn.disabled = true;
+                showStatus('⏳ uploading…', 'info');
+                showProgress(0, 'starting…');
+
+                const xhr = new XMLHttpRequest();
+                const formData = new FormData(form);
+
+                xhr.upload.addEventListener('progress', function(e) {
+                    if (e.lengthComputable) {
+                        const percent = Math.round((e.loaded / e.total) * 100);
+                        showProgress(percent);
+                    }
+                });
+
+                xhr.addEventListener('load', function() {
+                    if (xhr.status === 200) {
+                        const response = xhr.responseText.trim();
+                        if (response.includes('Success')) {
+                            showStatus('✓ update successful · device restarting', 'success');
+                            showProgress(100, 'done ✓');
+                            setTimeout(() => location.reload(), 3000);
+                        } else {
+                            showStatus('✗ ' + response, 'error');
+                            uploadBtn.disabled = false;
+                        }
+                    } else {
+                        showStatus('✗ upload failed: ' + (xhr.statusText || 'unknown'), 'error');
+                        uploadBtn.disabled = false;
+                    }
+                });
+
+                xhr.addEventListener('error', function() {
+                    showStatus('✗ network error · check connection', 'error');
+                    uploadBtn.disabled = false;
+                    hideProgress();
+                });
+
+                xhr.open('POST', '/update');
+                xhr.send(formData);
+            });
+
+            // ----- Reset -----
+            window.resetDevice = function() {
+                if (confirm('Reset device?')) {
+                    showStatus('⏳ resetting…', 'info');
+                    fetch('/update', { method: 'POST' })
+                        .then(() => {
+                            showStatus('✓ device reset', 'success');
+                            setTimeout(() => location.reload(), 2000);
+                        })
+                        .catch(() => {
+                            showStatus('✗ reset failed', 'error');
+                        });
+                }
+            };
+
+            // ----- Poll status -----
+            setInterval(function() {
+                fetch('/status')
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.version) {
+                            document.getElementById('firmwareVersion').textContent = data.version.substring(0, 16);
+                        }
+                    })
+                    .catch(() => {});
+            }, 5000);
+        })();
+    </script>
+
+</body>
+</html>
