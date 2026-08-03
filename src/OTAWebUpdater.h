@@ -1,6 +1,8 @@
 #ifndef OTAWebUpdater_h
 #define OTAWebUpdater_h
 
+#pragma once
+
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WebServer.h>

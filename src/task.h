@@ -5,12 +5,15 @@
 #include "ui.h"
 #include "energySave.h"
 #include "dev.h"
+#include "ex.h"
+
 
 extern GGL _GGL;
 extern TaskDispatcher _TD;
 extern Cursor _CRS;
 extern void runExFormStack();
 extern FPS _FPS;
+extern OTAWebUpdater _OTA_UPDATER;
 
 short _LOAD_CPU{};
 
@@ -275,15 +278,49 @@ void _myForm3()
 }
 
 /* Form. OTA mode*/
+bool isOtaMode = false;
+void _otaStartUpdater()
+{
+    if (_OTA_UPDATER.begin("EX-Updater", "12345678"))
+    {
+        _OTA_UPDATER.startWebServer(80);
+        isOtaMode = true;
+    }
+}
+
+void _otaStopUpdater()
+{
+    WiFi.mode(WIFI_OFF);
+    isOtaMode = false;
+}
+
 void _formOTAUpdate()
 {
     exForm* formOTAupdate = new exForm();
     
     eTextBox *textBox1 = new eTextBox("You can download the new firmware via\nWi-Fi using a web browser on your phone\nor computer.", BorderStyle::noBorder, 210, 30, 0, 0);
-    eLabel *label1 = new eLabel("IP: 192.168.0.4", 0, 40);
-    
-    eButton *button1 = new eButton("Start OTA mode", nullFunction, 5, 55);
-    eButton *button2 = new eButton("Stop OTA mode", nullFunction, 5, 72);
+    eButton *button1 = new eButton("Start OTA mode", _otaStartUpdater, 5, 55);
+    eButton *button2 = new eButton("Stop OTA mode", _otaStopUpdater, 5, 72);
+    eLabel *labelIp = new eLabel("", 0, 40);
+
+    eFunction *funStartOtaUpdate = new eFunction([]() {
+        if (isOtaMode == true)
+        {
+            _OTA_UPDATER.handleClient();
+        }
+    });
+
+    eFunction *func1 = new eFunction([labelIp](){ 
+        if (isOtaMode == true)
+        {
+            labelIp->setText((String)_OTA_UPDATER.getLocalIP().toString());
+        }
+        else
+        {
+            labelIp->setText("0.0.0.0");
+        }
+    });
+
 
     formOTAupdate->title = "Update center";
     formOTAupdate->eFormShowMode = NORMAL;
@@ -291,7 +328,9 @@ void _formOTAUpdate()
     formOTAupdate->addElement(textBox1);
     formOTAupdate->addElement(button1);
     formOTAupdate->addElement(button2);
-    formOTAupdate->addElement(label1);
+    formOTAupdate->addElement(funStartOtaUpdate);
+    formOTAupdate->addElement(func1);
+    formOTAupdate->addElement(labelIp);
 
     formsStack.push(formOTAupdate);
 }
@@ -342,7 +381,8 @@ void monitorTask()
 void testErrorTask()
 {
     for(;;)
-    {}
+    {
+    }
 }
 
 /**/

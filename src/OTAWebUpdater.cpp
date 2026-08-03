@@ -45,22 +45,22 @@ bool OTAWebUpdater::begin(const char *apSSID, const char *apPassword)
 
     _localIP = WiFi.softAPIP();
 
-    Serial.println("Access Point started!");
-    Serial.print("SSID: ");
-    Serial.println(_apSSID);
-    Serial.print("IP Address: ");
-    Serial.println(_localIP);
+    // Serial.println("Access Point started!");
+    // Serial.print("SSID: ");
+    // Serial.println(_apSSID);
+    // Serial.print("IP Address: ");
+    // Serial.println(_localIP);
 
     // Настройка mDNS
     if (!MDNS.begin(_apSSID.c_str()))
     {
         _lastStatus = "MDNS failed to start";
-        Serial.println("MDNS failed to start!");
+        // Serial.println("MDNS failed to start!");
     }
     else
     {
         MDNS.addService("http", "tcp", 80);
-        Serial.printf("mDNS started: http://%s.local\n", _apSSID.c_str());
+        // Serial.printf("mDNS started: http://%s.local\n", _apSSID.c_str());
     }
 
     _lastStatus = "Ready - AP Mode";
@@ -89,7 +89,7 @@ void OTAWebUpdater::startWebServer(int port)
                         { handleNotFound(); });
 
     _server->begin();
-    Serial.println("HTTP server started");
+    // Serial.println("HTTP server started");
 
     _lastStatus = "Web server running";
 }
@@ -124,7 +124,7 @@ String OTAWebUpdater::getUpdatePageHTML()
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>EX OTA</title>
+    <title>Update center</title>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{background:#0e0e14;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;font-family:'JetBrains Mono','Consolas',monospace;color:#c8d0dc;line-height:1.5}
@@ -273,7 +273,7 @@ void OTAWebUpdater::handleFirmwareUpload()
 
     if (upload.status == UPLOAD_FILE_START)
     {
-        Serial.printf("Update start: %s\n", upload.filename.c_str());
+        // Serial.printf("Update start: %s\n", upload.filename.c_str());
         _lastStatus = "Uploading: " + String(upload.filename.c_str());
 
         if (!Update.begin(UPDATE_SIZE_UNKNOWN))
@@ -297,7 +297,7 @@ void OTAWebUpdater::handleFirmwareUpload()
     {
         if (Update.end(true))
         {
-            Serial.printf("Update success: %d bytes\n", upload.totalSize);
+            // Serial.printf("Update success: %d bytes\n", upload.totalSize);
             _lastStatus = "Update successful!";
             _server->send(200, "text/plain", "Update Success");
             delay(500);

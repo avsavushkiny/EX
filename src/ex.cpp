@@ -8,6 +8,7 @@ Icon _ICON;
 SystemIcon _SICON;
 Joystick _JOY;
 Cursor _CRS;
+OTAWebUpdater _OTA_UPDATER;
 
 /* Global function */
 /* Initialization systems */
