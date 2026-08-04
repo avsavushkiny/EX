@@ -354,7 +354,7 @@ int exForm::showForm()
             xSizeStack = 200;
         }
         
-        _GRF.print("[" + (String)sizeStack + "]", xSizeStack, 2, 10, 5);
+        _GRF.print("[" + (String)sizeStack + "]", xSizeStack + 10, 2, 10, 5);
     }
 
     if (eFormShowMode == MAXIMIZED)
@@ -400,7 +400,7 @@ int exForm::showForm()
             xSizeStack = 200;
         }
        
-       _GRF.print("[" + (String)sizeStack + "]", xSizeStack, 2, 10, 5);
+       _GRF.print("[" + (String)sizeStack + "]", xSizeStack + 10, 2, 10, 5);
     }
 
     if (eFormShowMode == NORMAL)
@@ -447,7 +447,7 @@ int exForm::showForm()
             xSizeStack = 180;
         }
 
-        _GRF.print("[" + (String)sizeStack + "]", xSizeStack, outerBoundaryForm - 4, 10, 5);
+        _GRF.print("[" + (String)sizeStack + "]", xSizeStack + 10, outerBoundaryForm - 4, 10, 5);
     }
 
     // выводим все элементы на дисплей

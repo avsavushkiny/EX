@@ -277,7 +277,7 @@ void _myForm3()
     formsStack.push(form3);
 }
 
-/* Form. OTA mode*/
+/* Form. Update center*/
 bool isOtaMode = false;
 void _otaStartUpdater()
 {
