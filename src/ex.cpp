@@ -9,6 +9,7 @@ SystemIcon _SICON;
 Joystick _JOY;
 Cursor _CRS;
 OTAWebUpdater _OTA_UPDATER;
+DisplayWebServer _DISPLAY_SERVER;
 
 /* Global function */
 /* Initialization systems */

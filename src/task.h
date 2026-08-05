@@ -14,6 +14,7 @@ extern Cursor _CRS;
 extern void runExFormStack();
 extern FPS _FPS;
 extern OTAWebUpdater _OTA_UPDATER;
+extern int _LCD_BUFFER[(256 * 160 / 4) + 256];
 
 short _LOAD_CPU{};
 
@@ -335,6 +336,43 @@ void _formOTAUpdate()
     formsStack.push(formOTAupdate);
 }
 
+/* Form. Display server */
+bool _isDisplayServerMode = false;
+void _displayServerStart()
+{
+    if (_isDisplayServerMode == false)
+    {
+        _DISPLAY_SERVER.begin("Display-Server");
+        _DISPLAY_SERVER.startWebServer();
+        _DISPLAY_SERVER.setDisplayBuffer((uint8_t*)_LCD_BUFFER, 256, 160);
+    }
+
+}
+
+void _displayServerStop()
+{
+
+}
+
+
+void _formDisplayServer()
+{
+    exForm* formDisplayServer = new exForm();
+
+    eButton *button1 = new eButton("Start Display Server", _displayServerStart, 5, 10);
+    eButton *button2 = new eButton("Stop Display Server", _displayServerStop, 5, 20);
+    eLabel *label1 = new eLabel("IP adress", 0, 30);
+
+    formDisplayServer->title = "Display Server";
+    formDisplayServer->eFormShowMode = NORMAL;
+
+    formDisplayServer->addElement(button1);
+    formDisplayServer->addElement(button2);
+    formDisplayServer->addElement(label1);
+
+    formsStack.push(formDisplayServer);
+}
+
 /* Cursor */
 void _systemCursor()
 {
@@ -426,9 +464,11 @@ TaskArguments system0[]
     // createTask("userdesktop", &_userDesktop, _ICON.program_manager, DESKTOP, 0, false, PRIORITY_NORMAL),
     //
     // Error task
-    createTask("error", &testErrorTask, _ICON.chip_ram, DESKTOP, 0, false, PRIORITY_NORMAL),
+    // createTask("error", &testErrorTask, _ICON.chip_ram, DESKTOP, 0, false, PRIORITY_NORMAL),
+    // Display Server
+    createTask("displayServer", &_formDisplayServer, _ICON.bar_graph, DESKTOP, 0, false, PRIORITY_NORMAL),
     // OTA update
-    createTask("otaUpdate", &_formOTAUpdate, _ICON.binary, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("otaUpdate", &_formOTAUpdate, _ICON.backup_devices, DESKTOP, 0, false, PRIORITY_NORMAL),
     // Stack forms
     createTask("stackform", &runExFormStack, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 1),
     // Добавление задачи мониторинга

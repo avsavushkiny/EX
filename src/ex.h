@@ -12,6 +12,8 @@
 #include "watchdog.h"
 #include "dev.h"
 #include "OTAWebUpdater.h"
+#include "display_web_server.h"
+
 
 /* [!] Объекты в объявлении через extern 
        не должны содержать инициализацию! */
@@ -25,6 +27,7 @@ extern SystemIcon _SICON;
 extern Joystick _JOY;
 extern Cursor _CRS;
 extern OTAWebUpdater _OTA_UPDATER;
+extern DisplayWebServer _DISPLAY_SERVER;
 
 // Глобальные функции
 extern void initializationSystem();
