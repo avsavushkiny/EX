@@ -269,7 +269,7 @@ setInterval(function(){
     return html;
 }
 
-// Конвертация буфера в BMP
+// Конвертация буфера в BMP (исправленная версия)
 std::vector<uint8_t> DisplayWebServer::convertToBMP()
 {
     std::vector<uint8_t> result;
@@ -279,16 +279,11 @@ std::vector<uint8_t> DisplayWebServer::convertToBMP()
         return result;
     }
     
-    // BMP заголовки
-    // BITMAPFILEHEADER (14 байт)
-    // BITMAPINFOHEADER (40 байт)
-    // Палитра (4 * 256 = 1024 байт для 8-битного BMP)
-    // Данные пикселей (высота * ширина)
-    
-    int bpp = 1; // 8 бит на пиксель
+    // Параметры BMP
+    int bpp = 1; // 8 бит на пиксель (4 уровня серого)
     int rowSize = ((_width * bpp + 3) / 4) * 4; // Выравнивание по 4 байта
     int imageSize = rowSize * _height;
-    int paletteSize = 256 * 4; // 256 цветов * 4 байта (RGBA)
+    int paletteSize = 256 * 4; // 256 цветов * 4 байта
     int fileSize = 14 + 40 + paletteSize + imageSize;
     
     result.resize(fileSize);
@@ -296,63 +291,48 @@ std::vector<uint8_t> DisplayWebServer::convertToBMP()
     int offset = 0;
     
     // BITMAPFILEHEADER
-    // Signature "BM"
     data[offset++] = 'B';
     data[offset++] = 'M';
-    // Размер файла
     *(uint32_t*)(data + offset) = fileSize;
     offset += 4;
-    // Зарезервировано
     *(uint32_t*)(data + offset) = 0;
     offset += 4;
-    // Смещение до данных пикселей
     *(uint32_t*)(data + offset) = 14 + 40 + paletteSize;
     offset += 4;
     
     // BITMAPINFOHEADER
-    // Размер заголовка
     *(uint32_t*)(data + offset) = 40;
     offset += 4;
-    // Ширина
     *(int32_t*)(data + offset) = _width;
     offset += 4;
-    // Высота (отрицательная для верхнего-вниз)
-    *(int32_t*)(data + offset) = -_height;
+    *(int32_t*)(data + offset) = -_height; // Сверху вниз
     offset += 4;
-    // Плоскости
     *(uint16_t*)(data + offset) = 1;
     offset += 2;
-    // Бит на пиксель
     *(uint16_t*)(data + offset) = 8;
     offset += 2;
-    // Сжатие (0 = без сжатия)
     *(uint32_t*)(data + offset) = 0;
     offset += 4;
-    // Размер изображения
     *(uint32_t*)(data + offset) = imageSize;
     offset += 4;
-    // Разрешение по X (пикселей на метр)
     *(int32_t*)(data + offset) = 2835;
     offset += 4;
-    // Разрешение по Y
     *(int32_t*)(data + offset) = 2835;
     offset += 4;
-    // Количество используемых цветов
     *(uint32_t*)(data + offset) = 4;
     offset += 4;
-    // Количество важных цветов
     *(uint32_t*)(data + offset) = 4;
     offset += 4;
     
-    // Палитра (4 цвета: черный, темно-серый, светло-серый, белый)
+    // Палитра (4 уровня серого)
     // Формат: B, G, R, A
     uint32_t palette[] = {
-        0x00000000, // Черный
-        0x3F3F3F00, // Темно-серый
-        0xBFBFBF00, // Светло-серый
-        0xFFFFFFFF  // Белый
+        0x00000000, // 0 - Черный
+        0x55555500, // 1 - Темно-серый
+        0xAAAAAA00, // 2 - Светло-серый
+        0xFFFFFFFF  // 3 - Белый
     };
-    // Заполняем остальные цвета серой шкалой
+    
     for (int i = 0; i < 4; i++)
     {
         uint32_t color = palette[i];
@@ -361,33 +341,45 @@ std::vector<uint8_t> DisplayWebServer::convertToBMP()
         data[offset++] = (color >> 16) & 0xFF; // R
         data[offset++] = (color >> 24) & 0xFF; // A
     }
-    // Заполняем остальные цвета палитры
+    
+    // Заполняем остальные цвета палитры градиентом
     for (int i = 4; i < 256; i++)
     {
         uint8_t gray = (i - 4) * 255 / 252;
-        data[offset++] = gray; // B
-        data[offset++] = gray; // G
-        data[offset++] = gray; // R
-        data[offset++] = 0;    // A
+        data[offset++] = gray;
+        data[offset++] = gray;
+        data[offset++] = gray;
+        data[offset++] = 0;
     }
     
     // Данные пикселей
-    // Буфер дисплея хранит 2 бита на пиксель в упакованном виде
-    // Каждый байт содержит 4 пикселя (по 2 бита)
-    // Преобразуем в 8-битные значения
-    int pixelIndex = 0;
+    // Буфер: каждый байт содержит 4 пикселя (по 2 бита)
+    // Бит 7-6: пиксель 0, бит 5-4: пиксель 1, бит 3-2: пиксель 2, бит 1-0: пиксель 3
+    // Страница: 4 строки (COM0-COM3)
+    
+    int pixelDataOffset = 14 + 40 + paletteSize;
+    
     for (int row = 0; row < _height; row++)
     {
+        // Определяем страницу (каждая страница = 4 строки)
+        int page = row / 4;
+        // Определяем строку внутри страницы (0-3)
+        int rowInPage = row % 4;
+        
+        // Битовая позиция для 2-битного пикселя
+        int bitShift = rowInPage * 2;
+        
         for (int col = 0; col < _width; col++)
         {
-            int byteIndex = (row / 4) * _width + col;
-            int bitShift = (row % 4) * 2;
-            int pixelValue = (_displayBuffer[byteIndex] >> bitShift) & 0x03;
+            // Индекс в буфере: страница * ширина + колонка
+            int bufferIndex = page * _width + col;
             
-            // Пиксели хранятся снизу вверх
-            int destRow = _height - 1 - row;
-            int destPos = destRow * rowSize + col;
-            data[14 + 40 + paletteSize + destPos] = pixelValue;
+            // Извлекаем 2-битное значение
+            int pixelValue = (_displayBuffer[bufferIndex] >> bitShift) & 0x03;
+            
+            // Записываем в BMP (8 бит на пиксель)
+            int destPos = row * rowSize + col;
+            data[pixelDataOffset + destPos] = pixelValue;
         }
     }
     

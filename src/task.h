@@ -340,18 +340,19 @@ void _formOTAUpdate()
 bool _isDisplayServerMode = false;
 void _displayServerStart()
 {
-    if (_isDisplayServerMode == false)
+    if (_DISPLAY_SERVER.begin("Display-Server"))
     {
-        _DISPLAY_SERVER.begin("Display-Server");
-        _DISPLAY_SERVER.startWebServer();
+        _DISPLAY_SERVER.startWebServer(80);
         _DISPLAY_SERVER.setDisplayBuffer((uint8_t*)_LCD_BUFFER, 256, 160);
+        _isDisplayServerMode = true;
     }
 
 }
 
 void _displayServerStop()
 {
-
+    WiFi.mode(WIFI_OFF);
+    _isDisplayServerMode = false;
 }
 
 
@@ -359,9 +360,27 @@ void _formDisplayServer()
 {
     exForm* formDisplayServer = new exForm();
 
-    eButton *button1 = new eButton("Start Display Server", _displayServerStart, 5, 10);
-    eButton *button2 = new eButton("Stop Display Server", _displayServerStop, 5, 20);
-    eLabel *label1 = new eLabel("IP adress", 0, 30);
+    eButton *button1 = new eButton("Start Display Server", _displayServerStart, 5, 5);
+    eButton *button2 = new eButton("Stop Display Server", _displayServerStop, 5, 22);
+    eLabel *label1 = new eLabel("IP adress", 0, 40);
+
+    eFunction *funDisplayServerUpdate = new eFunction([]() {
+        if (_isDisplayServerMode == true)
+        {
+            _DISPLAY_SERVER.handleClient();
+        }
+    });
+
+    eFunction *func1 = new eFunction([label1](){ 
+        if (_isDisplayServerMode == true)
+        {
+            label1->setText((String)_DISPLAY_SERVER.getLocalIP().toString());
+        }
+        else
+        {
+            label1->setText("0.0.0.0");
+        }
+    });
 
     formDisplayServer->title = "Display Server";
     formDisplayServer->eFormShowMode = NORMAL;
@@ -369,6 +388,8 @@ void _formDisplayServer()
     formDisplayServer->addElement(button1);
     formDisplayServer->addElement(button2);
     formDisplayServer->addElement(label1);
+    formDisplayServer->addElement(funDisplayServerUpdate);
+    formDisplayServer->addElement(func1);
 
     formsStack.push(formDisplayServer);
 }
