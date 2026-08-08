@@ -4,12 +4,16 @@
 #include "taskDispatcher.h"
 #include "ui.h"
 #include "energySave.h"
+#include "dev.h"
+#include "ex.h"
+
 
 extern GGL _GGL;
 extern TaskDispatcher _TD;
 extern Cursor _CRS;
 extern void runExFormStack();
 extern FPS _FPS;
+extern OTAWebUpdater _OTA_UPDATER;
 
 short _LOAD_CPU{};
 
@@ -273,117 +277,63 @@ void _myForm3()
     formsStack.push(form3);
 }
 
-/* Form. Dispatcher [!] DELETE */
-void _myDispatcherFunction(int xG, int yG, int wG, int hG)
+/* Form. Update center*/
+bool isOtaMode = false;
+void _otaStartUpdater()
 {
-    int xx{5}, yy{23};
-
-    for (auto &_ta : tasks)
-    { 
-        if (_ta.activ == true)
-        {
-            String _Text = _ta.name;
-            uint8_t sizeText = _Text.length();
-
-            // _gfx.print(_ta.name, xx, yy, 8, 5);!!!
-            
-            if ((xx + (sizeText * 5) + 5) <= 240) //256 - 5 - 5
-            {
-                xx += (sizeText * 5) + 5;
-            }
-            
-            if ((xx + (sizeText * 5) + 5) >= 240)
-            {
-                xx = 5; yy += 10;
-            }
-        }
-    }
-
-    xx = 5;
-    
-    // _gfx.print("Inactive tasks:", xx + 5, (yy + 10), 8, 5);
-
-    yy += 20;
-    
-    for (auto &_ta : tasks)
-    { 
-        if (_ta.activ == false)
-        {
-            String _Text = _ta.name;
-            uint8_t sizeText = _Text.length();
-            
-            Label labelTask;
-            
-            if ((xx + (sizeText * 5) + 5) <= 240) //256 - 5 - 5
-            {
-                xx += (sizeText * 5) + 5;
-            }
-            
-            if ((xx + (sizeText * 5) + 5) >= 240)
-            {
-                xx = 5; yy += 10;
-            }
-        }
+    if (_OTA_UPDATER.begin("EX-Updater", "12345678"))
+    {
+        _OTA_UPDATER.startWebServer(80);
+        isOtaMode = true;
     }
 }
-void _myDispatcher()
+
+void _otaStopUpdater()
 {
-    exForm *formMyDispatcher = new exForm;
-    eGraphics *myDispatcher = new eGraphics(_myDispatcherFunction, 0, 0, 256, 160);
-
-    formMyDispatcher->title = "My Dispatcher task";
-    formMyDispatcher->eFormShowMode = FULLSCREEN;
-    formMyDispatcher->addElement(myDispatcher);
-
-    formsStack.push(formMyDispatcher);
+    WiFi.mode(WIFI_OFF);
+    isOtaMode = false;
 }
 
-/* Form. Settings */
-// settings Form
-// void _settingsForm()
-// {
-//     exForm *settingsForm = new exForm();
-//     uint8_t x{0}, y{0};
+void _formOTAUpdate()
+{
+    exForm* formOTAupdate = new exForm();
+    
+    eTextBox *textBox1 = new eTextBox("You can download the new firmware via\nWi-Fi using a web browser on your phone\nor computer.", BorderStyle::noBorder, 210, 30, 0, 0);
+    eButton *button1 = new eButton("Start OTA mode", _otaStartUpdater, 5, 55);
+    eButton *button2 = new eButton("Stop OTA mode", _otaStopUpdater, 5, 72);
+    eLabel *labelIp = new eLabel("", 0, 40);
 
-//     // --> LED control
-//     eCheckbox *checkLED = new eCheckbox(_SYS.STATEBACKLIGHT, "backlight control", x + 5, y + 5);
+    eFunction *funStartOtaUpdate = new eFunction([]() {
+        if (isOtaMode == true)
+        {
+            _OTA_UPDATER.handleClient();
+        }
+    });
 
-//     eFunction *funcLED = new eFunction([checkLED]()
-//                                        {
-//         systems.STATEBACKLIGHT = checkLED->isChecked();
-//         systems.setBacklight(systems.STATEBACKLIGHT); });
+    eFunction *func1 = new eFunction([labelIp](){ 
+        if (isOtaMode == true)
+        {
+            labelIp->setText((String)_OTA_UPDATER.getLocalIP().toString());
+        }
+        else
+        {
+            labelIp->setText("0.0.0.0");
+        }
+    });
 
-//     // --> Set contrast
-//     eLabel *label1 = new eLabel((String)systems.VALUECONTRAST, x + 20, y + 23);
 
-//     eButton *button1 = new eButton("-", []()
-//                                    { systems.VALUECONTRAST -= 1; delay(250); systems.setDisplayContrast(systems.VALUECONTRAST); }, x + 5, y + 20);
-//     eButton *button2 = new eButton("+", []()
-//                                    { systems.VALUECONTRAST += 1; delay(250); systems.setDisplayContrast(systems.VALUECONTRAST); }, x+ 50, y + 20);
+    formOTAupdate->title = "Update center";
+    formOTAupdate->eFormShowMode = NORMAL;
 
-//     eFunction *func1 = new eFunction([label1]()
-//                                      { label1->setText((String)systems.VALUECONTRAST); });
+    formOTAupdate->addElement(textBox1);
+    formOTAupdate->addElement(button1);
+    formOTAupdate->addElement(button2);
+    formOTAupdate->addElement(funStartOtaUpdate);
+    formOTAupdate->addElement(func1);
+    formOTAupdate->addElement(labelIp);
 
-//     eLabel *label2 = new eLabel("display contrast", x + 61, y + 23);
-   
-//     // --> Title, show mode Form
-//     settingsForm->title = "Settings";
-//     settingsForm->eFormShowMode = NORMAL;
-
-//     // --> Add elements Form
-//     settingsForm->addElement(checkLED);
-//     settingsForm->addElement(funcLED);
-//     settingsForm->addElement(button1);
-//     settingsForm->addElement(button2);
-//     settingsForm->addElement(label1);
-//     settingsForm->addElement(func1);
-//     settingsForm->addElement(label2);
-//     // settingsForm->addElement(func2);
-//     // settingsForm->addElement(label3);
-
-//     // --> Push Form object
-//     formsStack.push(settingsForm);
-// }
+    formsStack.push(formOTAupdate);
+}
 
 /* Cursor */
 void _systemCursor()
@@ -391,18 +341,34 @@ void _systemCursor()
     _JOY.updatePositionXY(20);
     _CRS.cursor(true, _JOY.posX0, _JOY.posY0);
 
-    // Выводим загрузку CPU
-    _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0 + 10, (String)_LOAD_CPU, 10, 1, _GGL.gray.BLACK);
-    _FPS.drawGrayFPS(_JOY.posX0 + 10, _JOY.posY0 + 20, _GGL.gray.DARK_GRAY);
-
-    // if ((_JOY.pressKeyEX() == true) && (_JOY.pressKeyENTER() == true))
-    // {
-    //     // Debug. Print coordinate
-    //     // u8g2.setCursor(_joy.posX0 + 10, _joy.posY0 + 10); !!!
-    //     // u8g2.print(_joy.posX0);
-    //     // u8g2.setCursor(_joy.posX0 + 10, _joy.posY0 + 20);
-    //     // u8g2.print(_joy.posY0);
-    // }
+    if (_JOY.posY0 > 132)
+    {
+        if ((_JOY.pressKeyEX() == true) && (_JOY.pressKeyENTER() == true))
+        {
+            _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0, (String)_VERSION_CORE, 10, 1, _GGL.gray.BLACK);
+            // _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0, (String)_DESCRIPTION, 10, 1, _GGL.gray.BLACK);
+        }
+        else
+        {
+            // Выводим загрузку CPU
+            _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0, (String)_LOAD_CPU, 10, 1, _GGL.gray.BLACK);
+            _FPS.drawGrayFPS(_JOY.posX0 + 23, _JOY.posY0, _GGL.gray.DARK_GRAY);
+        }
+    }
+    else
+    {
+        if ((_JOY.pressKeyEX() == true) && (_JOY.pressKeyENTER() == true))
+        {
+            _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0 + 10, (String)_VERSION_CORE, 10, 1, _GGL.gray.BLACK);
+            _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0 + 20, (String)_DESCRIPTION, 10, 1, _GGL.gray.BLACK);
+        }
+        else
+        {
+            // Выводим загрузку CPU
+            _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0 + 10, (String)_LOAD_CPU, 10, 1, _GGL.gray.BLACK);
+            _FPS.drawGrayFPS(_JOY.posX0 + 10, _JOY.posY0 + 20, _GGL.gray.DARK_GRAY);
+        }
+    }
 }
 
 /* CPU load */
@@ -415,7 +381,8 @@ void monitorTask()
 void testErrorTask()
 {
     for(;;)
-    {}
+    {
+    }
 }
 
 /**/
@@ -460,6 +427,8 @@ TaskArguments system0[]
     //
     // Error task
     createTask("error", &testErrorTask, _ICON.chip_ram, DESKTOP, 0, false, PRIORITY_NORMAL),
+    // OTA update
+    createTask("otaUpdate", &_formOTAUpdate, _ICON.binary, DESKTOP, 0, false, PRIORITY_NORMAL),
     // Stack forms
     createTask("stackform", &runExFormStack, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 1),
     // Добавление задачи мониторинга

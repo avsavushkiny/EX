@@ -1,0 +1,6 @@
+arduino-cli compile --fqbn esp32:esp32:esp32cam --output-dir ./my_binaries /path/to/sketch
+
+
+
+arduino-cli compile --fqbn stm32:stm32:Nucleo_144 -e /path/to/sketch
+

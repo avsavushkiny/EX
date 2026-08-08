@@ -11,6 +11,7 @@
 #include "exForm.h"
 #include "watchdog.h"
 #include "dev.h"
+#include "OTAWebUpdater.h"
 
 /* [!] Объекты в объявлении через extern 
        не должны содержать инициализацию! */
@@ -23,6 +24,7 @@ extern Icon _ICON;
 extern SystemIcon _SICON;
 extern Joystick _JOY;
 extern Cursor _CRS;
+extern OTAWebUpdater _OTA_UPDATER;
 
 // Глобальные функции
 extern void initializationSystem();

@@ -24,8 +24,6 @@ public:
     
     int calculatePositionX0();
     int calculatePositionY0();
-    int calculatePositionX1();
-    int calculatePositionY1();
 
     int posX0{}, posY0{}, posX1{}, posY1{};
 
@@ -48,7 +46,5 @@ public:
 
     /* Counts objects by +1, normally 0 */
     int8_t calculateIndexY0();
-    int8_t calculateIndexY1();
     int8_t calculateIndexX0();
-    int8_t calculateIndexX1();
 };

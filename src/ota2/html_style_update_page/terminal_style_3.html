@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EX OTA</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#0e0e14;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;font-family:'JetBrains Mono','Consolas',monospace;color:#c8d0dc;line-height:1.5}
+        .console{max-width:720px;width:100%;background:#14161e;border-radius:12px;border:1px solid #2a2d3a;box-shadow:0 12px 48px rgba(0,0,0,.7);padding:20px 24px 24px}
+        @media(max-width:480px){.console{padding:14px 14px 18px}}
+        .terminal-bar{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #252a36}
+        .dot-group{display:flex;gap:6px}
+        .dot{width:10px;height:10px;border-radius:50%}
+        .dot.red{background:#ff5f6d}
+        .dot.yellow{background:#ffc857}
+        .dot.green{background:#2bcf7a}
+        .terminal-title{font-size:13px;color:#6b728a;font-weight:400;user-select:none}
+        .terminal-title span{color:#3b82f6}
+        .header{margin-bottom:16px}
+        .header h1{font-size:18px;font-weight:500;color:#e8edf5}
+        .header p{font-size:12px;color:#6e768f;margin-top:1px}
+        .header p .prompt{color:#3b82f6}
+        .divider{height:1px;background:#232835;margin:14px 0 16px}
+        .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:2px}
+        @media(max-width:420px){.info-grid{grid-template-columns:1fr}}
+        .info-item{background:#0f111a;border:1px solid #222734;border-radius:6px;padding:8px 12px}
+        .info-item .label{font-size:8px;text-transform:uppercase;letter-spacing:.5px;color:#5c6480;display:block;font-weight:500}
+        .info-item .value{font-size:13px;color:#d4dcec;word-break:break-word;margin-top:1px}
+        .info-item .value.mono{font-size:12px;color:#a8b5d1}
+        .upload-section{margin:12px 0 2px}
+        .upload-box{border:2px dashed #232835;border-radius:8px;padding:20px 16px 18px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;background:#0d0f17}
+        .upload-box:hover,.upload-box.dragover{border-color:#3b82f6;background:#11141f}
+        .upload-box input{display:none}
+        .upload-icon{font-size:22px;display:block;margin-bottom:4px;opacity:.5}
+        .upload-text{font-size:13px;color:#bcc6dd}
+        .upload-text .cmd{color:#3b82f6;background:#1a2030;padding:0 8px;border-radius:3px;border:1px solid #2a3145}
+        .upload-hint{font-size:10px;color:#545d7a;margin-top:2px}
+        .file-name{display:none;margin-top:8px;padding:4px 14px;background:#10141f;border:1px solid #2a3145;border-radius:30px;font-size:11px;color:#6e8bc7}
+        .file-name.show{display:inline-block}
+        .actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+        .btn{padding:6px 16px;border:1px solid #2a3145;border-radius:30px;font-size:11px;font-weight:450;font-family:inherit;cursor:pointer;transition:background .15s,border-color .15s;display:inline-flex;align-items:center;gap:4px;background:#11141f;color:#b0bbd4}
+        .btn:active{transform:scale(.97)}
+        .btn-primary{background:#1a2a44;border-color:#3b82f6;color:#b6ceff}
+        .btn-primary:hover:not(:disabled){background:#1f3155;border-color:#5b94f7}
+        .btn-primary:disabled{opacity:.35;cursor:not-allowed}
+        .btn-secondary{background:0 0;border-color:#232835;color:#6b748f}
+        .btn-secondary:hover{background:#181d2b;border-color:#3a4058}
+        .btn-danger{background:#2a1a1e;border-color:#8f3a44;color:#e07a86}
+        .btn-danger:hover{background:#3a1f25;border-color:#b54a56}
+        @media(max-width:420px){.actions{flex-direction:column}.btn{justify-content:center;padding:8px 16px}}
+        .status{margin-top:14px;padding:8px 14px;border-radius:5px;display:none;font-size:11px;border-left:3px solid transparent;background:#0f111a}
+        .status.show{display:block}
+        .status-success{border-left-color:#2bcf7a;color:#8cd4b0;background:#0f1d16}
+        .status-error{border-left-color:#ff5f6d;color:#f0a0a8;background:#1e1216}
+        .status-info{border-left-color:#3b82f6;color:#9bb8f0;background:#111a2a}
+        .progress-container{margin-top:12px;display:none}
+        .progress-container.show{display:block}
+        .progress-bar{width:100%;height:4px;background:#181d2b;border-radius:10px;overflow:hidden;border:1px solid #252b3d}
+        .progress-bar .fill{height:100%;background:#3b82f6;width:0%;transition:width .25s ease;border-radius:10px}
+        .progress-label{display:flex;justify-content:space-between;font-size:10px;color:#545d7a;margin-top:4px}
+        .progress-label .percent{color:#6e8bc7}
+        ::-webkit-scrollbar{width:4px;background:#0e0e14}
+        ::-webkit-scrollbar-thumb{background:#2a3145;border-radius:8px}
+        ::selection{background:rgba(59,130,246,.2);color:#e8edf5}
+    </style>
+</head>
+<body>
+<div class="console">
+    <div class="terminal-bar">
+        <div class="dot-group">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+        </div>
+        <div class="terminal-title"><span>OTA</span></div>
+    </div>
+    <div class="header">
+        <h1>⟳ Update Console</h1>
+        <p><span class="prompt">$</span> upload firmware · <span style="color:#6e768f;">ready</span></p>
+    </div>
+    <div class="divider"></div>
+    <div class="info-grid">
+        <div class="info-item"><span class="label">◆ device</span><span class="value">)rawliteral" + _apSSID + R"rawliteral(</span></div>
+        <div class="info-item"><span class="label">◆ ip</span><span class="value mono">)rawliteral" + _localIP.toString() + R"rawliteral(</span></div>
+        <div class="info-item"><span class="label">◆ firmware</span><span class="value mono" id="fwVer">)rawliteral" + ESP.getSketchMD5().substring(0,16) + R"rawliteral(</span></div>
+        <div class="info-item"><span class="label">◆ memory</span><span class="value mono">)rawliteral" + String(ESP.getFreeHeap()/1024) + R"rawliteral( <span style="color:#545d7a;">KB</span></span></div>
+    </div>
+    <div class="divider"></div>
+    <form id="up" method="POST" action="/update" enctype="multipart/form-data">
+        <div class="upload-section">
+            <div class="upload-box" id="box">
+                <span class="upload-icon">⬡</span>
+                <div class="upload-text"><span class="cmd">$ drop</span> or <span class="cmd">$ choose</span> .bin</div>
+                <div class="upload-hint">max 4 MB · drag &amp; drop</div>
+                <span class="file-name" id="fname"></span>
+                <input type="file" id="file" name="firmware" accept=".bin" />
+            </div>
+        </div>
+        <div class="actions">
+            <button type="submit" class="btn btn-primary" id="upbtn" disabled><span>⤒</span> Upload</button>
+            <button type="button" class="btn btn-secondary" onclick="location.reload()">⟳ Refresh</button>
+            <button type="button" class="btn btn-danger" onclick="resetDev()">↺ Reset</button>
+        </div>
+    </form>
+    <div class="status" id="status"></div>
+    <div class="progress-container" id="progress">
+        <div class="progress-bar"><div class="fill" id="fill"></div></div>
+        <div class="progress-label"><span id="ptext">uploading…</span><span class="percent" id="ppercent">0%</span></div>
+    </div>
+</div>
+<script>
+(function(){const file=document.getElementById('file'),box=document.getElementById('box'),fname=document.getElementById('fname'),upbtn=document.getElementById('upbtn'),status=document.getElementById('status'),progress=document.getElementById('progress'),fill=document.getElementById('fill'),ptext=document.getElementById('ptext'),ppercent=document.getElementById('ppercent'),form=document.getElementById('up');
+function show(m,t){status.className='status show status-'+t;status.textContent=m}
+function hide(){status.className='status';status.textContent=''}
+function prog(p,t){progress.classList.add('show');const pp=Math.min(100,Math.max(0,p));fill.style.width=pp+'%';ppercent.textContent=pp+'%';if(t)ptext.textContent=t}
+function hideProg(){progress.classList.remove('show');fill.style.width='0%';ppercent.textContent='0%'}
+function resetUI(){file.value='';fname.classList.remove('show');fname.textContent='';upbtn.disabled=true}
+file.addEventListener('change',function(){if(this.files&&this.files[0]){const f=this.files[0];fname.textContent='⦿ '+f.name+' ('+(f.size/1024).toFixed(1)+' KB)';fname.classList.add('show');upbtn.disabled=false;hide()}else resetUI()});
+box.addEventListener('dragover',function(e){e.preventDefault();this.classList.add('dragover')});
+box.addEventListener('dragleave',function(e){e.preventDefault();this.classList.remove('dragover')});
+box.addEventListener('drop',function(e){e.preventDefault();this.classList.remove('dragover');if(e.dataTransfer.files&&e.dataTransfer.files[0]){file.files=e.dataTransfer.files;file.dispatchEvent(new Event('change'))}});
+box.addEventListener('click',function(){file.click()});
+form.addEventListener('submit',function(e){e.preventDefault();if(!file.files||!file.files[0]){show('⚠ no file','error');return}const f=file.files[0];if(!f.name.toLowerCase().endsWith('.bin')){show('⚠ expected .bin','error');return}upbtn.disabled=true;show('⏳ uploading…','info');prog(0,'starting…');const xhr=new XMLHttpRequest(),fd=new FormData(form);xhr.upload.addEventListener('progress',function(e){if(e.lengthComputable){prog(Math.round((e.loaded/e.total)*100))}});xhr.addEventListener('load',function(){if(xhr.status===200){const r=xhr.responseText.trim();if(r.includes('Success')){show('✓ update successful · restarting','success');prog(100,'done ✓');setTimeout(()=>location.reload(),3000)}else{show('✗ '+r,'error');upbtn.disabled=false}}else{show('✗ upload failed: '+(xhr.statusText||'unknown'),'error');upbtn.disabled=false}});xhr.addEventListener('error',function(){show('✗ network error','error');upbtn.disabled=false;hideProg()});xhr.open('POST','/update');xhr.send(fd)});
+window.resetDev=function(){if(confirm('Reset device?')){show('⏳ resetting…','info');fetch('/update',{method:'POST'}).then(()=>{show('✓ device reset','success');setTimeout(()=>location.reload(),2000)}).catch(()=>{show('✗ reset failed','error')})}};
+setInterval(function(){fetch('/status').then(r=>r.json()).then(d=>{if(d.version){document.getElementById('fwVer').textContent=d.version.substring(0,16)}}).catch(()=>{})},5000)})();
+</script>
+</body>
+</html>
