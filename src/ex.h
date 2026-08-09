@@ -12,6 +12,7 @@
 #include "watchdog.h"
 #include "dev.h"
 #include "OTAWebUpdater.h"
+#include "notification.h"
 
 /* [!] Объекты в объявлении через extern 
        не должны содержать инициализацию! */
@@ -25,6 +26,7 @@ extern SystemIcon _SICON;
 extern Joystick _JOY;
 extern Cursor _CRS;
 extern OTAWebUpdater _OTA_UPDATER;
+extern Notification _NOTIF;
 
 // Глобальные функции
 extern void initializationSystem();

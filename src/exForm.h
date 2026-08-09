@@ -7,10 +7,13 @@
 #include "graphics.h"
 #include "taskDispatcher.h"
 #include "ui.h"
+#include "notification.h"
+
 
 extern GGL _GGL;
 extern Joystick _JOY;
 extern Graphics _GRF;
+extern Notification _NOTIF;
 
 enum BorderStyle
 {

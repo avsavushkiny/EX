@@ -1,14 +1,15 @@
 #include "ex.h"
 
 // Global object (объявляем как extern)
-Graphics _GRF;
-TaskDispatcher _TD;
-GGL _GGL;
-Icon _ICON;
-SystemIcon _SICON;
-Joystick _JOY;
-Cursor _CRS;
-OTAWebUpdater _OTA_UPDATER;
+Graphics _GRF;                 // Глобальный объект графики
+TaskDispatcher _TD;            // Глобальный объект диспетчера задач
+GGL _GGL;                      // Глобальный объект графического движка
+Icon _ICON;                    // Глобальный объект иконки
+SystemIcon _SICON;             // Глобальный объект иконки (системные)
+Joystick _JOY;                 // Глобальный объект джойстика
+Cursor _CRS;                   // Глобальный объект курсора
+OTAWebUpdater _OTA_UPDATER;    // Глобальный объект для обновления по воздуху
+Notification _NOTIF;           // Глобальный объект уведомлений
 
 /* Global function */
 /* Initialization systems */
