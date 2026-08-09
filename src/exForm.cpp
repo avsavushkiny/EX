@@ -408,30 +408,30 @@ int exForm::showForm()
         // if (closeForm.button("CLOSE", 205, outerBoundaryForm - 12 + 6, _JOY.posX0, _JOY.posY0))
         if (closeForm.button(_SICON.close_13x13, _SICON.close_13x13_w, _SICON.close_13x13_h, 223, outerBoundaryForm - 12 + 6, _JOY.posX0, _JOY.posY0))
         {
-            // if (_NOTIF.showSimple("Close window", Notification::SUCCESS))
+            if (_NOTIF.showSimple("Close window", Notification::SUCCESS))
+            {
+                // Пользователь нажал OK
+                // Serial.println("User confirmed notification");
+                return 1; // 1 - exit and delete form from stack
+            }
+
+            // Notification::Result result = _NOTIF.show(
+            //     "Confirm Action",
+            //     "Close the window?\nYou may lose unsaved data.",
+            //     Notification::WARNING,
+            //     Notification::YES_NO);
+
+            // if (result == Notification::YES)
             // {
-            //     // Пользователь нажал OK
-            //     // Serial.println("User confirmed notification");
-            //     return 1; // 1 - exit and delete form from stack
+            //     // Выполнить действие
+            //     // Serial.println("Action confirmed"); 
+            //     return 1;
             // }
-
-            Notification::Result result = _NOTIF.show(
-                "Confirm Action",
-                "Close the window?\nYou may lose unsaved data.",
-                Notification::WARNING,
-                Notification::YES_NO);
-
-            if (result == Notification::YES)
-            {
-                // Выполнить действие
-                // Serial.println("Action confirmed"); 
-                return 1;
-            }
-            else if (result == Notification::NO)
-            {
-                // Serial.println("Action cancelled");
-                return 0;
-            }
+            // else if (result == Notification::NO)
+            // {
+            //     // Serial.println("Action cancelled");
+            //     return 0;
+            // }
         }
 
         switch (eFormBackground)
