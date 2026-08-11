@@ -19,19 +19,21 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
 
   _GGL.gray.bitmap(x, y + 21, _SICON.shortcut0, 11, 11, _GGL.gray.NOT_TRANSPARENT);
 
-//   TextBox textBoxNameTask;
+  TextBox textBoxNameTask; // name task
+  textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 24); // name task
 
   if ((xCursor >= x && xCursor <= (x + 32)) && (yCursor >= y && yCursor <= (y + 32)))
   {
     _GGL.gray.drawFrame(x, y, 32, 32, _GGL.gray.BLACK);
-
-    // textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 24);
     
+    bool result = false;
     if (Joystick::pressKeyENTER() == true)
     {
-      _GRF.waitDisplay();
-      f();
-      return true;
+      if (_GRF.waitDisplay())
+      {
+        f();
+        return true;
+      }    
     }
   }
   else
@@ -89,9 +91,13 @@ bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t 
     _GGL.gray.drawFillFrame(x, y, (sizeText * charW) + border + border, 13, _GGL.gray.BLACK, _GGL.gray.BLACK);
     _GGL.gray.writeLine(x + border, y - 1/* font H */ + border, text, 10, 1, _GGL.gray.WHITE);
 
+    bool result = false;
     if (Joystick::pressKeyENTER() == true)
     {
-      return true;
+      if (_GRF.waitDisplay())
+      {
+        return true;
+      }    
     }
   }
   else
@@ -113,11 +119,13 @@ bool Button::button(const uint8_t *bitMap, uint8_t w, uint8_t h, uint8_t x, uint
     _GGL.gray.drawFillFrame(x, y, w, h, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
     _GGL.gray.bitmap(x, y, bitMap, w, h, _GGL.gray.TRANSPARENT);
     
+    bool result = false;
     if (Joystick::pressKeyENTER() == true)
     {
-    //   _GRF.waitDisplay();
-    //   f();
-      return true;
+      if (_GRF.waitDisplay())
+      {
+        return true;
+      }    
     }
   }
   else

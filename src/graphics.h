@@ -37,11 +37,26 @@ public:
 
     bool waitDisplay()
     {
-        _GGL.gray.clearBuffer(); // -->
-        _GGL.gray.bitmap(((W_LCD - _SICON.wait_w) / 2), ((H_LCD - _SICON.wait_h) / 2), _SICON.wait, _SICON.wait_w, _SICON.wait_h, _GGL.gray.NOT_TRANSPARENT);
-        _GGL.gray.sendBuffer(); // <--
-        delay(150);
-        return true;
+        static unsigned long lastUpdate = 0;
+        static bool isDisplayed = false;
+        unsigned long currentTime = millis();
+
+        if (!isDisplayed)
+        {
+            _GGL.gray.clearBuffer();
+            _GGL.gray.bitmap(((W_LCD - _SICON.wait_w) / 2), ((H_LCD - _SICON.wait_h) / 2), _SICON.wait, _SICON.wait_w, _SICON.wait_h, _GGL.gray.NOT_TRANSPARENT);
+            _GGL.gray.sendBuffer();
+            lastUpdate = currentTime;
+            isDisplayed = true;
+        }
+
+        if (currentTime - lastUpdate >= 150)
+        {
+            isDisplayed = false;
+            return true;
+        }
+
+        return false;
     }
 
     // далее

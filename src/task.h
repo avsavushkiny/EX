@@ -415,20 +415,20 @@ TaskArguments system0[]
     createTask("initSleepTimerTask", &initSleepTimerTask, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, true, 1),
     createTask("energySave", &energySave, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, 0, 100), // было 10
     // createTask("oshello", &_osHello, NULL, SYSTEM, 101, true, PRIORITY_NORMAL),
-    createTask("form1", &_myForm1, _ICON.window_abc, DESKTOP, 0, false, PRIORITY_NORMAL),
-    createTask("form2", &_myForm2, _ICON.window_shell_1, DESKTOP, 0, false, PRIORITY_NORMAL),
-    createTask("form3", &_myForm3, _ICON.window_shell_2, DESKTOP, 0, false, PRIORITY_NORMAL),
-    createTask("graphics1", &_myGraphicsTest1, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
-    createTask("graphics2", &_myGraphicsTest2, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("Form 1", &_myForm1, _ICON.window_abc, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("Form 2", &_myForm2, _ICON.window_shell_1, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("Form 3", &_myForm3, _ICON.window_shell_2, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("Graphics 1", &_myGraphicsTest1, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("Graphics 2", &_myGraphicsTest2, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
     // createTask("dispatcher", &_myDispatcher, _ICON.app_wizard, DESKTOP, 0, false, PRIORITY_NORMAL),
     // createTask("graphics 3", &_myGraphicsTest3, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
     // // createTask("settings", _settingsForm, icon.technical_group, DESKTOP, 0, false, PRIORITY_NORMAL),
-    // createTask("userdesktop", &_userDesktop, _ICON.program_manager, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("User", &_userDesktop, _ICON.program_manager, DESKTOP, 0, false, PRIORITY_NORMAL),
     //
     // Error task
-    createTask("error", &testErrorTask, _ICON.chip_ram, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("Error", &testErrorTask, _ICON.chip_ram, DESKTOP, 0, false, PRIORITY_NORMAL),
     // OTA update
-    createTask("otaUpdate", &_formOTAUpdate, _ICON.binary, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("Update centre", &_formOTAUpdate, _ICON.binary, DESKTOP, 0, false, PRIORITY_NORMAL),
     // Stack forms
     createTask("stackform", &runExFormStack, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 1),
     // Добавление задачи мониторинга
