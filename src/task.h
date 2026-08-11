@@ -287,8 +287,12 @@ void _myForm1()
 
     // Устанавливаем начальный текст
     textInput->setText("Hello World!");
-    textInput2->setText("Text 2");
+    textInput2->setText("Text");
 
+    submitBtn->setZIndex(5);
+    textInput->setZIndex(5);
+    textInput2->setZIndex(10);
+    
     form1->addElement(submitBtn);
     form1->addElement(textInput);
     form1->addElement(textInput2);

@@ -2,6 +2,9 @@
 
 #include <Arduino.h>
 #include <stack>
+#include <vector>
+#include <algorithm>
+#include <functional>
 #include "ggl.h"
 #include "input.h"
 #include "graphics.h"
@@ -20,24 +23,85 @@ enum BorderStyle
     shadow,
     shadowNoFrame
 };
+
 /* Basic interface for all form elements */
 class eElement
 {
 public:
     virtual ~eElement() {}
+
     /* чистая функция для вывода элемента */
     virtual void show() = 0;
+    virtual void show(const std::vector<eElement *> &allElements) { show(); } // Для совместимости
 
     /* чистая функция для установки позиции элемента */
     virtual void setPosition(int x, int y, int w, int h) = 0;
+
+    /* Методы для работы с Z-индексом */
+    virtual void setZIndex(int zIndex) { m_zIndex = zIndex; }
+    virtual int getZIndex() const { return m_zIndex; }
+
+    /* Проверка, находится ли курсор над элементом */
+    virtual bool isPointOverElement(int x, int y) const
+    {
+        return (x >= m_x && x <= m_x + m_w && y >= m_y && y <= m_y + m_h);
+    }
+
+    /* Проверка перекрытия двух элементов */
+    static bool isRectOverlap(const eElement *a, const eElement *b)
+    {
+        if (!a || !b)
+            return false;
+        return !(a->m_x + a->m_w <= b->m_x ||
+                 b->m_x + b->m_w <= a->m_x ||
+                 a->m_y + a->m_h <= b->m_y ||
+                 b->m_y + b->m_h <= a->m_y);
+    }
+
+    /* Проверка, перекрыт ли текущий элемент более верхними */
+    bool isOverlappedByHigher(const std::vector<eElement *> &allElements)
+    {
+        for (auto *other : allElements)
+        {
+            if (other == this)
+                continue;
+            if (other->getZIndex() > this->getZIndex() &&
+                isRectOverlap(this, other))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /* Проверка, перекрыт ли текущий элемент более верхними в точке курсора */
+    bool isOverlappedAtPoint(const std::vector<eElement *> &allElements, int x, int y)
+    {
+        for (auto *other : allElements)
+        {
+            if (other == this)
+                continue;
+            if (other->getZIndex() > this->getZIndex() &&
+                other->isPointOverElement(x, y))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
     int m_x{0}, m_y{0}, m_w{0}, m_h{0};
+    int m_zIndex{0}; // Чем больше число, тем выше элемент
+    bool m_enabled{true};
+    bool m_visible{true};
 };
+
 /* Button */
 class eButton : public eElement
 {
 public:
-    // eButton(const String& label, void (*onClick)(), int x, int y) : m_label(label), m_onClick(onClick), m_x(x), m_y(y) {}
-    eButton(const String &label, std::function<void()> func, int x, int y) : m_label(label), m_func(func), m_x(x), m_y(y) {}
+    eButton(const String &label, std::function<void()> func, int x, int y)
+        : m_label(label), m_func(func), m_x(x), m_y(y) {}
 
     void setLabel(const String &new_label)
     {
@@ -45,24 +109,24 @@ public:
     }
 
     void show() override;
+    void show(const std::vector<eElement *> &allElements) override;
 
     void setPosition(int x, int y, int w, int h) override
     {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
-        this->wForm = w;
-        this->hForm = h;
+        this->m_x = x + this->m_x;
+        this->m_y = y + this->m_y;
+        this->m_w = w;
+        this->m_h = h;
     }
-    bool m_stateButton;
+
+    bool m_stateButton{false};
 
 private:
-    std::function<void()> m_func; // Обёртка для функции
+    std::function<void()> m_func;
     String m_label;
-    // void (*m_onClick)(void);
-    int xForm, yForm, wForm, hForm;
-    // short outerBoundaryForm{20};
     int m_x{0}, m_y{0};
 };
+
 /* Text multiline */
 class eText : public eElement
 {
@@ -83,24 +147,23 @@ public:
 
     void setPosition(int x, int y, int w, int h) override
     {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
-        this->wForm = w;
-        this->hForm = h;
+        this->m_x = x + this->m_x;
+        this->m_y = y + this->m_y;
+        this->m_w = w;
+        this->m_h = h;
     }
 
 private:
     String m_text;
-    short const highChar{10};
-    int xForm, yForm, wForm, hForm;
-    short outerBoundaryForm{20};
     int m_x{0}, m_y{0};
 };
+
 /* Textbox */
 class eTextBox : public eElement
 {
 public:
-    eTextBox(const String &text, BorderStyle borderStyle, int sizeW, int sizeH, int x, int y) : m_text(text), m_borderStyle(borderStyle), m_sizeW(sizeW), m_sizeH(sizeH), m_x(x), m_y(y) {}
+    eTextBox(const String &text, BorderStyle borderStyle, int sizeW, int sizeH, int x, int y)
+        : m_text(text), m_borderStyle(borderStyle), m_sizeW(sizeW), m_sizeH(sizeH), m_x(x), m_y(y) {}
 
     void setText(const String &new_text)
     {
@@ -116,20 +179,19 @@ public:
 
     void setPosition(int x, int y, int w, int h) override
     {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
-        this->wForm = w;
-        this->hForm = h;
+        this->m_x = x + this->m_x;
+        this->m_y = y + this->m_y;
+        this->m_w = w;
+        this->m_h = h;
     }
 
 private:
     BorderStyle m_borderStyle;
     String m_text;
-    int xForm, yForm, wForm, hForm;
-    short outerBoundaryForm{20};
     int m_x{0}, m_y{0};
     int m_sizeW, m_sizeH;
 };
+
 /* Label */
 class eLabel : public eElement
 {
@@ -150,22 +212,23 @@ public:
 
     void setPosition(int x, int y, int w, int h) override
     {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
-        this->wForm = w;
-        this->hForm = h;
+        this->m_x = x + this->m_x;
+        this->m_y = y + this->m_y;
+        this->m_w = w;
+        this->m_h = h;
     }
 
 private:
     String m_text;
-    int xForm, yForm, wForm, hForm;
     int m_x{0}, m_y{0};
 };
+
 /* Label to link */
 class eLinkLabel : public eElement
 {
 public:
-    eLinkLabel(const String &text, void (*onClick)(), int x, int y) : m_text(text), m_onClick(onClick), m_x(x), m_y(y) {}
+    eLinkLabel(const String &text, void (*onClick)(), int x, int y)
+        : m_text(text), m_onClick(onClick), m_x(x), m_y(y) {}
 
     void setText(const String &new_text)
     {
@@ -178,22 +241,23 @@ public:
     }
 
     void show() override;
+    void show(const std::vector<eElement *> &allElements) override;
 
     void setPosition(int x, int y, int w, int h) override
     {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
-        this->wForm = w;
-        this->hForm = h;
+        this->m_x = x + this->m_x;
+        this->m_y = y + this->m_y;
+        this->m_w = w;
+        this->m_h = h;
     }
 
 private:
     void (*m_onClick)(void);
     String m_text;
-    int xForm, yForm, wForm, hForm;
     int m_x{0}, m_y{0};
     int m_sizeW, m_sizeH;
 };
+
 /* Horizontal line */
 class eLine : public eElement
 {
@@ -204,23 +268,22 @@ public:
 
     void setPosition(int x, int y, int w, int h) override
     {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
-        this->wForm = w + m_w;
-        this->hForm = h + m_h;
+        this->m_x = x + this->m_x;
+        this->m_y = y + this->m_y;
+        this->m_w = w + this->m_w;
+        this->m_h = h + this->m_h;
     }
 
 private:
-    // String m_title;
-    int xForm, yForm, wForm, hForm;
     int m_x, m_y, m_w{256}, m_h{160};
 };
+
 /* Checkbox */
 class eCheckbox : public eElement
 {
 public:
-    // eCheckbox(const String& text, int x, int y) : m_text(text), m_x(x), m_y(y) {}
-    eCheckbox(bool checked, const String &text, int x, int y) : m_checked(checked), m_text(text), m_x(x), m_y(y) {}
+    eCheckbox(bool checked, const String &text, int x, int y)
+        : m_checked(checked), m_text(text), m_x(x), m_y(y) {}
 
     bool isChecked() const
     {
@@ -243,27 +306,26 @@ public:
     }
 
     void show() override;
+    void show(const std::vector<eElement *> &allElements) override;
 
     void setPosition(int x, int y, int w, int h) override
     {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
-        this->wForm = w;
-        this->hForm = h;
+        this->m_x = x + this->m_x;
+        this->m_y = y + this->m_y;
+        this->m_w = w;
+        this->m_h = h;
     }
 
 private:
     bool m_checked;
     String m_text;
-    int xForm, yForm, wForm, hForm;
     int m_x{0}, m_y{0};
 };
+
 /* Function */
 class eFunction : public eElement
 {
 public:
-    // eFunction(void (*func)()) : m_func(func) {}
-    // Конструктор, принимающий std::function
     eFunction(std::function<void()> func) : m_func(func) {}
 
     void execute()
@@ -278,138 +340,126 @@ public:
 
     void setPosition(int x, int y, int w, int h) override
     {
-        this->xForm = x;
-        this->yForm = y;
-        this->wForm = w;
-        this->hForm = h;
+        this->m_x = x;
+        this->m_y = y;
+        this->m_w = w;
+        this->m_h = h;
     }
-    int xForm, yForm, wForm, hForm;
 
 private:
-    // void (*m_func)(void);
-    std::function<void()> m_func; // Обёртка для функции
+    std::function<void()> m_func;
 };
+
 /* Picture xbmp */
 class ePicture : public eElement
 {
 public:
-    ePicture(const uint8_t *bitmap, int x, int y, int w, int h) : m_bitmap(bitmap), m_x(x), m_y(y), m_w(w), m_h(h) {}
+    ePicture(const uint8_t *bitmap, int x, int y, int w, int h)
+        : m_bitmap(bitmap), m_x(x), m_y(y), m_w(w), m_h(h) {}
 
     void show() override;
 
     void setPosition(int x, int y, int w, int h) override
     {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
-        this->wForm = 0;
-        this->hForm = 0;
+        this->m_x = x + this->m_x;
+        this->m_y = y + this->m_y;
+        this->m_w = 0;
+        this->m_h = 0;
     }
 
 private:
     int m_x, m_y, m_w, m_h;
-    int xForm, yForm, wForm, hForm;
     const uint8_t *m_bitmap;
 };
+
 /* Background */
 class eBackground : public eElement
 {
 public:
-    eBackground(const uint8_t *bitmap, int x, int y, int w, int h) : m_bitmap(bitmap), m_x(x), m_y(y), m_w(w), m_h(h) {}
+    eBackground(const uint8_t *bitmap, int x, int y, int w, int h)
+        : m_bitmap(bitmap), m_x(x), m_y(y), m_w(w), m_h(h) {}
 
     void show() override;
 
     void setPosition(int x, int y, int w, int h) override
     {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
-        this->wForm = 0;
-        this->hForm = 0;
+        this->m_x = x + this->m_x;
+        this->m_y = y + this->m_y;
+        this->m_w = 0;
+        this->m_h = 0;
     }
 
 private:
     int m_x, m_y, m_w, m_h;
-    int xForm, yForm, wForm, hForm;
     const uint8_t *m_bitmap;
 };
+
 /* Keyboard */
 class eKeyboard : public eElement
 {
 public:
-    // Раскладка клавиатуры
     std::vector<String> row1, row2, row3;
 
-    // Конструктор: принимает колбэк для ввода символа, позицию и размер клавиш
     eKeyboard(std::function<void(char)> onCharInput, int x, int y, int keyW = 18, int keyH = 14)
         : m_onCharInput(onCharInput), m_x(x), m_y(y), m_keyW(keyW), m_keyH(keyH),
           m_lastKeyPressTime(0), m_keyRepeatDelay(200), m_capsLock(false)
     {
-        // Первый ряд: QWERTYUIOP
         row1 = {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"};
-        // Второй ряд: ASDFGHJKL + Z
         row2 = {"A", "S", "D", "F", "G", "H", "J", "K", "L", "Z"};
-        // Третий ряд: XCVBNM + Backspace + CapsLock
         row3 = {"X", "C", "V", " ", "B", "N", "M", "BS", "CL"};
     }
 
     void show() override;
+    void show(const std::vector<eElement *> &allElements) override;
 
     void setPosition(int x, int y, int w, int h) override
     {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
-        this->wForm = w;
-        this->hForm = h;
+        this->m_x = x + this->m_x;
+        this->m_y = y + this->m_y;
+        this->m_w = w;
+        this->m_h = h;
     }
 
-    // Получить текущий введённый текст
     String getText() const
     {
         return m_inputText;
     }
 
-    // Очистить введённый текст
     void clearText()
     {
         m_inputText = "";
     }
 
-    // Установить текст (для инициализации)
     void setText(const String &text)
     {
         m_inputText = text;
     }
 
-    // Проверить, активна ли клавиатура
     bool isActive() const
     {
         return m_active;
     }
 
-    // Активировать/деактивировать клавиатуру
     void setActive(bool active)
     {
         m_active = active;
     }
 
-    // Установить задержку между нажатиями (в миллисекундах)
     void setKeyRepeatDelay(unsigned long delayMs)
     {
         m_keyRepeatDelay = delayMs;
     }
 
-    // Получить состояние Caps Lock
     bool isCapsLock() const
     {
         return m_capsLock;
     }
 
-    // Установить состояние Caps Lock
     void setCapsLock(bool enabled)
     {
         m_capsLock = enabled;
     }
 
-    // Получить размеры клавиатуры
     void getKeyboardSize(int &width, int &height, int keyW, int keyH) const
     {
         int keySpacing = 2;
@@ -419,20 +469,17 @@ public:
     }
 
 private:
-    std::function<void(char)> m_onCharInput; // Колбэк при вводе символа
-    String m_inputText;                      // Текущий введённый текст
-    bool m_active{true};                     // Активна ли клавиатура
-    bool m_capsLock;                         // Состояние Caps Lock
+    std::function<void(char)> m_onCharInput;
+    String m_inputText;
+    bool m_active{true};
+    bool m_capsLock;
 
-    int xForm, yForm, wForm, hForm;
     int m_x, m_y;
-    int m_keyW, m_keyH; // Ширина и высота клавиши
+    int m_keyW, m_keyH;
 
-    // Таймер для защиты от множественных нажатий
     unsigned long m_lastKeyPressTime;
-    unsigned long m_keyRepeatDelay; // Задержка между нажатиями (мс)
+    unsigned long m_keyRepeatDelay;
 
-    // Вспомогательные методы
     void drawKey(int x, int y, int w, int h, const String &label, bool highlighted);
     bool isKeyPressed(int x, int y, int w, int h);
 };
@@ -441,16 +488,16 @@ private:
 class eTextInput : public eElement
 {
 public:
-    eTextInput(const String &label, int x, int y, int width, int height, 
-               std::function<void(const String&)> onTextChanged = nullptr)
+    eTextInput(const String &label, int x, int y, int width, int height,
+               std::function<void(const String &)> onTextChanged = nullptr)
         : m_label(label), m_x(x), m_y(y), m_width(width), m_height(height),
           m_onTextChanged(onTextChanged), m_isEditing(false), m_lastToggleTime(0)
     {
-        // Создаём клавиатуру
         m_keyboard = new eKeyboard(
-            [this](char ch) { this->onCharInput(ch); },
-            x, y + height + 5, 18, 14
-        );
+            [this](char ch)
+            { this->onCharInput(ch); },
+            x, y + height + 5, 18, 14);
+        m_keyboard->setZIndex(100); // Клавиатура всегда сверху
     }
 
     ~eTextInput()
@@ -459,23 +506,21 @@ public:
     }
 
     void show() override;
+    void show(const std::vector<eElement *> &allElements) override;
 
     void setPosition(int x, int y, int w, int h) override
     {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
-        this->wForm = w;
-        this->hForm = h;
-        
+        this->m_x = x + this->m_x;
+        this->m_y = y + this->m_y;
+        this->m_w = w;
+        this->m_h = h;
+
         if (m_keyboard)
         {
-            m_keyboard->setPosition(x, y, w, 0);
-            // m_keyboard->setPosition(x, y + m_height + 5, w, 0);
-            // m_keyboard->setPosition(this->xForm, this->yForm + m_height + 5, w, 0);
+            m_keyboard->setPosition(x, y + m_height + 5, w, 0);
         }
     }
 
-    // Установить текст
     void setText(const String &text)
     {
         m_text = text;
@@ -485,13 +530,11 @@ public:
         }
     }
 
-    // Получить текст
     String getText() const
     {
         return m_text;
     }
 
-    // Очистить текст
     void clearText()
     {
         m_text = "";
@@ -501,7 +544,6 @@ public:
         }
     }
 
-    // Активировать/деактивировать режим редактирования
     void setEditing(bool editing)
     {
         m_isEditing = editing;
@@ -517,7 +559,6 @@ public:
         return m_isEditing;
     }
 
-    // Установить задержку повторения клавиш
     void setKeyRepeatDelay(unsigned long delayMs)
     {
         if (m_keyboard)
@@ -526,13 +567,11 @@ public:
         }
     }
 
-    // Получить состояние Caps Lock
     bool isCapsLock() const
     {
         return m_keyboard ? m_keyboard->isCapsLock() : false;
     }
 
-    // Установить состояние Caps Lock
     void setCapsLock(bool enabled)
     {
         if (m_keyboard)
@@ -546,7 +585,6 @@ private:
     {
         if (ch == '\b')
         {
-            // Backspace - удаляем последний символ
             if (m_text.length() > 0)
             {
                 m_text.remove(m_text.length() - 1);
@@ -554,17 +592,14 @@ private:
         }
         else
         {
-            // Добавляем символ
             m_text += ch;
         }
-        
-        // Обновляем текст в клавиатуре
+
         if (m_keyboard)
         {
             m_keyboard->setText(m_text);
         }
-        
-        // Вызываем callback, если он задан
+
         if (m_onTextChanged)
         {
             m_onTextChanged(m_text);
@@ -580,12 +615,11 @@ private:
     String m_text;
     int m_x, m_y;
     int m_width, m_height;
-    int xForm, yForm, wForm, hForm;
     bool m_isEditing;
-    eKeyboard* m_keyboard;
-    std::function<void(const String&)> m_onTextChanged;
+    eKeyboard *m_keyboard;
+    std::function<void(const String &)> m_onTextChanged;
     unsigned long m_lastToggleTime;
-    static const unsigned long TOGGLE_COOLDOWN = 250; // milliseconds
+    static const unsigned long TOGGLE_COOLDOWN = 250;
 };
 
 /* Desktop */
@@ -594,7 +628,7 @@ class eDesktop : public eElement
 {
 public:
     eDesktop(const std::vector<T> &data) : data_(data) {}
-    
+
     void show() override
     {
         uint8_t border{4};
@@ -621,42 +655,41 @@ public:
             }
         }
     }
-    
+
     void setPosition(int x, int y, int w, int h) override
     {
-        this->xForm = x;
-        this->yForm = y;
-        this->wForm = w;
-        this->hForm = h;
+        this->m_x = x;
+        this->m_y = y;
+        this->m_w = w;
+        this->m_h = h;
     }
 
 private:
     std::vector<T> data_;
-    int xForm, yForm, wForm, hForm;
 };
+
 /* Graphics */
 class eGraphics : public eElement
 {
 public:
-    // eGraphics(void (*func)()) : showFunc(func) {}
-    eGraphics(void (*func)(int, int, int, int), int x, int y, int w, int h) : showFunc(func), m_x(x), m_y(y), m_w(w), m_h(h) {}
+    eGraphics(void (*func)(int, int, int, int), int x, int y, int w, int h)
+        : showFunc(func), m_x(x), m_y(y), m_w(w), m_h(h) {}
 
     void show() override
     {
-        showFunc(xForm, yForm, wForm, hForm);
+        showFunc(m_x, m_y, m_w, m_h);
     }
 
     void setPosition(int x, int y, int w, int h) override
     {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
-        this->wForm = w + m_w;
-        this->hForm = h + m_h;
+        this->m_x = x + this->m_x;
+        this->m_y = y + this->m_y;
+        this->m_w = w + this->m_w;
+        this->m_h = h + this->m_h;
     }
 
 private:
     int m_x, m_y, m_w, m_h;
-    int xForm, yForm, wForm, hForm;
     void (*showFunc)(int, int, int, int);
 };
 
@@ -665,10 +698,35 @@ class eForm
 {
 public:
     virtual int showForm() = 0;
-    
+
     void addElement(eElement *element)
     {
         elements.push_back(element);
+        sortElementsByZIndex();
+    }
+
+    void removeElement(eElement *element)
+    {
+        auto it = std::find(elements.begin(), elements.end(), element);
+        if (it != elements.end())
+        {
+            elements.erase(it);
+        }
+    }
+
+    void sortElementsByZIndex()
+    {
+        std::sort(elements.begin(), elements.end(),
+                  [](eElement *a, eElement *b)
+                  {
+                      return a->getZIndex() < b->getZIndex();
+                  });
+    }
+
+    // Получить все элементы формы
+    const std::vector<eElement *> &getElements() const
+    {
+        return elements;
     }
 
     virtual ~eForm()
@@ -691,6 +749,7 @@ enum EFORMSHOWMODE
     NORMAL,
     FLAT
 };
+
 enum EFORMBACKGROUND
 {
     TRANSPARENT,
@@ -711,7 +770,7 @@ public:
     EFORMBACKGROUND eFormBackground;
 
 private:
-    int xForm, yForm;
+    int m_x, m_y;
     short outerBoundaryForm{20};
 };
 
@@ -721,12 +780,11 @@ extern std::stack<exForm *> formsStack;
 class exFormStack
 {
 public:
-    // Add the form to the stack
     void push(exForm *form)
     {
         formsStack.push(form);
     }
-    // Extract the upper form from the stack
+
     exForm *pop()
     {
         if (!formsStack.empty())
@@ -737,44 +795,45 @@ public:
         }
         return nullptr;
     }
-    //
+
     exForm *top()
     {
-        exForm *top = formsStack.top();
-        return top;
+        if (!formsStack.empty())
+        {
+            return formsStack.top();
+        }
+        return nullptr;
     }
-    // The number of forms in the stack
+
     size_t size() const
     {
         return formsStack.size();
     }
-    // Check, is it empty?
+
     bool empty() const
     {
         return formsStack.empty();
     }
-    // обновляем форму один раз
+
     void refreshForm()
     {
         if (!formsStack.empty())
         {
-            exForm *top = pop(); // Извлекаем верхнюю форму из стека
-            push(top);           // Снова добавляем эту форму в стек
+            exForm *top = pop();
+            push(top);
         }
     }
-    // обновляем форму многократно
+
     bool updateForm(unsigned int timeUpdate)
     {
         unsigned long currTime = millis();
         if (currTime - prevTime >= timeUpdate)
         {
             prevTime = currTime;
-
             refreshForm();
-
-            return 1;
+            return true;
         }
-        return 0;
+        return false;
     }
 
 private:
