@@ -239,6 +239,7 @@ void eBackground::show()
         }
     }
 }
+
 /* desktop */
 // template <typename T>
 // void eDesktop<T>::show()
@@ -274,6 +275,157 @@ void eBackground::show()
 //         }
 //     }
 // }
+
+/* Keyboard */
+void eKeyboard::show()
+{
+    if (!m_active) return;
+
+    int keySpacing = 2;
+    int keyW = m_keyW;
+    int keyH = m_keyH;
+    int startX = xForm;
+    int startY = yForm;
+
+    // Рисуем фон клавиатуры
+    int totalWidth = row1.size() * (keyW + keySpacing) + keySpacing;
+    int totalHeight = 3 * (keyH + keySpacing) + keySpacing;
+    _GGL.gray.drawFillFrame(startX, startY, totalWidth, totalHeight, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
+
+    int currentY = startY + keySpacing;
+
+    // Рисуем ряды клавиш
+    // Ряд 1 (QWERTYUIOP)
+    int currentX = startX + keySpacing + (totalWidth - row1.size() * (keyW + keySpacing)) / 2;
+    for (const auto &key : row1)
+    {
+        bool isHighlighted = isKeyPressed(currentX, currentY, keyW, keyH);
+        drawKey(currentX, currentY, keyW, keyH, key, isHighlighted);
+        currentX += keyW + keySpacing;
+    }
+
+    // Ряд 2 (ASDFGHJKL)
+    currentY += keyH + keySpacing;
+    currentX = startX + keySpacing + (totalWidth - row2.size() * (keyW + keySpacing)) / 2;
+    for (const auto &key : row2)
+    {
+        bool isHighlighted = isKeyPressed(currentX, currentY, keyW, keyH);
+        drawKey(currentX, currentY, keyW, keyH, key, isHighlighted);
+        currentX += keyW + keySpacing;
+    }
+
+    // Ряд 3 (ZXCVBNM + Backspace)
+    currentY += keyH + keySpacing;
+    // Смещаем ряд 3 вправо для красоты
+    currentX = startX + keySpacing + (totalWidth - row3.size() * (keyW + keySpacing)) / 2;
+    for (const auto &key : row3)
+    {
+        // Для клавиши Backspace делаем её шире
+        int w = keyW;
+        if (key == "⌫")
+        {
+            w = keyW * 1.5;
+        }
+        bool isHighlighted = isKeyPressed(currentX, currentY, w, keyH);
+        drawKey(currentX, currentY, w, keyH, key, isHighlighted);
+        currentX += w + keySpacing;
+    }
+
+    // Обработка нажатий клавиш
+    // Проверяем все клавиши первого ряда
+    currentY = startY + keySpacing;
+    currentX = startX + keySpacing + (totalWidth - row1.size() * (keyW + keySpacing)) / 2;
+    for (const auto &key : row1)
+    {
+        if (isKeyPressed(currentX, currentY, keyW, keyH) && _JOY.pressKeyENTER())
+        {
+            if (m_onCharInput)
+            {
+                m_onCharInput(key[0]);
+                m_inputText += key;
+            }
+            delay(200);
+        }
+        currentX += keyW + keySpacing;
+    }
+
+    // Второй ряд
+    currentY += keyH + keySpacing;
+    currentX = startX + keySpacing + (totalWidth - row2.size() * (keyW + keySpacing)) / 2;
+    for (const auto &key : row2)
+    {
+        if (isKeyPressed(currentX, currentY, keyW, keyH) && _JOY.pressKeyENTER())
+        {
+            if (m_onCharInput)
+            {
+                m_onCharInput(key[0]);
+                m_inputText += key;
+            }
+            delay(200);
+        }
+        currentX += keyW + keySpacing;
+    }
+
+    // Третий ряд
+    currentY += keyH + keySpacing;
+    currentX = startX + keySpacing + (totalWidth - row3.size() * (keyW + keySpacing)) / 2;
+    for (const auto &key : row3)
+    {
+        int w = keyW;
+        if (key == "⌫")
+        {
+            w = keyW * 1.5;
+        }
+        if (isKeyPressed(currentX, currentY, w, keyH) && _JOY.pressKeyENTER())
+        {
+            if (key == "⌫")
+            {
+                // Backspace - удаляем последний символ
+                if (m_inputText.length() > 0)
+                {
+                    m_inputText.remove(m_inputText.length() - 1);
+                    if (m_onCharInput)
+                    {
+                        m_onCharInput('\b'); // Отправляем backspace
+                    }
+                }
+            }
+            else
+            {
+                if (m_onCharInput)
+                {
+                    m_onCharInput(key[0]);
+                    m_inputText += key;
+                }
+            }
+            delay(200);
+        }
+        currentX += w + keySpacing;
+    }
+}
+
+void eKeyboard::drawKey(int x, int y, int w, int h, const String &label, bool highlighted)
+{
+    if (highlighted)
+    {
+        _GGL.gray.drawFillFrame(x, y, w, h, _GGL.gray.BLACK, _GGL.gray.DARK_GRAY);
+        _GGL.gray.writeLine(x + 3, y + 2, label, 10, 1, _GGL.gray.WHITE);
+        _GGL.gray.drawFrame(x, y, w, h, _GGL.gray.BLACK);
+    }
+    else
+    {
+        _GGL.gray.drawFillFrame(x, y, w, h, _GGL.gray.BLACK, _GGL.gray.WHITE);
+        _GGL.gray.writeLine(x + 3, y + 2, label, 10, 1, _GGL.gray.BLACK);
+        _GGL.gray.drawFrame(x, y, w, h, _GGL.gray.BLACK);
+    }
+}
+
+bool eKeyboard::isKeyPressed(int x, int y, int w, int h)
+{
+    return (_JOY.posX0 >= x && _JOY.posX0 <= x + w &&
+            _JOY.posY0 >= y && _JOY.posY0 <= y + h);
+}
+
 /* exForm show */
 int exForm::showForm()
 {

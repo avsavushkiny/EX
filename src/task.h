@@ -221,13 +221,36 @@ void _myForm1()
 { 
     exForm *form1 = new exForm();
 
-    eTextBox *textbox1 = new eTextBox("I've missed more than 9000 shots in my career. I've lost almost 300 games. 26 times, I've been trusted to take the game winning shot and missed. I've failed over and over and over again in my life. And that is why I succeed.", 
+    eTextBox *textbox1 = new eTextBox("I've missed more than 9000 shots in my career.", 
         BorderStyle::noBorder, 210, 100, 0, 0
+    );
+
+    eKeyboard *keyboard = new eKeyboard(
+        [](char c)
+        {
+            // Обработчик ввода символа
+            if (c == '\b')
+            {
+                // Backspace - удалить последний символ
+                Serial.println("Backspace pressed");
+            }
+            else
+            {
+                Serial.print("Char input: ");
+                Serial.println(c);
+            }
+        },
+        10, // x позиция
+        50, // y позиция
+        18, // ширина клавиши
+        14  // высота клавиши
     );
 
     form1->title = "Form 1. Output text";
     form1->eFormShowMode = NORMAL;
+
     form1->addElement(textbox1);
+    form1->addElement(keyboard);
 
     formsStack.push(form1);
 }

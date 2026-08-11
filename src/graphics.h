@@ -18,7 +18,7 @@ public:
         _GGL.gray.sendBuffer();
     }
 
-    void print(String text, int x, int y, int8_t lii, int8_t chi)
+    void print(String text, int x, int y, int8_t lii = 10, int8_t chi = 6)
     {
         int sizeText = text.length();
         int yy{0};

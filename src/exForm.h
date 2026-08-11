@@ -331,6 +331,78 @@ private:
     int xForm, yForm, wForm, hForm;
     const uint8_t *m_bitmap;
 };
+/* Keyboard */
+class eKeyboard : public eElement
+{
+public:
+    // Конструктор: принимает колбэк для ввода символа, позицию и размер клавиш
+    eKeyboard(std::function<void(char)> onCharInput, int x, int y, int keyW = 18, int keyH = 14)
+        : m_onCharInput(onCharInput), m_x(x), m_y(y), m_keyW(keyW), m_keyH(keyH)
+    {
+        // Первый ряд: QWERTYUIOP
+        row1 = {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"};
+        // Второй ряд: ASDFGHJKL
+        row2 = {"A", "S", "D", "F", "G", "H", "J", "K", "L"};
+        // Третий ряд: ZXCVBNM + Backspace
+        row3 = {"Z", "X", "C", "V", "B", "N", "M", "⌫"};
+    }
+
+    void show() override;
+
+    void setPosition(int x, int y, int w, int h) override
+    {
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
+    }
+
+    // Получить текущий введённый текст
+    String getText() const
+    {
+        return m_inputText;
+    }
+
+    // Очистить введённый текст
+    void clearText()
+    {
+        m_inputText = "";
+    }
+
+    // Установить текст (для инициализации)
+    void setText(const String &text)
+    {
+        m_inputText = text;
+    }
+
+    // Проверить, активна ли клавиатура
+    bool isActive() const
+    {
+        return m_active;
+    }
+
+    // Активировать/деактивировать клавиатуру
+    void setActive(bool active)
+    {
+        m_active = active;
+    }
+
+private:
+    std::function<void(char)> m_onCharInput; // Колбэк при вводе символа
+    String m_inputText;                      // Текущий введённый текст
+    bool m_active{true};                     // Активна ли клавиатура
+
+    // Раскладка клавиатуры
+    std::vector<String> row1, row2, row3;
+
+    int xForm, yForm, wForm, hForm;
+    int m_x, m_y;
+    int m_keyW, m_keyH; // Ширина и высота клавиши
+
+    // Вспомогательные методы
+    void drawKey(int x, int y, int w, int h, const String &label, bool highlighted);
+    bool isKeyPressed(int x, int y, int w, int h);
+};
 
 /* Desktop */
 template <typename T>
