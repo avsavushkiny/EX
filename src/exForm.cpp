@@ -288,65 +288,109 @@ void eKeyboard::show()
     int startY = yForm;
 
     // Рисуем фон клавиатуры
-    int totalWidth = row1.size() * (keyW + keySpacing) + keySpacing;
+    int maxRowSize = max(row1.size(), max(row2.size(), row3.size()));
+    int totalWidth = maxRowSize * (keyW + keySpacing) + keySpacing;
     int totalHeight = 3 * (keyH + keySpacing) + keySpacing;
-    _GGL.gray.drawFillFrame(startX, startY, totalWidth + 2, totalHeight, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
+    _GGL.gray.drawFillFrame(startX, startY, totalWidth, totalHeight, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
 
     int currentY = startY + keySpacing;
 
-    // Рисуем ряды клавиш
     // Ряд 1 (QWERTYUIOP)
-    int currentX = startX + keySpacing + (totalWidth - row1.size() * (keyW + keySpacing)) / 2;
+    int row1Width = row1.size() * (keyW + keySpacing) - keySpacing;
+    int row1Offset = (totalWidth - row1Width) / 2;
+    int currentX = startX + row1Offset;
     for (const auto &key : row1)
     {
+        String displayKey = key;
+        if (m_capsLock) {
+            displayKey.toUpperCase();
+        } else {
+            displayKey.toLowerCase();
+        }
         bool isHighlighted = isKeyPressed(currentX, currentY, keyW, keyH);
-        drawKey(currentX, currentY, keyW, keyH, key, isHighlighted);
+        drawKey(currentX, currentY, keyW, keyH, displayKey, isHighlighted);
         currentX += keyW + keySpacing;
     }
 
-    // Ряд 2 (ASDFGHJKL)
+    // Ряд 2 (ASDFGHJKLZ)
     currentY += keyH + keySpacing;
-    currentX = startX + keySpacing + (totalWidth - row2.size() * (keyW + keySpacing)) / 2;
+    int row2Width = row2.size() * (keyW + keySpacing) - keySpacing;
+    int row2Offset = (totalWidth - row2Width) / 2;
+    currentX = startX + row2Offset;
     for (const auto &key : row2)
     {
+        String displayKey = key;
+        if (m_capsLock) {
+            displayKey.toUpperCase();
+        } else {
+            displayKey.toLowerCase();
+        }
         bool isHighlighted = isKeyPressed(currentX, currentY, keyW, keyH);
-        drawKey(currentX, currentY, keyW, keyH, key, isHighlighted);
+        drawKey(currentX, currentY, keyW, keyH, displayKey, isHighlighted);
         currentX += keyW + keySpacing;
     }
 
-    // Ряд 3 (ZXCVBNM + Backspace)
+    // Ряд 3 (XCVBNM + Backspace + CapsLock)
     currentY += keyH + keySpacing;
-    currentX = startX + keySpacing + (totalWidth - row3.size() * (keyW + keySpacing)) / 2;
+    int row3Width = 0;
+    for (const auto &key : row3) {
+        int w = keyW;
+        if (key == "BS" || key == "CL") {
+            w = keyW * 1.5;
+        }
+        row3Width += w + keySpacing;
+    }
+    row3Width -= keySpacing;
+    int row3Offset = (totalWidth - row3Width) / 2;
+    currentX = startX + row3Offset;
     for (const auto &key : row3)
     {
         int w = keyW;
-        if (key == "⌫")
+        if (key == "BS" || key == "CL")
         {
             w = keyW * 1.5;
         }
+        
+        String displayLabel = key;
+        if (key == "CL") {
+            displayLabel = m_capsLock ? "CAPS" : "caps";
+        } else if (key != "BS" && !key.isEmpty()) {
+            if (m_capsLock) {
+                displayLabel.toUpperCase();
+            } else {
+                displayLabel.toLowerCase();
+            }
+        }
+        
         bool isHighlighted = isKeyPressed(currentX, currentY, w, keyH);
-        drawKey(currentX, currentY, w, keyH, key, isHighlighted);
+        drawKey(currentX, currentY, w, keyH, displayLabel, isHighlighted);
         currentX += w + keySpacing;
     }
-
 
     // Обработка нажатий клавиш с использованием таймера
     unsigned long currentTime = millis();
     
     // Проверяем все клавиши первого ряда
     currentY = startY + keySpacing;
-    currentX = startX + keySpacing + (totalWidth - row1.size() * (keyW + keySpacing)) / 2;
+    row1Width = row1.size() * (keyW + keySpacing) - keySpacing;
+    row1Offset = (totalWidth - row1Width) / 2;
+    currentX = startX + row1Offset;
     for (const auto &key : row1)
     {
         if (isKeyPressed(currentX, currentY, keyW, keyH) && _JOY.pressKeyENTER())
         {
-            // Проверяем, прошло ли достаточно времени с последнего нажатия
             if (currentTime - m_lastKeyPressTime >= m_keyRepeatDelay)
             {
                 if (m_onCharInput)
                 {
-                    m_onCharInput(key[0]);
-                    m_inputText += key;
+                    char ch = key[0];
+                    if (m_capsLock) {
+                        ch = toupper(ch);
+                    } else {
+                        ch = tolower(ch);
+                    }
+                    m_onCharInput(ch);
+                    m_inputText += ch;
                 }
                 m_lastKeyPressTime = currentTime;
             }
@@ -356,7 +400,9 @@ void eKeyboard::show()
 
     // Второй ряд
     currentY += keyH + keySpacing;
-    currentX = startX + keySpacing + (totalWidth - row2.size() * (keyW + keySpacing)) / 2;
+    row2Width = row2.size() * (keyW + keySpacing) - keySpacing;
+    row2Offset = (totalWidth - row2Width) / 2;
+    currentX = startX + row2Offset;
     for (const auto &key : row2)
     {
         if (isKeyPressed(currentX, currentY, keyW, keyH) && _JOY.pressKeyENTER())
@@ -365,8 +411,14 @@ void eKeyboard::show()
             {
                 if (m_onCharInput)
                 {
-                    m_onCharInput(key[0]);
-                    m_inputText += key;
+                    char ch = key[0];
+                    if (m_capsLock) {
+                        ch = toupper(ch);
+                    } else {
+                        ch = tolower(ch);
+                    }
+                    m_onCharInput(ch);
+                    m_inputText += ch;
                 }
                 m_lastKeyPressTime = currentTime;
             }
@@ -376,19 +428,30 @@ void eKeyboard::show()
 
     // Третий ряд
     currentY += keyH + keySpacing;
-    currentX = startX + keySpacing + (totalWidth - row3.size() * (keyW + keySpacing)) / 2;
+    row3Width = 0;
+    for (const auto &key : row3) {
+        int w = keyW;
+        if (key == "BS" || key == "CL") {
+            w = keyW * 1.5;
+        }
+        row3Width += w + keySpacing;
+    }
+    row3Width -= keySpacing;
+    row3Offset = (totalWidth - row3Width) / 2;
+    currentX = startX + row3Offset;
     for (const auto &key : row3)
     {
         int w = keyW;
-        if (key == "⌫")
+        if (key == "BS" || key == "CL")
         {
             w = keyW * 1.5;
         }
+        
         if (isKeyPressed(currentX, currentY, w, keyH) && _JOY.pressKeyENTER())
         {
             if (currentTime - m_lastKeyPressTime >= m_keyRepeatDelay)
             {
-                if (key == "⌫")
+                if (key == "BS")
                 {
                     // Backspace - удаляем последний символ
                     if (m_inputText.length() > 0)
@@ -400,12 +463,28 @@ void eKeyboard::show()
                         }
                     }
                 }
-                else
+                else if (key == "CL")
                 {
+                    // Caps Lock - переключаем состояние
+                    m_capsLock = !m_capsLock;
                     if (m_onCharInput)
                     {
-                        m_onCharInput(key[0]);
-                        m_inputText += key;
+                        // m_onCharInput(m_capsLock ? 'C' : 'c');
+                    }
+                }
+                else if (!key.isEmpty())
+                {
+                    // Буквенные клавиши
+                    if (m_onCharInput)
+                    {
+                        char ch = key[0];
+                        if (m_capsLock) {
+                            ch = toupper(ch);
+                        } else {
+                            ch = tolower(ch);
+                        }
+                        m_onCharInput(ch);
+                        m_inputText += ch;
                     }
                 }
                 m_lastKeyPressTime = currentTime;

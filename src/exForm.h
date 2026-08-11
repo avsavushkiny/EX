@@ -338,14 +338,14 @@ public:
     // Конструктор: принимает колбэк для ввода символа, позицию и размер клавиш
     eKeyboard(std::function<void(char)> onCharInput, int x, int y, int keyW = 18, int keyH = 14)
         : m_onCharInput(onCharInput), m_x(x), m_y(y), m_keyW(keyW), m_keyH(keyH),
-          m_lastKeyPressTime(0), m_keyRepeatDelay(200)
+          m_lastKeyPressTime(0), m_keyRepeatDelay(200), m_capsLock(false)
     {
         // Первый ряд: QWERTYUIOP
         row1 = {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"};
-        // Второй ряд: ASDFGHJKL
-        row2 = {"A", "S", "D", "F", "G", "H", "J", "K", "L"};
-        // Третий ряд: ZXCVBNM + Backspace
-        row3 = {"Z", "X", "C", "V", "B", "N", "M", "⌫"};
+        // Второй ряд: ASDFGHJKL + Z
+        row2 = {"A", "S", "D", "F", "G", "H", "J", "K", "L", "Z"};
+        // Третий ряд: XCVBNM + Backspace + CapsLock
+        row3 = {"X", "C", "V", "B", "N", "M", "BS", "CL"};
     }
 
     void show() override;
@@ -394,10 +394,23 @@ public:
         m_keyRepeatDelay = delayMs;
     }
 
+    // Получить состояние Caps Lock
+    bool isCapsLock() const
+    {
+        return m_capsLock;
+    }
+
+    // Установить состояние Caps Lock
+    void setCapsLock(bool enabled)
+    {
+        m_capsLock = enabled;
+    }
+
 private:
     std::function<void(char)> m_onCharInput; // Колбэк при вводе символа
     String m_inputText;                      // Текущий введённый текст
     bool m_active{true};                     // Активна ли клавиатура
+    bool m_capsLock;                         // Состояние Caps Lock
 
     // Раскладка клавиатуры
     std::vector<String> row1, row2, row3;
