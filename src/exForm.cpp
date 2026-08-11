@@ -336,7 +336,7 @@ void eKeyboard::show()
     for (const auto &key : row3) {
         int w = keyW;
         if (key == "BS" || key == "CL") {
-            w = keyW * 1.5;
+            w = keyW * 1; // 1.5
         }
         row3Width += w + keySpacing;
     }
@@ -348,12 +348,12 @@ void eKeyboard::show()
         int w = keyW;
         if (key == "BS" || key == "CL")
         {
-            w = keyW * 1.5;
+            w = keyW * 1; // 1.5
         }
         
         String displayLabel = key;
         if (key == "CL") {
-            displayLabel = m_capsLock ? "CAPS" : "caps";
+            displayLabel = m_capsLock ? "CL" : "cl";
         } else if (key != "BS" && !key.isEmpty()) {
             if (m_capsLock) {
                 displayLabel.toUpperCase();
@@ -515,6 +515,109 @@ bool eKeyboard::isKeyPressed(int x, int y, int w, int h)
     return (_JOY.posX0 >= x && _JOY.posX0 <= x + w &&
             _JOY.posY0 >= y && _JOY.posY0 <= y + h);
 }
+
+/* eTextInput */
+void eTextInput::show()
+{
+    unsigned long currentTime = millis();
+    
+    int inputX = xForm;
+    int inputY = yForm;
+    int inputW = m_width > 0 ? m_width : 200;
+    int inputH = m_height > 0 ? m_height : 20;
+
+    // Рисуем метку
+    if (m_label.length() > 0)
+    {
+        _GGL.gray.writeLine(inputX, inputY - 12, m_label, 10, 1, _GGL.gray.BLACK);
+    }
+
+    // Рисуем поле ввода
+    if (m_isEditing)
+    {
+        _GGL.gray.drawFillFrame(inputX, inputY, inputW, inputH, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
+        _GGL.gray.drawFrame(inputX, inputY, inputW, inputH, _GGL.gray.BLACK);
+        _GGL.gray.drawFrame(inputX - 1, inputY - 1, inputW + 2, inputH + 2, _GGL.gray.BLACK);
+    }
+    else
+    {
+        _GGL.gray.drawFillFrame(inputX, inputY, inputW, inputH, _GGL.gray.BLACK, _GGL.gray.WHITE);
+        _GGL.gray.drawFrame(inputX, inputY, inputW, inputH, _GGL.gray.BLACK);
+    }
+
+    // Выводим текст
+    String displayText = m_text;
+    if (displayText.length() > 0)
+    {
+        int maxChars = (inputW - 6) / 5;
+        if ((int)displayText.length() > maxChars)
+        {
+            displayText = "..." + displayText.substring(displayText.length() - maxChars + 3);
+        }
+        _GGL.gray.writeLine(inputX + 3, inputY + 3, displayText, 10, 1, _GGL.gray.BLACK);
+    }
+    else if (m_isEditing && (currentTime / 500) % 2 == 0)
+    {
+        // Мигающий курсор
+        // _GGL.gray.writeLine(inputX + 3, inputY + 3, "|", 10, 1, _GGL.gray.BLACK);
+    }
+
+    // Проверка нажатия ENTER на поле ввода
+    bool isCursorOverInput = (m_isEditing == false) && 
+        isPointInRect(_JOY.posX0, _JOY.posY0, inputX, inputY, inputW, inputH);
+    
+    if (isCursorOverInput && _JOY.pressKeyENTER() && (currentTime - m_lastToggleTime >= TOGGLE_COOLDOWN))
+    {
+        m_isEditing = true;
+        if (m_keyboard)
+        {
+            m_keyboard->setActive(true);
+            m_keyboard->setText(m_text);
+        }
+        m_lastToggleTime = currentTime;
+    }
+
+    // Если в режиме редактирования - показываем клавиатуру
+    if (m_isEditing && m_keyboard)
+    {
+        int kbX = xForm;
+        int kbY = yForm + m_height + 5;
+        int kbW = 0, kbH = 0;
+        
+        // Получаем размеры клавиатуры
+        m_keyboard->getKeyboardSize(kbW, kbH, 18, 14);
+        
+        m_keyboard->show();
+        
+        // Проверяем условия выхода из режима редактирования
+        // bool isCursorOverInput = isPointInRect(_JOY.posX0, _JOY.posY0, inputX, inputY, inputW, inputH);
+        // bool isCursorOverKeyboard = isPointInRect(_JOY.posX0, _JOY.posY0, kbX, kbY, kbW, kbH);
+        
+        // Выход при клике ENTER вне поля ввода и вне клавиатуры
+        // if (!isCursorOverInput && !isCursorOverKeyboard && _JOY.pressKeyENTER() && 
+        //     (currentTime - m_lastToggleTime >= TOGGLE_COOLDOWN))
+        // {
+        //     m_isEditing = false;
+        //     if (m_keyboard)
+        //     {
+        //         m_keyboard->setActive(false);
+        //     }
+        //     m_lastToggleTime = currentTime;
+        // }
+        
+        // Выход по ESC
+        if (_JOY.pressKeyEX() && (currentTime - m_lastToggleTime >= TOGGLE_COOLDOWN))
+        {
+            m_isEditing = false;
+            if (m_keyboard)
+            {
+                m_keyboard->setActive(false);
+            }
+            m_lastToggleTime = currentTime;
+        }
+    }
+}
+
 
 /* exForm show */
 int exForm::showForm()

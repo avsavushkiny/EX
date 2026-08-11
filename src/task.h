@@ -221,36 +221,83 @@ void _myForm1()
 { 
     exForm *form1 = new exForm();
 
-    eTextBox *textbox1 = new eTextBox("I've missed more than 9000 shots in my career.", 
-        BorderStyle::noBorder, 210, 100, 0, 0
-    );
+    // eTextBox *textbox1 = new eTextBox("I've missed more than 9000 shots in my career.", 
+    //     BorderStyle::noBorder, 210, 100, 0, 0
+    // );
 
-    eKeyboard *keyboard = new eKeyboard(
-        [](char c)
+    // eKeyboard *keyboard = new eKeyboard(
+    //     [](char c)
+    //     {
+    //         // Обработчик ввода символа
+    //         if (c == '\b')
+    //         {
+    //             // Backspace - удалить последний символ
+    //             // Serial.println("Backspace pressed");
+    //         }
+    //         else
+    //         {
+    //             // Serial.print("Char input: ");
+    //             // Serial.println(c);
+    //         }
+    //     },
+    //     5, // x позиция
+    //     60, // y позиция
+    //     18, // ширина клавиши
+    //     14  // высота клавиши
+    // );
+
+    // Создаём текстовое поле ввода
+    eTextInput *textInput = new eTextInput(
+        "Enter text:", // метка
+        5,             // x
+        15,            // y
+        120,           // ширина
+        20,            // высота
+        [](const String &text)
         {
-            // Обработчик ввода символа
-            if (c == '\b')
-            {
-                // Backspace - удалить последний символ
-                Serial.println("Backspace pressed");
-            }
-            else
-            {
-                Serial.print("Char input: ");
-                Serial.println(c);
-            }
-        },
-        10, // x позиция
-        50, // y позиция
-        18, // ширина клавиши
-        14  // высота клавиши
-    );
+            // Callback при изменении текста
+            // Serial.println("Text changed: " + text);
+        });
 
-    form1->title = "Form 1. Output text";
+    // Создаём текстовое поле ввода
+    eTextInput *textInput2 = new eTextInput(
+        "Enter text 2:", // метка
+        5,             // x
+        47,            // y
+        120,           // ширина
+        20,            // высота
+        [](const String &text)
+        {
+            // Callback при изменении текста
+            // Serial.println("Text changed: " + text);
+        });
+
+
+    // Добавляем кнопку для подтверждения
+    eButton *submitBtn = new eButton(
+        "Submit",
+        []()
+        {
+            // Получить текст из поля ввода можно через глобальную переменную
+            // или через callback
+            // Serial.println("Text submitted!");
+        },
+        130,
+        15);
+
+    // Устанавливаем начальный текст
+    textInput->setText("Hello World!");
+    textInput2->setText("Text 2");
+
+    form1->addElement(submitBtn);
+    form1->addElement(textInput);
+    form1->addElement(textInput2);
+
+    form1->title = "Form 1. Input text";
     form1->eFormShowMode = NORMAL;
 
-    form1->addElement(textbox1);
-    form1->addElement(keyboard);
+    // form1->addElement(textbox1);
+    // form1->addElement(keyboard);
 
     formsStack.push(form1);
 }

@@ -335,6 +335,9 @@ private:
 class eKeyboard : public eElement
 {
 public:
+    // Раскладка клавиатуры
+    std::vector<String> row1, row2, row3;
+
     // Конструктор: принимает колбэк для ввода символа, позицию и размер клавиш
     eKeyboard(std::function<void(char)> onCharInput, int x, int y, int keyW = 18, int keyH = 14)
         : m_onCharInput(onCharInput), m_x(x), m_y(y), m_keyW(keyW), m_keyH(keyH),
@@ -345,7 +348,7 @@ public:
         // Второй ряд: ASDFGHJKL + Z
         row2 = {"A", "S", "D", "F", "G", "H", "J", "K", "L", "Z"};
         // Третий ряд: XCVBNM + Backspace + CapsLock
-        row3 = {"X", "C", "V", "B", "N", "M", "BS", "CL"};
+        row3 = {"X", "C", "V", " ", "B", "N", "M", "BS", "CL"};
     }
 
     void show() override;
@@ -406,14 +409,20 @@ public:
         m_capsLock = enabled;
     }
 
+    // Получить размеры клавиатуры
+    void getKeyboardSize(int &width, int &height, int keyW, int keyH) const
+    {
+        int keySpacing = 2;
+        int maxRowSize = max(row1.size(), max(row2.size(), row3.size()));
+        width = maxRowSize * (keyW + keySpacing) + keySpacing;
+        height = 3 * (keyH + keySpacing) + keySpacing;
+    }
+
 private:
     std::function<void(char)> m_onCharInput; // Колбэк при вводе символа
     String m_inputText;                      // Текущий введённый текст
     bool m_active{true};                     // Активна ли клавиатура
     bool m_capsLock;                         // Состояние Caps Lock
-
-    // Раскладка клавиатуры
-    std::vector<String> row1, row2, row3;
 
     int xForm, yForm, wForm, hForm;
     int m_x, m_y;
@@ -426,6 +435,157 @@ private:
     // Вспомогательные методы
     void drawKey(int x, int y, int w, int h, const String &label, bool highlighted);
     bool isKeyPressed(int x, int y, int w, int h);
+};
+
+/* Text Input with Keyboard */
+class eTextInput : public eElement
+{
+public:
+    eTextInput(const String &label, int x, int y, int width, int height, 
+               std::function<void(const String&)> onTextChanged = nullptr)
+        : m_label(label), m_x(x), m_y(y), m_width(width), m_height(height),
+          m_onTextChanged(onTextChanged), m_isEditing(false), m_lastToggleTime(0)
+    {
+        // Создаём клавиатуру
+        m_keyboard = new eKeyboard(
+            [this](char ch) { this->onCharInput(ch); },
+            x, y + height + 5, 18, 14
+        );
+    }
+
+    ~eTextInput()
+    {
+        delete m_keyboard;
+    }
+
+    void show() override;
+
+    void setPosition(int x, int y, int w, int h) override
+    {
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
+        
+        if (m_keyboard)
+        {
+            m_keyboard->setPosition(x, y, w, 0);
+            // m_keyboard->setPosition(x, y + m_height + 5, w, 0);
+            // m_keyboard->setPosition(this->xForm, this->yForm + m_height + 5, w, 0);
+        }
+    }
+
+    // Установить текст
+    void setText(const String &text)
+    {
+        m_text = text;
+        if (m_keyboard)
+        {
+            m_keyboard->setText(text);
+        }
+    }
+
+    // Получить текст
+    String getText() const
+    {
+        return m_text;
+    }
+
+    // Очистить текст
+    void clearText()
+    {
+        m_text = "";
+        if (m_keyboard)
+        {
+            m_keyboard->clearText();
+        }
+    }
+
+    // Активировать/деактивировать режим редактирования
+    void setEditing(bool editing)
+    {
+        m_isEditing = editing;
+        if (m_keyboard)
+        {
+            m_keyboard->setActive(editing);
+        }
+        m_lastToggleTime = millis();
+    }
+
+    bool isEditing() const
+    {
+        return m_isEditing;
+    }
+
+    // Установить задержку повторения клавиш
+    void setKeyRepeatDelay(unsigned long delayMs)
+    {
+        if (m_keyboard)
+        {
+            m_keyboard->setKeyRepeatDelay(delayMs);
+        }
+    }
+
+    // Получить состояние Caps Lock
+    bool isCapsLock() const
+    {
+        return m_keyboard ? m_keyboard->isCapsLock() : false;
+    }
+
+    // Установить состояние Caps Lock
+    void setCapsLock(bool enabled)
+    {
+        if (m_keyboard)
+        {
+            m_keyboard->setCapsLock(enabled);
+        }
+    }
+
+private:
+    void onCharInput(char ch)
+    {
+        if (ch == '\b')
+        {
+            // Backspace - удаляем последний символ
+            if (m_text.length() > 0)
+            {
+                m_text.remove(m_text.length() - 1);
+            }
+        }
+        else
+        {
+            // Добавляем символ
+            m_text += ch;
+        }
+        
+        // Обновляем текст в клавиатуре
+        if (m_keyboard)
+        {
+            m_keyboard->setText(m_text);
+        }
+        
+        // Вызываем callback, если он задан
+        if (m_onTextChanged)
+        {
+            m_onTextChanged(m_text);
+        }
+    }
+
+    bool isPointInRect(int x, int y, int rx, int ry, int rw, int rh) const
+    {
+        return (x >= rx && x <= rx + rw && y >= ry && y <= ry + rh);
+    }
+
+    String m_label;
+    String m_text;
+    int m_x, m_y;
+    int m_width, m_height;
+    int xForm, yForm, wForm, hForm;
+    bool m_isEditing;
+    eKeyboard* m_keyboard;
+    std::function<void(const String&)> m_onTextChanged;
+    unsigned long m_lastToggleTime;
+    static const unsigned long TOGGLE_COOLDOWN = 250; // milliseconds
 };
 
 /* Desktop */
