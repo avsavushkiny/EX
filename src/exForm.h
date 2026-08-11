@@ -337,7 +337,8 @@ class eKeyboard : public eElement
 public:
     // Конструктор: принимает колбэк для ввода символа, позицию и размер клавиш
     eKeyboard(std::function<void(char)> onCharInput, int x, int y, int keyW = 18, int keyH = 14)
-        : m_onCharInput(onCharInput), m_x(x), m_y(y), m_keyW(keyW), m_keyH(keyH)
+        : m_onCharInput(onCharInput), m_x(x), m_y(y), m_keyW(keyW), m_keyH(keyH),
+          m_lastKeyPressTime(0), m_keyRepeatDelay(200)
     {
         // Первый ряд: QWERTYUIOP
         row1 = {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"};
@@ -387,6 +388,12 @@ public:
         m_active = active;
     }
 
+    // Установить задержку между нажатиями (в миллисекундах)
+    void setKeyRepeatDelay(unsigned long delayMs)
+    {
+        m_keyRepeatDelay = delayMs;
+    }
+
 private:
     std::function<void(char)> m_onCharInput; // Колбэк при вводе символа
     String m_inputText;                      // Текущий введённый текст
@@ -398,6 +405,10 @@ private:
     int xForm, yForm, wForm, hForm;
     int m_x, m_y;
     int m_keyW, m_keyH; // Ширина и высота клавиши
+
+    // Таймер для защиты от множественных нажатий
+    unsigned long m_lastKeyPressTime;
+    unsigned long m_keyRepeatDelay; // Задержка между нажатиями (мс)
 
     // Вспомогательные методы
     void drawKey(int x, int y, int w, int h, const String &label, bool highlighted);

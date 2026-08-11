@@ -290,7 +290,7 @@ void eKeyboard::show()
     // Рисуем фон клавиатуры
     int totalWidth = row1.size() * (keyW + keySpacing) + keySpacing;
     int totalHeight = 3 * (keyH + keySpacing) + keySpacing;
-    _GGL.gray.drawFillFrame(startX, startY, totalWidth, totalHeight, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
+    _GGL.gray.drawFillFrame(startX, startY, totalWidth + 2, totalHeight, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
 
     int currentY = startY + keySpacing;
 
@@ -316,11 +316,9 @@ void eKeyboard::show()
 
     // Ряд 3 (ZXCVBNM + Backspace)
     currentY += keyH + keySpacing;
-    // Смещаем ряд 3 вправо для красоты
     currentX = startX + keySpacing + (totalWidth - row3.size() * (keyW + keySpacing)) / 2;
     for (const auto &key : row3)
     {
-        // Для клавиши Backspace делаем её шире
         int w = keyW;
         if (key == "⌫")
         {
@@ -331,7 +329,10 @@ void eKeyboard::show()
         currentX += w + keySpacing;
     }
 
-    // Обработка нажатий клавиш
+
+    // Обработка нажатий клавиш с использованием таймера
+    unsigned long currentTime = millis();
+    
     // Проверяем все клавиши первого ряда
     currentY = startY + keySpacing;
     currentX = startX + keySpacing + (totalWidth - row1.size() * (keyW + keySpacing)) / 2;
@@ -339,12 +340,16 @@ void eKeyboard::show()
     {
         if (isKeyPressed(currentX, currentY, keyW, keyH) && _JOY.pressKeyENTER())
         {
-            if (m_onCharInput)
+            // Проверяем, прошло ли достаточно времени с последнего нажатия
+            if (currentTime - m_lastKeyPressTime >= m_keyRepeatDelay)
             {
-                m_onCharInput(key[0]);
-                m_inputText += key;
+                if (m_onCharInput)
+                {
+                    m_onCharInput(key[0]);
+                    m_inputText += key;
+                }
+                m_lastKeyPressTime = currentTime;
             }
-            delay(200);
         }
         currentX += keyW + keySpacing;
     }
@@ -356,12 +361,15 @@ void eKeyboard::show()
     {
         if (isKeyPressed(currentX, currentY, keyW, keyH) && _JOY.pressKeyENTER())
         {
-            if (m_onCharInput)
+            if (currentTime - m_lastKeyPressTime >= m_keyRepeatDelay)
             {
-                m_onCharInput(key[0]);
-                m_inputText += key;
+                if (m_onCharInput)
+                {
+                    m_onCharInput(key[0]);
+                    m_inputText += key;
+                }
+                m_lastKeyPressTime = currentTime;
             }
-            delay(200);
         }
         currentX += keyW + keySpacing;
     }
@@ -378,27 +386,30 @@ void eKeyboard::show()
         }
         if (isKeyPressed(currentX, currentY, w, keyH) && _JOY.pressKeyENTER())
         {
-            if (key == "⌫")
+            if (currentTime - m_lastKeyPressTime >= m_keyRepeatDelay)
             {
-                // Backspace - удаляем последний символ
-                if (m_inputText.length() > 0)
+                if (key == "⌫")
                 {
-                    m_inputText.remove(m_inputText.length() - 1);
-                    if (m_onCharInput)
+                    // Backspace - удаляем последний символ
+                    if (m_inputText.length() > 0)
                     {
-                        m_onCharInput('\b'); // Отправляем backspace
+                        m_inputText.remove(m_inputText.length() - 1);
+                        if (m_onCharInput)
+                        {
+                            m_onCharInput('\b');
+                        }
                     }
                 }
-            }
-            else
-            {
-                if (m_onCharInput)
+                else
                 {
-                    m_onCharInput(key[0]);
-                    m_inputText += key;
+                    if (m_onCharInput)
+                    {
+                        m_onCharInput(key[0]);
+                        m_inputText += key;
+                    }
                 }
+                m_lastKeyPressTime = currentTime;
             }
-            delay(200);
         }
         currentX += w + keySpacing;
     }
