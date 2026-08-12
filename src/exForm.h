@@ -751,11 +751,29 @@ private:
 
 extern std::stack<exForm *> formsStack;
 
+/* Глобальные функции для управления свернутыми формами */
+extern std::vector<exForm*> minimizedForms;
+
+void minimizeForm(exForm* form);
+void restoreForm(exForm* form);
+bool isFormMinimized(exForm* form);
+
 /* Class for controlling the glass forms */
 class exFormStack
 {
 public:
-    void push(exForm *form) { formsStack.push(form); }
+    void push(exForm *form) { 
+        // Если форма была свернута, восстанавливаем её
+        if (isFormMinimized(form))
+        {
+            restoreForm(form);
+        }
+        else
+        {
+            formsStack.push(form); 
+        }
+    }
+    
     exForm *pop()
     {
         if (!formsStack.empty())
@@ -766,16 +784,29 @@ public:
         }
         return nullptr;
     }
-    exForm *top() { return formsStack.top(); }
+    
+    exForm *top() { 
+        if (!formsStack.empty())
+            return formsStack.top(); 
+        return nullptr;
+    }
+    
     size_t size() const { return formsStack.size(); }
     bool empty() const { return formsStack.empty(); }
 
     void refreshForm()
     {
+        // Показываем только верхнюю форму из стека
+        // Свернутые формы не отображаются
         if (!formsStack.empty())
         {
-            exForm *top = pop();
-            push(top);
+            exForm *top = formsStack.top();
+            // Проверяем, не свернута ли форма
+            if (!isFormMinimized(top))
+            {
+                // Обновляем отображение только если форма не свернута
+                top->showForm();
+            }
         }
     }
 

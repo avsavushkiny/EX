@@ -1,6 +1,7 @@
 #include "exForm.h"
 
 std::stack<exForm *> formsStack;
+std::vector<exForm*> minimizedForms;
 eElement *g_activeElement = nullptr;
 
 /* Глобальные функции для управления активностью */
@@ -28,6 +29,57 @@ void deactivateCurrentElement()
         g_activeElement->deactivate();
         g_activeElement = nullptr;
     }
+}
+
+/* Функции для управления свернутыми формами */
+void minimizeForm(exForm* form)
+{
+    if (form == nullptr) return;
+    
+    // Проверяем, не свернута ли уже форма
+    auto it = std::find(minimizedForms.begin(), minimizedForms.end(), form);
+    if (it != minimizedForms.end()) return;
+    
+    // Если форма в стеке, удаляем её оттуда
+    std::stack<exForm*> tempStack;
+    while (!formsStack.empty())
+    {
+        exForm* top = formsStack.top();
+        formsStack.pop();
+        if (top != form)
+        {
+            tempStack.push(top);
+        }
+    }
+    while (!tempStack.empty())
+    {
+        formsStack.push(tempStack.top());
+        tempStack.pop();
+    }
+    
+    // Добавляем в список свернутых
+    minimizedForms.push_back(form);
+}
+
+void restoreForm(exForm* form)
+{
+    if (form == nullptr) return;
+    
+    // Удаляем из списка свернутых
+    auto it = std::find(minimizedForms.begin(), minimizedForms.end(), form);
+    if (it != minimizedForms.end())
+    {
+        minimizedForms.erase(it);
+        // Возвращаем форму в стек
+        formsStack.push(form);
+    }
+}
+
+bool isFormMinimized(exForm* form)
+{
+    if (form == nullptr) return false;
+    auto it = std::find(minimizedForms.begin(), minimizedForms.end(), form);
+    return (it != minimizedForms.end());
 }
 
 /* eButton */
@@ -727,7 +779,9 @@ void eTextInput::show()
 /* exForm show */
 int exForm::showForm()
 {
-    Button closeForm;
+    Button closeFormBtn;
+    Button minimizeFormBtn;
+
     int sizeStack = formsStack.size();
 
     switch (eFormShowMode)
@@ -754,9 +808,16 @@ int exForm::showForm()
 
     if (eFormShowMode == FULLSCREEN)
     {
-        if (closeForm.button(_SICON.close_13x13, _SICON.close_13x13_w, _SICON.close_13x13_h, 243, 0, _JOY.posX0, _JOY.posY0))
+        if (closeFormBtn.button(_SICON.close_13x13, _SICON.close_13x13_w, _SICON.close_13x13_h, 243, 0, _JOY.posX0, _JOY.posY0))
         {
             return 1;
+        }
+
+        if (minimizeFormBtn.button(_SICON.mini_13x13, _SICON.mini_13x13_w, _SICON.mini_13x13_h, 230, 0, _JOY.posX0, _JOY.posY0))
+        {
+            // Сворачиваем форму
+            ::minimizeForm(this);
+            return 0; // Не закрываем, просто сворачиваем
         }
 
         switch (eFormBackground)
@@ -788,14 +849,20 @@ int exForm::showForm()
             xSizeStack = 205;
         if ((sizeStack >= 10) && (sizeStack <= 99))
             xSizeStack = 200;
-        _GRF.print("[" + (String)sizeStack + "]", xSizeStack + 20, 2, 10, 5);
+        _GRF.print("[" + (String)sizeStack + "]", xSizeStack, 2, 10, 5);
     }
 
     if (eFormShowMode == MAXIMIZED)
     {
-        if (closeForm.button(_SICON.close_13x13, _SICON.close_13x13_w, _SICON.close_13x13_h, 243, 0, _JOY.posX0, _JOY.posY0))
+        if (closeFormBtn.button(_SICON.close_13x13, _SICON.close_13x13_w, _SICON.close_13x13_h, 243, 0, _JOY.posX0, _JOY.posY0))
         {
             return 1;
+        }
+
+        if (minimizeFormBtn.button(_SICON.mini_13x13, _SICON.mini_13x13_w, _SICON.mini_13x13_h, 230, 0, _JOY.posX0, _JOY.posY0))
+        {
+            ::minimizeForm(this);
+            return 0;
         }
 
         switch (eFormBackground)
@@ -827,14 +894,20 @@ int exForm::showForm()
             xSizeStack = 205;
         if ((sizeStack >= 10) && (sizeStack <= 99))
             xSizeStack = 200;
-        _GRF.print("[" + (String)sizeStack + "]", xSizeStack + 20, 2, 10, 5);
+        _GRF.print("[" + (String)sizeStack + "]", xSizeStack, 2, 10, 5);
     }
 
     if (eFormShowMode == NORMAL)
     {
-        if (closeForm.button(_SICON.close_13x13, _SICON.close_13x13_w, _SICON.close_13x13_h, 223, outerBoundaryForm - 12 + 6, _JOY.posX0, _JOY.posY0))
+        if (closeFormBtn.button(_SICON.close_13x13, _SICON.close_13x13_w, _SICON.close_13x13_h, 223, outerBoundaryForm - 12 + 6, _JOY.posX0, _JOY.posY0))
         {
             return 1;
+        }
+
+        if (minimizeFormBtn.button(_SICON.mini_13x13, _SICON.mini_13x13_w, _SICON.mini_13x13_h, 210, outerBoundaryForm - 12 + 6, _JOY.posX0, _JOY.posY0))
+        {
+            ::minimizeForm(this);
+            return 0;
         }
 
         switch (eFormBackground)
@@ -866,7 +939,7 @@ int exForm::showForm()
             xSizeStack = 185;
         if ((sizeStack >= 10) && (sizeStack <= 99))
             xSizeStack = 180;
-        _GRF.print("[" + (String)sizeStack + "]", xSizeStack + 20, outerBoundaryForm - 4, 10, 5);
+        _GRF.print("[" + (String)sizeStack + "]", xSizeStack, outerBoundaryForm - 4, 10, 5);
     }
 
     // === СОРТИРОВКА ЭЛЕМЕНТОВ ПО Z-ПОРЯДКУ ===
