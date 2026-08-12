@@ -237,6 +237,77 @@ void eLabel::show()
     }
 }
 
+/* eLink */
+void eLink::show()
+{
+    uint8_t sizeText = m_text.length();
+    uint8_t yy{}, chi{5}, lii{8};
+    int x{xForm + 1}, y{yForm};
+
+    if (!m_isActive)
+    {
+        for (int i = 0, xx = 0; i < sizeText && xx < (sizeText * chi); i++, xx += chi)
+        {
+            _GGL.gray.writeChar(xx + x, yy + y, m_text[i], 10, 1, _GGL.gray.DARK_GRAY);
+            if (m_text[i] == '\n')
+            {
+                yy += lii;
+                xx = -chi;
+            }
+        }
+        return;
+    }
+
+    if ((_JOY.posX0 >= x && _JOY.posX0 <= (x + (sizeText * chi))) &&
+        (_JOY.posY0 >= y - 2 && _JOY.posY0 <= y + lii + 2))
+    {
+        _GGL.gray.drawBox(x - 1, y, (sizeText * chi) + 2, lii + 1, _GGL.gray.BLACK);
+
+        for (int i = 0, xx = 0; i < sizeText && xx < (sizeText * chi); i++, xx += chi)
+        {
+            _GGL.gray.writeChar(xx + x, yy + y, m_text[i], 10, 1, _GGL.gray.WHITE);
+            if (m_text[i] == '\n')
+            {
+                yy += lii;
+                xx = -chi;
+            }
+        }
+
+        if (g_activeElement == nullptr || g_activeElement == this)
+        {
+            if (_JOY.pressKeyENTER() == true)
+            {
+                for (int i = 0, xx = 0; i < sizeText && xx < (sizeText * chi); i++, xx += chi)
+                {
+                    _GGL.gray.writeChar(xx + x, yy + y, m_text[i], 10, 1, _GGL.gray.DARK_GRAY);
+                    if (m_text[i] == '\n')
+                    {
+                        yy += lii;
+                        xx = -chi;
+                    }
+                }
+                m_onClick();
+                if (g_activeElement == this)
+                {
+                    g_activeElement = nullptr;
+                }
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0, xx = 0; i < sizeText && xx < (sizeText * chi); i++, xx += chi)
+        {
+            _GGL.gray.writeChar(xx + x, yy + y, m_text[i], 10, 1, _GGL.gray.BLACK);
+            if (m_text[i] == '\n')
+            {
+                yy += lii;
+                xx = -chi;
+            }
+        }
+    }
+}
+
 /* eLinkLabel */
 void eLinkLabel::show()
 {

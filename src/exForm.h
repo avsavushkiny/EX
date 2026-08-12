@@ -225,7 +225,37 @@ private:
 class eLinkLabel : public eActiveElement
 {
 public:
-    eLinkLabel(const String &text, void (*onClick)(), int x, int y)
+    // Изменяем сигнатуру на std::function
+    eLinkLabel(const String &text, std::function<void()> onClick, int x, int y)
+        : m_text(text), m_onClick(onClick), m_x(x), m_y(y)
+    {
+        m_zOrder = 10;
+    }
+
+    void setText(const String &new_text) { m_text = new_text; }
+    String getText() const { return m_text; }
+    void show() override;
+    void setPosition(int x, int y, int w, int h) override
+    {
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
+    }
+
+private:
+    std::function<void()> m_onClick;  // Изменяем тип
+    String m_text;
+    int xForm, yForm, wForm, hForm;
+    int m_x{0}, m_y{0};
+    int m_sizeW, m_sizeH;
+};
+
+/* link */
+class eLink : public eActiveElement
+{
+public:
+    eLink(const String &text, void (*onClick)(), int x, int y)
         : m_text(text), m_onClick(onClick), m_x(x), m_y(y)
     {
         m_zOrder = 10;

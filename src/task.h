@@ -427,6 +427,106 @@ void testErrorTask()
     }
 }
 
+/* Form. Minimized Windows List */
+void _minimizedWindowsForm()
+{
+    exForm *formMinimized = new exForm();
+    
+    // Контейнер для ссылок на свернутые окна
+    // Используем std::vector для хранения ссылок
+    std::vector<eLinkLabel*> linkLabels;
+
+    int yPos = 5;      // Переменная для отслеживания позиции Y
+    int maxLinks = 10; // Максимальное количество отображаемых окон
+    
+    // Получаем список свернутых форм
+    std::vector<exForm*> minimizedCopy = minimizedForms; // Копируем для безопасного доступа
+
+    eFunction *func1 = new eFunction([](){ 
+        
+    });
+    
+    // Если нет свернутых окон
+    if (minimizedCopy.empty())
+    {
+        eLabel *emptyLabel = new eLabel("No minimized windows", 5, yPos);
+        formMinimized->addElement(emptyLabel);
+    }
+    else
+    {
+        // Создаем ссылки для каждого свернутого окна
+        for (size_t i = 0; i < minimizedCopy.size() && i < maxLinks; i++)
+        {
+            exForm* form = minimizedCopy[i];
+            if (form == nullptr) continue;
+            
+            // Создаем ссылку с именем формы
+            String linkText = "- " + form->title;
+            
+            // Создаем eLinkLabel с функцией восстановления
+            eLinkLabel *link = new eLinkLabel(
+                linkText,
+                [form]() {
+                    // Восстанавливаем форму
+                    restoreForm(form);
+                    // Обновляем стек форм
+                    // Форма будет показана при следующем обновлении
+                },
+                5,
+                yPos
+            );
+            
+            linkLabels.push_back(link);
+            formMinimized->addElement(link);
+            
+            yPos += 10; // Отступ между элементами
+        }
+        
+        // Если окон больше чем maxLinks, показываем индикатор
+        if (minimizedCopy.size() > maxLinks)
+        {
+            eLabel *moreLabel = new eLabel(
+                "... and " + String(minimizedCopy.size() - maxLinks) + " more",
+                5,
+                yPos
+            );
+            formMinimized->addElement(moreLabel);
+        }
+    }
+    
+    // Кнопка "Закрыть все"
+    eButton *closeAllBtn = new eButton(
+        "Close All",
+        []() {
+            // Закрываем все свернутые окна
+            std::vector<exForm*> copy = minimizedForms;
+            for (exForm* form : copy)
+            {
+                if (form != nullptr)
+                {
+                    // Удаляем из списка свернутых
+                    auto it = std::find(minimizedForms.begin(), minimizedForms.end(), form);
+                    if (it != minimizedForms.end())
+                    {
+                        minimizedForms.erase(it);
+                    }
+                    delete form;
+                }
+            }
+        },
+        5,
+        130
+    );
+    
+    formMinimized->title = "Minimized Windows";
+    formMinimized->eFormShowMode = FULLSCREEN;
+    
+    formMinimized->addElement(closeAllBtn);
+    formMinimized->addElement(func1);
+    
+    formsStack.push(formMinimized);
+}
+
 /**/
 // Вспомогательная функция для создания задач с параметрами по умолчанию
 TaskArguments createTask(String name, void (*f)(void), const uint8_t *bitMap, 
@@ -465,12 +565,13 @@ TaskArguments system0[]
     // createTask("dispatcher", &_myDispatcher, _ICON.app_wizard, DESKTOP, 0, false, PRIORITY_NORMAL),
     // createTask("graphics 3", &_myGraphicsTest3, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
     // // createTask("settings", _settingsForm, icon.technical_group, DESKTOP, 0, false, PRIORITY_NORMAL),
-    createTask("User", &_userDesktop, _ICON.program_manager, DESKTOP, 0, false, PRIORITY_NORMAL),
-    //
+    createTask("Minimized Windows", &_minimizedWindowsForm, _ICON.program_manager, DESKTOP, 0, false, PRIORITY_NORMAL),
+
+    createTask("User", &_userDesktop, _ICON.computer, DESKTOP, 0, false, PRIORITY_NORMAL),
     // Error task
     createTask("Error", &testErrorTask, _ICON.chip_ram, DESKTOP, 0, false, PRIORITY_NORMAL),
     // OTA update
-    createTask("Update centre", &_formOTAUpdate, _ICON.binary, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("Update centre", &_formOTAUpdate, _ICON.technical_group, DESKTOP, 0, false, PRIORITY_NORMAL),
     // Stack forms
     createTask("stackform", &runExFormStack, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 1),
     // Добавление задачи мониторинга
