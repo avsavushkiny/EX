@@ -388,9 +388,8 @@ void eKeyboard::show()
     for (const auto &key : row3)
     {
         int w = keyW;
-        // if (key == "BS" || key == "CL")
         if (key == " ")
-            w = keyW * 1.5;
+            w = keyW * 2; // Двойная ширина для пробела
         row3Width += w + keySpacing;
     }
     row3Width -= keySpacing;
@@ -399,9 +398,8 @@ void eKeyboard::show()
     for (const auto &key : row3)
     {
         int w = keyW;
-        // if (key == "BS" || key == "CL")
         if (key == " ")
-            w = keyW * 1.5;
+            w = keyW * 2; // Двойной размер кнопки для пробела
 
         String displayLabel = key;
         if (key == "CL")
@@ -484,9 +482,8 @@ void eKeyboard::show()
     for (const auto &key : row3)
     {
         int w = keyW;
-        // if (key == "BS" || key == "CL")
         if (key == " ")
-            w = keyW * 1.5;
+            w = keyW * 2; // Для пробела увеличиваем ширину
         row3Width += w + keySpacing;
     }
     row3Width -= keySpacing;
@@ -495,9 +492,8 @@ void eKeyboard::show()
     for (const auto &key : row3)
     {
         int w = keyW;
-        // if (key == "BS" || key == "CL")
         if (key == " ")
-            w = keyW * 1.5;
+            w = keyW * 2; // Двойной размер кнопки для пробела
 
         if (isKeyPressed(currentX, currentY, w, keyH) && _JOY.pressKeyENTER())
         {
@@ -562,133 +558,6 @@ bool eKeyboard::isKeyPressed(int x, int y, int w, int h)
     return (_JOY.posX0 >= x && _JOY.posX0 <= x + w &&
             _JOY.posY0 >= y && _JOY.posY0 <= y + h);
 }
-
-/* eTextInput */
-// void eTextInput::show()
-// {
-//     // Если есть глобально активный элемент и это не мы - рисуем в неактивном состоянии
-//     if (g_activeElement != nullptr && g_activeElement != this)
-//     {
-//         int inputX = xForm;
-//         int inputY = yForm;
-//         int inputW = m_width > 0 ? m_width : 200;
-//         int inputH = m_height > 0 ? m_height : 20;
-
-//         if (m_label.length() > 0)
-//         {
-//             _GGL.gray.writeLine(inputX, inputY - 12, m_label, 10, 1, _GGL.gray.DARK_GRAY);
-//         }
-
-//         _GGL.gray.drawFillFrame(inputX, inputY, inputW, inputH, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
-//         _GGL.gray.drawFrame(inputX, inputY, inputW, inputH, _GGL.gray.DARK_GRAY);
-
-//         String displayText = m_text;
-//         if (displayText.length() > 0)
-//         {
-//             int maxChars = (inputW - 6) / 5;
-//             if ((int)displayText.length() > maxChars)
-//             {
-//                 displayText = "..." + displayText.substring(displayText.length() - maxChars + 3);
-//             }
-//             _GGL.gray.writeLine(inputX + 3, inputY + 3, displayText, 10, 1, _GGL.gray.DARK_GRAY);
-//         }
-//         return;
-//     }
-
-//     unsigned long currentTime = millis();
-
-//     int inputX = xForm;
-//     int inputY = yForm;
-//     int inputW = m_width > 0 ? m_width : 200;
-//     int inputH = m_height > 0 ? m_height : 20;
-
-//     if (m_label.length() > 0)
-//     {
-//         _GGL.gray.writeLine(inputX, inputY - 12, m_label, 10, 1, _GGL.gray.BLACK);
-//     }
-
-//     if (m_isEditing)
-//     {
-//         _GGL.gray.drawFillFrame(inputX, inputY, inputW, inputH, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
-//         _GGL.gray.drawFrame(inputX, inputY, inputW, inputH, _GGL.gray.BLACK);
-//         _GGL.gray.drawFrame(inputX - 1, inputY - 1, inputW + 2, inputH + 2, _GGL.gray.BLACK);
-//     }
-//     else
-//     {
-//         _GGL.gray.drawFillFrame(inputX, inputY, inputW, inputH, _GGL.gray.BLACK, _GGL.gray.WHITE);
-//         _GGL.gray.drawFrame(inputX, inputY, inputW, inputH, _GGL.gray.BLACK);
-//     }
-
-//     String displayText = m_text;
-//     if (displayText.length() > 0)
-//     {
-//         int maxChars = (inputW - 6) / 5;
-//         if ((int)displayText.length() > maxChars)
-//         {
-//             displayText = "..." + displayText.substring(displayText.length() - maxChars + 3);
-//         }
-//         _GGL.gray.writeLine(inputX + 3, inputY + 3, displayText, 10, 1, _GGL.gray.BLACK);
-//     }
-
-//     // Проверяем, можно ли активировать этот элемент
-//     bool canActivate = (g_activeElement == nullptr || g_activeElement == this);
-    
-//     // Проверяем наведение курсора на поле ввода только если этот элемент может быть активным
-//     bool isCursorOverInput = (m_isEditing == false) && canActivate &&
-//                              isPointInRect(_JOY.posX0, _JOY.posY0, inputX, inputY, inputW, inputH);
-
-//     if (isCursorOverInput && _JOY.pressKeyENTER() && (currentTime - m_lastToggleTime >= TOGGLE_COOLDOWN))
-//     {
-//         // Если есть другой активный элемент - деактивируем его
-//         if (g_activeElement != nullptr && g_activeElement != this)
-//         {
-//             g_activeElement->deactivate();
-//         }
-        
-//         m_isEditing = true;
-//         m_isActive = true;
-//         g_activeElement = this;
-//         if (m_keyboard)
-//         {
-//             // Позиционируем клавиатуру статично внизу экрана по центру
-//             int kbW, kbH;
-//             m_keyboard->getKeyboardSize(kbW, kbH, 18, 14);
-//             // Центрируем по горизонтали, размещаем внизу с отступом 2 пикселя
-//             int kbX = (256 - kbW) / 2;
-//             int kbY = 160 - kbH - 2;
-//             m_keyboard->setStaticPosition(kbX, kbY);
-            
-//             m_keyboard->setActive(true);
-//             m_keyboard->setIsActive(true);
-//             m_keyboard->setText(m_text);
-//             ElementZOrderManager::bringToFront(m_keyboard);
-//         }
-//         ElementZOrderManager::bringToFront(this);
-//         m_lastToggleTime = currentTime;
-//     }
-
-//     if (m_isEditing && m_keyboard)
-//     {
-//         // Клавиатура уже отображается через вызов show()
-//         // Не перерисовываем её здесь, чтобы избежать мерцания
-//         m_keyboard->show();
-
-//         if (_JOY.pressKeyEX() && (currentTime - m_lastToggleTime >= TOGGLE_COOLDOWN))
-//         {
-//             m_isEditing = false;
-//             m_isActive = false;
-//             if (g_activeElement == this)
-//                 g_activeElement = nullptr;
-//             if (m_keyboard)
-//             {
-//                 m_keyboard->setActive(false);
-//                 m_keyboard->setIsActive(false);
-//                 m_keyboard->clearStaticPosition(); // Очищаем статическую позицию
-//             }
-//             m_lastToggleTime = currentTime;
-//         }
-//     }
-// }
 
 /* eTextInput */
 void eTextInput::show()
