@@ -334,6 +334,11 @@ void eKeyboard::show()
         g_activeElement = this;
     }
 
+    // Выбираем текущие ряды в зависимости от режима
+    const std::vector<String>& currentRow1 = m_isNumberMode ? row1Numbers : row1;
+    const std::vector<String>& currentRow2 = m_isNumberMode ? row2Numbers : row2;
+    const std::vector<String>& currentRow3 = m_isNumberMode ? row3Numbers : row3;
+
     int keySpacing = 2;
     int keyW = m_keyW;
     int keyH = m_keyH;
@@ -341,25 +346,26 @@ void eKeyboard::show()
     int startY = yForm;
 
     // Рисуем фон клавиатуры
-    int maxRowSize = max(row1.size(), max(row2.size(), row3.size()));
+    int maxRowSize = max(currentRow1.size(), max(currentRow2.size(), currentRow3.size()));
     int totalWidth = maxRowSize * (keyW + keySpacing) + keySpacing;
     int totalHeight = 3 * (keyH + keySpacing) + keySpacing;
-    // _GGL.gray.drawFillFrame(startX, startY, totalWidth, totalHeight, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
     _GGL.gray.drawFillFrame(0, startY, 256, totalHeight, _GGL.gray.LIGHT_GRAY, _GGL.gray.LIGHT_GRAY);
 
     int currentY = startY + keySpacing;
 
     // Ряд 1
-    int row1Width = row1.size() * (keyW + keySpacing) - keySpacing;
+    int row1Width = currentRow1.size() * (keyW + keySpacing) - keySpacing;
     int row1Offset = (totalWidth - row1Width) / 2;
     int currentX = startX + row1Offset;
-    for (const auto &key : row1)
+    for (const auto &key : currentRow1)
     {
         String displayKey = key;
-        if (m_capsLock)
+        // Для букв применяем CapsLock
+        if (!m_isNumberMode && m_capsLock && key.length() == 1 && isalpha(key[0]))
             displayKey.toUpperCase();
-        else
+        else if (!m_isNumberMode && !m_capsLock && key.length() == 1 && isalpha(key[0]))
             displayKey.toLowerCase();
+        
         bool isHighlighted = isKeyPressed(currentX, currentY, keyW, keyH);
         drawKey(currentX, currentY, keyW, keyH, displayKey, isHighlighted);
         currentX += keyW + keySpacing;
@@ -367,16 +373,17 @@ void eKeyboard::show()
 
     // Ряд 2
     currentY += keyH + keySpacing;
-    int row2Width = row2.size() * (keyW + keySpacing) - keySpacing;
+    int row2Width = currentRow2.size() * (keyW + keySpacing) - keySpacing;
     int row2Offset = (totalWidth - row2Width) / 2;
     currentX = startX + row2Offset;
-    for (const auto &key : row2)
+    for (const auto &key : currentRow2)
     {
         String displayKey = key;
-        if (m_capsLock)
+        if (!m_isNumberMode && m_capsLock && key.length() == 1 && isalpha(key[0]))
             displayKey.toUpperCase();
-        else
+        else if (!m_isNumberMode && !m_capsLock && key.length() == 1 && isalpha(key[0]))
             displayKey.toLowerCase();
+        
         bool isHighlighted = isKeyPressed(currentX, currentY, keyW, keyH);
         drawKey(currentX, currentY, keyW, keyH, displayKey, isHighlighted);
         currentX += keyW + keySpacing;
@@ -385,28 +392,33 @@ void eKeyboard::show()
     // Ряд 3
     currentY += keyH + keySpacing;
     int row3Width = 0;
-    for (const auto &key : row3)
+    for (const auto &key : currentRow3)
     {
         int w = keyW;
         if (key == " ")
-            w = keyW * 2; // Двойная ширина для пробела
+            w = keyW * 2;
         row3Width += w + keySpacing;
     }
     row3Width -= keySpacing;
     int row3Offset = (totalWidth - row3Width) / 2;
     currentX = startX + row3Offset;
-    for (const auto &key : row3)
+    for (const auto &key : currentRow3)
     {
         int w = keyW;
         if (key == " ")
-            w = keyW * 2; // Двойной размер кнопки для пробела
+            w = keyW * 2;
 
         String displayLabel = key;
         if (key == "CL")
         {
             displayLabel = m_capsLock ? "CL" : "cl";
         }
-        else if (key != "BS" && !key.isEmpty())
+        else if (key == "12" || key == "AB")
+        {
+            // Отображаем текущий режим
+            displayLabel = m_isNumberMode ? "AB" : "12";
+        }
+        else if (!m_isNumberMode && key != "BS" && !key.isEmpty() && key != " " && key != "CL" && key != "12")
         {
             if (m_capsLock)
                 displayLabel.toUpperCase();
@@ -424,10 +436,10 @@ void eKeyboard::show()
 
     // Ряд 1
     currentY = startY + keySpacing;
-    row1Width = row1.size() * (keyW + keySpacing) - keySpacing;
+    row1Width = currentRow1.size() * (keyW + keySpacing) - keySpacing;
     row1Offset = (totalWidth - row1Width) / 2;
     currentX = startX + row1Offset;
-    for (const auto &key : row1)
+    for (const auto &key : currentRow1)
     {
         if (isKeyPressed(currentX, currentY, keyW, keyH) && _JOY.pressKeyENTER())
         {
@@ -436,10 +448,13 @@ void eKeyboard::show()
                 if (m_onCharInput)
                 {
                     char ch = key[0];
-                    if (m_capsLock)
-                        ch = toupper(ch);
-                    else
-                        ch = tolower(ch);
+                    if (!m_isNumberMode)
+                    {
+                        if (m_capsLock)
+                            ch = toupper(ch);
+                        else
+                            ch = tolower(ch);
+                    }
                     m_onCharInput(ch);
                     m_inputText += ch;
                 }
@@ -451,10 +466,10 @@ void eKeyboard::show()
 
     // Ряд 2
     currentY += keyH + keySpacing;
-    row2Width = row2.size() * (keyW + keySpacing) - keySpacing;
+    row2Width = currentRow2.size() * (keyW + keySpacing) - keySpacing;
     row2Offset = (totalWidth - row2Width) / 2;
     currentX = startX + row2Offset;
-    for (const auto &key : row2)
+    for (const auto &key : currentRow2)
     {
         if (isKeyPressed(currentX, currentY, keyW, keyH) && _JOY.pressKeyENTER())
         {
@@ -463,10 +478,13 @@ void eKeyboard::show()
                 if (m_onCharInput)
                 {
                     char ch = key[0];
-                    if (m_capsLock)
-                        ch = toupper(ch);
-                    else
-                        ch = tolower(ch);
+                    if (!m_isNumberMode)
+                    {
+                        if (m_capsLock)
+                            ch = toupper(ch);
+                        else
+                            ch = tolower(ch);
+                    }
                     m_onCharInput(ch);
                     m_inputText += ch;
                 }
@@ -479,21 +497,21 @@ void eKeyboard::show()
     // Ряд 3
     currentY += keyH + keySpacing;
     row3Width = 0;
-    for (const auto &key : row3)
+    for (const auto &key : currentRow3)
     {
         int w = keyW;
         if (key == " ")
-            w = keyW * 2; // Для пробела увеличиваем ширину
+            w = keyW * 2;
         row3Width += w + keySpacing;
     }
     row3Width -= keySpacing;
     row3Offset = (totalWidth - row3Width) / 2;
     currentX = startX + row3Offset;
-    for (const auto &key : row3)
+    for (const auto &key : currentRow3)
     {
         int w = keyW;
         if (key == " ")
-            w = keyW * 2; // Двойной размер кнопки для пробела
+            w = keyW * 2;
 
         if (isKeyPressed(currentX, currentY, w, keyH) && _JOY.pressKeyENTER())
         {
@@ -512,15 +530,23 @@ void eKeyboard::show()
                 {
                     m_capsLock = !m_capsLock;
                 }
-                else if (!key.isEmpty())
+                else if (key == "12" || key == "AB")
+                {
+                    // Переключение между режимами
+                    toggleNumberMode();
+                }
+                else if (!key.isEmpty() && key != " " && key != "BS" && key != "CL" && key != "12" && key != "AB")
                 {
                     if (m_onCharInput)
                     {
                         char ch = key[0];
-                        if (m_capsLock)
-                            ch = toupper(ch);
-                        else
-                            ch = tolower(ch);
+                        if (!m_isNumberMode)
+                        {
+                            if (m_capsLock)
+                                ch = toupper(ch);
+                            else
+                                ch = tolower(ch);
+                        }
                         m_onCharInput(ch);
                         m_inputText += ch;
                     }

@@ -221,31 +221,6 @@ void _myForm1()
 { 
     exForm *form1 = new exForm();
 
-    // eTextBox *textbox1 = new eTextBox("I've missed more than 9000 shots in my career.", 
-    //     BorderStyle::noBorder, 210, 100, 0, 0
-    // );
-
-    // eKeyboard *keyboard = new eKeyboard(
-    //     [](char c)
-    //     {
-    //         // Обработчик ввода символа
-    //         if (c == '\b')
-    //         {
-    //             // Backspace - удалить последний символ
-    //             // Serial.println("Backspace pressed");
-    //         }
-    //         else
-    //         {
-    //             // Serial.print("Char input: ");
-    //             // Serial.println(c);
-    //         }
-    //     },
-    //     5, // x позиция
-    //     60, // y позиция
-    //     18, // ширина клавиши
-    //     14  // высота клавиши
-    // );
-
     // Создаём текстовое поле ввода
     eTextInput *textInput = new eTextInput(
         "Enter text:", // метка
@@ -295,9 +270,6 @@ void _myForm1()
 
     form1->title = "Form 1. Input text";
     form1->eFormShowMode = NORMAL;
-
-    // form1->addElement(textbox1);
-    // form1->addElement(keyboard);
 
     formsStack.push(form1);
 }

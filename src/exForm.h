@@ -80,11 +80,11 @@ class ElementZOrderManager
 public:
     static void sortElements(std::vector<eElement *> &elements)
     {
-        std::sort(elements.begin(), elements.end(), 
-            [](eElement *a, eElement *b) {
-                return a->getZOrder() < b->getZOrder();
-            }
-        );
+        std::sort(elements.begin(), elements.end(),
+                  [](eElement *a, eElement *b)
+                  {
+                      return a->getZOrder() < b->getZOrder();
+                  });
     }
 
     static void bringToFront(eElement *element)
@@ -114,7 +114,7 @@ class eButton : public eActiveElement
 {
 public:
     eButton(const String &label, std::function<void()> func, int x, int y)
-        : m_label(label), m_func(func), m_x(x), m_y(y) 
+        : m_label(label), m_func(func), m_x(x), m_y(y)
     {
         m_zOrder = 10;
     }
@@ -141,7 +141,7 @@ private:
 class eText : public eElement
 {
 public:
-    eText(const String &text, int x, int y) : m_text(text), m_x(x), m_y(y) 
+    eText(const String &text, int x, int y) : m_text(text), m_x(x), m_y(y)
     {
         m_zOrder = 5;
     }
@@ -170,7 +170,7 @@ class eTextBox : public eActiveElement
 {
 public:
     eTextBox(const String &text, BorderStyle borderStyle, int sizeW, int sizeH, int x, int y)
-        : m_text(text), m_borderStyle(borderStyle), m_sizeW(sizeW), m_sizeH(sizeH), m_x(x), m_y(y) 
+        : m_text(text), m_borderStyle(borderStyle), m_sizeW(sizeW), m_sizeH(sizeH), m_x(x), m_y(y)
     {
         m_zOrder = 10;
     }
@@ -199,7 +199,7 @@ private:
 class eLabel : public eElement
 {
 public:
-    eLabel(const String &text, int x, int y) : m_text(text), m_x(x), m_y(y) 
+    eLabel(const String &text, int x, int y) : m_text(text), m_x(x), m_y(y)
     {
         m_zOrder = 5;
     }
@@ -226,7 +226,7 @@ class eLinkLabel : public eActiveElement
 {
 public:
     eLinkLabel(const String &text, void (*onClick)(), int x, int y)
-        : m_text(text), m_onClick(onClick), m_x(x), m_y(y) 
+        : m_text(text), m_onClick(onClick), m_x(x), m_y(y)
     {
         m_zOrder = 10;
     }
@@ -254,7 +254,7 @@ private:
 class eLine : public eElement
 {
 public:
-    eLine(int x, int y) : m_x(x), m_y(y) 
+    eLine(int x, int y) : m_x(x), m_y(y)
     {
         m_zOrder = 3;
     }
@@ -278,7 +278,7 @@ class eCheckbox : public eActiveElement
 {
 public:
     eCheckbox(bool checked, const String &text, int x, int y)
-        : m_checked(checked), m_text(text), m_x(x), m_y(y) 
+        : m_checked(checked), m_text(text), m_x(x), m_y(y)
     {
         m_zOrder = 10;
     }
@@ -307,7 +307,7 @@ private:
 class eFunction : public eElement
 {
 public:
-    eFunction(std::function<void()> func) : m_func(func) 
+    eFunction(std::function<void()> func) : m_func(func)
     {
         m_zOrder = 1;
     }
@@ -336,7 +336,7 @@ class ePicture : public eElement
 {
 public:
     ePicture(const uint8_t *bitmap, int x, int y, int w, int h)
-        : m_bitmap(bitmap), m_x(x), m_y(y), m_w(w), m_h(h) 
+        : m_bitmap(bitmap), m_x(x), m_y(y), m_w(w), m_h(h)
     {
         m_zOrder = 2;
     }
@@ -361,7 +361,7 @@ class eBackground : public eElement
 {
 public:
     eBackground(const uint8_t *bitmap, int x, int y, int w, int h)
-        : m_bitmap(bitmap), m_x(x), m_y(y), m_w(w), m_h(h) 
+        : m_bitmap(bitmap), m_x(x), m_y(y), m_w(w), m_h(h)
     {
         m_zOrder = 0;
     }
@@ -386,17 +386,25 @@ private:
 class eKeyboard : public eActiveElement
 {
 public:
-    std::vector<String> row1, row2, row3;
+    std::vector<String> row1, row2, row3;                      // Буквенная раскладка
+    std::vector<String> row1Numbers, row2Numbers, row3Numbers; // Цифровая раскладка
 
     eKeyboard(std::function<void(char)> onCharInput, int x, int y, int keyW = 18, int keyH = 14)
         : m_onCharInput(onCharInput), m_x(x), m_y(y), m_keyW(keyW), m_keyH(keyH),
           m_lastKeyPressTime(0), m_keyRepeatDelay(200), m_capsLock(false), m_active(true),
-          m_useStaticPosition(false), m_staticX(0), m_staticY(0)
+          m_useStaticPosition(false), m_staticX(0), m_staticY(0), m_isNumberMode(false)
     {
+        // Буквенная раскладка
         row1 = {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"};
         row2 = {"A", "S", "D", "F", "G", "H", "J", "K", "L", "Z"};
         row3 = {"12", "X", "C", "V", " ", "B", "N", "M", "BS", "CL"};
-        m_zOrder = 500; // Высокий приоритет
+
+        // Цифровая/символьная раскладка
+        row1Numbers = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"};
+        row2Numbers = {"-", "/", ":", ";", "(", ")", "$", "&", "@", "\""};
+        row3Numbers = {"AB", ".", ",", "?", " ", "!", "'", "%", "BS", "CL"};
+
+        m_zOrder = 500;
     }
 
     void show() override;
@@ -410,7 +418,7 @@ public:
         this->wForm = w;
         this->hForm = h;
     }
-    
+
     // Новый метод для статического позиционирования
     void setStaticPosition(int x, int y)
     {
@@ -420,7 +428,7 @@ public:
         this->xForm = x;
         this->yForm = y;
     }
-    
+
     void clearStaticPosition()
     {
         m_useStaticPosition = false;
@@ -451,6 +459,14 @@ public:
     }
     ElementType getElementType() const override { return ELEM_TYPE_KEYBOARD; }
 
+    void toggleNumberMode() 
+    { 
+        m_isNumberMode = !m_isNumberMode; 
+    }
+    
+    bool isNumberMode() const { return m_isNumberMode; }
+    void setNumberMode(bool enabled) { m_isNumberMode = enabled; }
+
 private:
     std::function<void(char)> m_onCharInput;
     String m_inputText;
@@ -461,10 +477,12 @@ private:
     int m_keyW, m_keyH;
     unsigned long m_lastKeyPressTime;
     unsigned long m_keyRepeatDelay;
-    
+
     // Для статического позиционирования
     bool m_useStaticPosition;
     int m_staticX, m_staticY;
+
+    bool m_isNumberMode; // Флаг режима (true - цифры/символы, false - буквы)
 
     void drawKey(int x, int y, int w, int h, const String &label, bool highlighted);
     bool isKeyPressed(int x, int y, int w, int h);
@@ -542,8 +560,8 @@ public:
     }
     bool isEditing() const override { return m_isEditing; }
     bool isInEditMode() const override { return m_isEditing; }
-    void deactivate() override 
-    { 
+    void deactivate() override
+    {
         m_isActive = false;
         m_isEditing = false;
         if (m_keyboard)
@@ -569,7 +587,7 @@ public:
     }
     ElementType getElementType() const override { return ELEM_TYPE_TEXT_INPUT; }
 
-    eKeyboard* getKeyboard() const { return m_keyboard; }
+    eKeyboard *getKeyboard() const { return m_keyboard; }
 
 private:
     void onCharInput(char ch)
@@ -611,7 +629,7 @@ template <typename T>
 class eDesktop : public eElement
 {
 public:
-    eDesktop(const std::vector<T> &data) : data_(data) 
+    eDesktop(const std::vector<T> &data) : data_(data)
     {
         m_zOrder = 1;
     }
@@ -659,7 +677,7 @@ class eGraphics : public eElement
 {
 public:
     eGraphics(void (*func)(int, int, int, int), int x, int y, int w, int h)
-        : showFunc(func), m_x(x), m_y(y), m_w(w), m_h(h) 
+        : showFunc(func), m_x(x), m_y(y), m_w(w), m_h(h)
     {
         m_zOrder = 2;
     }
