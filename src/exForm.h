@@ -390,7 +390,8 @@ public:
 
     eKeyboard(std::function<void(char)> onCharInput, int x, int y, int keyW = 18, int keyH = 14)
         : m_onCharInput(onCharInput), m_x(x), m_y(y), m_keyW(keyW), m_keyH(keyH),
-          m_lastKeyPressTime(0), m_keyRepeatDelay(200), m_capsLock(false), m_active(true)
+          m_lastKeyPressTime(0), m_keyRepeatDelay(200), m_capsLock(false), m_active(true),
+          m_useStaticPosition(false), m_staticX(0), m_staticY(0)
     {
         row1 = {"Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"};
         row2 = {"A", "S", "D", "F", "G", "H", "J", "K", "L", "Z"};
@@ -401,10 +402,28 @@ public:
     void show() override;
     void setPosition(int x, int y, int w, int h) override
     {
-        this->xForm = x + m_x;
-        this->yForm = y + m_y;
+        if (!m_useStaticPosition)
+        {
+            this->xForm = x + m_x;
+            this->yForm = y + m_y;
+        }
         this->wForm = w;
         this->hForm = h;
+    }
+    
+    // Новый метод для статического позиционирования
+    void setStaticPosition(int x, int y)
+    {
+        m_useStaticPosition = true;
+        m_staticX = x;
+        m_staticY = y;
+        this->xForm = x;
+        this->yForm = y;
+    }
+    
+    void clearStaticPosition()
+    {
+        m_useStaticPosition = false;
     }
 
     String getText() const { return m_inputText; }
@@ -442,6 +461,10 @@ private:
     int m_keyW, m_keyH;
     unsigned long m_lastKeyPressTime;
     unsigned long m_keyRepeatDelay;
+    
+    // Для статического позиционирования
+    bool m_useStaticPosition;
+    int m_staticX, m_staticY;
 
     void drawKey(int x, int y, int w, int h, const String &label, bool highlighted);
     bool isKeyPressed(int x, int y, int w, int h);

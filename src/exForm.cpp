@@ -562,6 +562,7 @@ bool eKeyboard::isKeyPressed(int x, int y, int w, int h)
 }
 
 /* eTextInput */
+/* eTextInput */
 void eTextInput::show()
 {
     // Если есть глобально активный элемент и это не мы - рисуем в неактивном состоянии
@@ -648,6 +649,14 @@ void eTextInput::show()
         g_activeElement = this;
         if (m_keyboard)
         {
+            // Позиционируем клавиатуру статично внизу экрана по центру
+            int kbW, kbH;
+            m_keyboard->getKeyboardSize(kbW, kbH, 18, 14);
+            // Центрируем по горизонтали, размещаем внизу с отступом 2 пикселя
+            int kbX = (256 - kbW) / 2;
+            int kbY = 160 - kbH - 2;
+            m_keyboard->setStaticPosition(kbX, kbY);
+            
             m_keyboard->setActive(true);
             m_keyboard->setIsActive(true);
             m_keyboard->setText(m_text);
@@ -659,10 +668,8 @@ void eTextInput::show()
 
     if (m_isEditing && m_keyboard)
     {
-        int kbX = xForm;
-        int kbY = yForm + m_height + 5;
-        int kbW = 0, kbH = 0;
-        m_keyboard->getKeyboardSize(kbW, kbH, 18, 14);
+        // Клавиатура уже отображается через вызов show()
+        // Не перерисовываем её здесь, чтобы избежать мерцания
         m_keyboard->show();
 
         if (_JOY.pressKeyEX() && (currentTime - m_lastToggleTime >= TOGGLE_COOLDOWN))
@@ -675,6 +682,7 @@ void eTextInput::show()
             {
                 m_keyboard->setActive(false);
                 m_keyboard->setIsActive(false);
+                m_keyboard->clearStaticPosition(); // Очищаем статическую позицию
             }
             m_lastToggleTime = currentTime;
         }
