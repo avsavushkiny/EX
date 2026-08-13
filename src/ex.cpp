@@ -24,6 +24,9 @@ void initializationSystem()
    */
    esp_sleep_enable_ext0_wakeup(GPIO_NUM_32, 1); // Stick 0
 
+   /* Инициализация системы событий */
+
+   
    /* setting the operating system state */
    Serial.begin(9600);
    _GGL.gray.begin();

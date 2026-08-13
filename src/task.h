@@ -528,6 +528,7 @@ void _minimizedWindowsForm()
     formsStack.push(formMinimized);
 }
 
+
 /**/
 // Вспомогательная функция для создания задач с параметрами по умолчанию
 TaskArguments createTask(String name, void (*f)(void), const uint8_t *bitMap, 
@@ -554,20 +555,25 @@ TaskArguments createTask(String name, void (*f)(void), const uint8_t *bitMap,
 TaskArguments system0[] 
 {
     //        (название, функция, bitmap, тип, индекс, статус, ПРИОРИТЕТ, oneshot, тик)
+    /* Рабочий стол */
     createTask("desktop", &_myDesktop, NULL, SYSTEM, 100, true, PRIORITY_NORMAL, true, 1),
+    /* Инициализация таймера */
     createTask("initSleepTimerTask", &initSleepTimerTask, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, true, 1),
+    /* Энергосбережение */
     createTask("energySave", &energySave, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, 0, 100), // было 10
+    /* Обновление состояния кнопок (высокий приоритет, часто) */
+    // createTask("eventUpdate", &eventTask, NULL, SYSTEM, 0, true, PRIORITY_HIGH, false, 10),
+    /* Диспетчер свернутых форм */
+    createTask("Minimized Windows", &_minimizedWindowsForm, _ICON.program_manager, DESKTOP, 0, false, PRIORITY_NORMAL),
     // createTask("oshello", &_osHello, NULL, SYSTEM, 101, true, PRIORITY_NORMAL),
     createTask("Form 1", &_myForm1, _ICON.window_abc, DESKTOP, 0, false, PRIORITY_NORMAL),
     createTask("Form 2", &_myForm2, _ICON.window_shell_1, DESKTOP, 0, false, PRIORITY_NORMAL),
     createTask("Form 3", &_myForm3, _ICON.window_shell_2, DESKTOP, 0, false, PRIORITY_NORMAL),
     createTask("Graphics 1", &_myGraphicsTest1, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
     createTask("Graphics 2", &_myGraphicsTest2, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
-    // createTask("dispatcher", &_myDispatcher, _ICON.app_wizard, DESKTOP, 0, false, PRIORITY_NORMAL),
-    // createTask("graphics 3", &_myGraphicsTest3, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
-    // // createTask("settings", _settingsForm, icon.technical_group, DESKTOP, 0, false, PRIORITY_NORMAL),
-    createTask("Minimized Windows", &_minimizedWindowsForm, _ICON.program_manager, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("graphics 3", &_myGraphicsTest3, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
 
+    // User
     createTask("User", &_userDesktop, _ICON.computer, DESKTOP, 0, false, PRIORITY_NORMAL),
     // Error task
     createTask("Error", &testErrorTask, _ICON.chip_ram, DESKTOP, 0, false, PRIORITY_NORMAL),
