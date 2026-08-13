@@ -6,7 +6,8 @@
 // Определение глобальных переменных
 esp_timer_handle_t sleep_timer = nullptr;
 volatile bool sleep_timeout = false;
-const uint64_t SLEEP_TIMEOUT_US = 60000000; // 60 секунд в микросекундах
+// const uint64_t SLEEP_TIMEOUT_US = 60000000; // 60 секунд в микросекундах
+const uint64_t SLEEP_TIMEOUT_US = 180000000; // 60 секунд в микросекундах
 
 // Callback функция таймера
 void sleep_timer_callback(void *arg)

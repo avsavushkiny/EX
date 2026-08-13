@@ -44,6 +44,7 @@ bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y
   return false;
 }
 
+
 /* [for Desktop name tasks] no Frame */
 void TextBox::textBox(String str, int sizeH, int sizeW, short charH, short charW, int x, int y)
 {

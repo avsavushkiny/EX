@@ -520,6 +520,7 @@ void _minimizedWindowsForm()
     
     formMinimized->title = "Minimized Windows";
     formMinimized->eFormShowMode = FULLSCREEN;
+
     
     formMinimized->addElement(closeAllBtn);
     formMinimized->addElement(func1);

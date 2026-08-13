@@ -913,6 +913,7 @@ int exForm::showForm()
             break;
         }
 
+        _GGL.gray.drawFillFrame(0, 0, 231, 13, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
         _GRF.print(title, 5, 2, 10, 5);
 
         uint8_t xSizeStack{};
@@ -958,6 +959,7 @@ int exForm::showForm()
             break;
         }
 
+        _GGL.gray.drawFillFrame(0, 0, 231, 13, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
         _GRF.print(title, 5, 2, 10, 5);
 
         uint8_t xSizeStack{};
@@ -1003,6 +1005,7 @@ int exForm::showForm()
             break;
         }
 
+        _GGL.gray.drawFillFrame(outerBoundaryForm, outerBoundaryForm - 6, 191, 13, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
         _GRF.print(title, outerBoundaryForm + 5, outerBoundaryForm - 4, 10, 5);
 
         uint8_t xSizeStack{};
@@ -1010,7 +1013,7 @@ int exForm::showForm()
             xSizeStack = 185;
         if ((sizeStack >= 10) && (sizeStack <= 99))
             xSizeStack = 180;
-        _GRF.print("[" + (String)sizeStack + "]", xSizeStack, outerBoundaryForm - 4, 10, 5);
+        _GRF.print((String)sizeStack, xSizeStack, outerBoundaryForm - 4, 10, 5);
     }
 
     // === СОРТИРОВКА ЭЛЕМЕНТОВ ПО Z-ПОРЯДКУ ===
