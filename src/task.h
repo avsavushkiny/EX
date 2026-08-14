@@ -795,12 +795,11 @@ TaskArguments system0[]{
     createTask("graphics 3", &_myGraphicsTest3, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
 
     // 
-    createTask("WiFi", &_wifiConnect, _ICON.window_shell_1, DESKTOP, 0, false, PRIORITY_NORMAL),
-    //
+    createTask("WiFi", &_wifiConnect, _ICON.connect, DESKTOP, 0, false, PRIORITY_NORMAL),
     // createTask("wifiAuto", &wifiAutoReconnect, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 100),
 
     
-    createTask("ADC Monitor", &_adcMonitorForm, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("ADC Monitor", &_adcMonitorForm, _ICON.bar_graph, DESKTOP, 0, false, PRIORITY_NORMAL),
     // User
     createTask("User", &_userDesktop, _ICON.computer, DESKTOP, 0, false, PRIORITY_NORMAL),
     // Error task

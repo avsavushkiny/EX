@@ -729,7 +729,6 @@ private:
 };
 
 /* Plotter */
-/* Plotter - с фреймом и временем обновления */
 class ePlotter : public eElement
 {
 public:
