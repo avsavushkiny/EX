@@ -318,6 +318,38 @@ void _myForm3()
 
     formsStack.push(form3);
 }
+/* Form. Test 4 */
+/* Form. ADC Monitor with Plotter */
+/* Form. ADC Monitor - Compact */
+void _adcMonitorForm()
+{
+    exForm* formADC = new exForm();
+    
+    eLabel* label = new eLabel("ADC: 0", 0, 5);
+    ePlotter* plotter = new ePlotter(5, 20, 246, 90, 500);
+    plotter->setYRange(0, 4095);
+    
+    eButton* clearBtn = new eButton("Clear", [plotter](){
+        plotter->clearData();
+    }, 5, 115);
+    
+    eFunction* update = new eFunction([label, plotter](){
+        int raw = analogRead(39);
+        label->setText("ADC: " + String(raw));
+        plotter->addDataPoint(raw);
+    });
+    
+    formADC->addElement(label);
+    formADC->addElement(plotter);
+    formADC->addElement(clearBtn);
+    formADC->addElement(update);
+    
+    formADC->title = "Plotter. ADC pin 29";
+    formADC->eFormShowMode = MAXIMIZED;
+    
+    formsStack.push(formADC);
+}
+
 
 /* Form. Update center*/
 bool isOtaMode = false;
@@ -675,6 +707,7 @@ TaskArguments system0[]
     createTask("Graphics 2", &_myGraphicsTest2, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
     createTask("graphics 3", &_myGraphicsTest3, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
 
+    createTask("ADC Monitor", &_adcMonitorForm, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
     // User
     createTask("User", &_userDesktop, _ICON.computer, DESKTOP, 0, false, PRIORITY_NORMAL),
     // Error task

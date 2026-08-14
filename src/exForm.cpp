@@ -446,6 +446,158 @@ void eBackground::show()
     }
 }
 
+/* Plotter */
+/* ePlotter implementation */
+void ePlotter::show()
+{
+    // Очищаем область
+    _GGL.gray.drawFillFrame((short)xForm, (short)yForm, (short)m_width, (short)m_height, GRAY::BLACK, GRAY::WHITE);
+    
+    // Рисуем фрейм
+    drawFrame();
+    
+    // Если нет данных - выводим сообщение
+    if (m_data.empty())
+    {
+        String msg = "No data";
+        int msgX = xForm + (m_width - msg.length() * 5) / 2;
+        int msgY = yForm + (m_height - 8) / 2;
+        _GGL.gray.writeLine((short)msgX, (short)msgY, msg, 10, 1, GRAY::DARK_GRAY);
+        return;
+    }
+    
+    // Рисуем сетку
+    drawGrid();
+    
+    // Рисуем данные
+    drawData();
+    
+    // Подписи осей
+    drawAxisLabels();
+}
+
+void ePlotter::drawFrame()
+{
+    // Внешняя рамка
+    // _GGL.gray.drawFrame((short)xForm, (short)yForm, (short)m_width, (short)m_height, GRAY::BLACK);
+    
+    // Внутренняя рамка (область графика)
+    int margin = 0;
+    int plotX = xForm + margin;
+    int plotY = yForm;
+    int plotW = m_width - margin * 2;
+    int plotH = m_height;
+    
+    if (plotW > 10 && plotH > 10)
+    {
+        _GGL.gray.drawFrame((short)plotX, (short)plotY, (short)plotW, (short)plotH, GRAY::BLACK);
+        // _GGL.gray.drawFrame((short)xForm, (short)yForm, (short)m_width, (short)m_height, GRAY::BLACK);
+    }
+}
+
+void ePlotter::drawGrid()
+{
+    int margin = 0;
+    int plotX = xForm + margin;
+    int plotY = yForm;
+    int plotW = m_width - margin * 2;
+    int plotH = m_height;
+    
+    if (plotW < 10 || plotH < 10)
+        return;
+    
+    // Горизонтальные линии сетки (4 линии)
+    for (int i = 1; i < 5; i++)
+    {
+        int y = plotY + (plotH * i) / 5;
+        _GGL.gray.drawHLine((short)plotX, (short)y, (short)plotW, GRAY::LIGHT_GRAY, 1);
+    }
+    
+    // Вертикальные линии сетки (6 линий)
+    for (int i = 1; i < 7; i++)
+    {
+        int x = plotX + (plotW * i) / 7;
+        _GGL.gray.drawVLine((short)x, (short)plotY, (short)plotH, GRAY::LIGHT_GRAY, 1);
+    }
+}
+
+void ePlotter::drawData()
+{
+    int margin = 0;
+    int plotX = xForm + margin;
+    int plotY = yForm;
+    int plotW = m_width - margin * 2;
+    int plotH = m_height;
+    
+    if (plotW < 10 || plotH < 10 || m_data.size() < 2)
+        return;
+    
+    float range = m_maxValue - m_minValue;
+    if (range < 0.001f) range = 1.0f;
+    
+    size_t dataSize = m_data.size();
+    
+    // Рисуем линию графика
+    for (size_t i = 0; i < dataSize - 1; i++)
+    {
+        float v1 = m_data[i].value;
+        float v2 = m_data[i + 1].value;
+        
+        int x1 = plotX + (plotW * i) / (dataSize - 1);
+        int x2 = plotX + (plotW * (i + 1)) / (dataSize - 1);
+        
+        int y1 = plotY + plotH - (int)(((v1 - m_minValue) / range) * plotH);
+        int y2 = plotY + plotH - (int)(((v2 - m_minValue) / range) * plotH);
+        
+        // Ограничиваем координаты
+        if (y1 < plotY) y1 = plotY;
+        if (y1 > plotY + plotH) y1 = plotY + plotH;
+        if (y2 < plotY) y2 = plotY;
+        if (y2 > plotY + plotH) y2 = plotY + plotH;
+        
+        _GGL.gray.drawLine((short)x1, (short)y1, (short)x2, (short)y2, m_lineColor);
+    }
+    
+    // Рисуем последнюю точку
+    if (!m_data.empty())
+    {
+        float v = m_data.back().value;
+        int x = plotX + plotW;
+        int y = plotY + plotH - (int)(((v - m_minValue) / range) * plotH);
+        if (y >= plotY && y <= plotY + plotH)
+        {
+            _GGL.gray.drawFillCircle((short)x, (short)y, 3, m_lineColor, m_lineColor);
+        }
+    }
+}
+
+void ePlotter::drawAxisLabels()
+{
+    int margin = 0;
+    int plotX = xForm + margin;
+    int plotY = yForm;
+    int plotW = m_width - margin * 2;
+    int plotH = m_height;
+    
+    if (plotW < 30 || plotH < 20)
+        return;
+    
+    // Подписи по оси Y (мин и макс) - внутри графика слева
+    String minLabel = String((int)m_minValue);
+    String maxLabel = String((int)m_maxValue);
+    
+    // Максимальное значение - вверху слева
+    _GGL.gray.writeLine((short)(plotX + 2), (short)(plotY + 2), maxLabel, 10, 1, GRAY::DARK_GRAY);
+    
+    // Минимальное значение - внизу слева
+    _GGL.gray.writeLine((short)(plotX + 2), (short)(plotY + plotH - 10), minLabel, 10, 1, GRAY::DARK_GRAY);
+    
+    // Количество точек - справа внизу
+    String countLabel = String(m_data.size());
+    int countX = plotX + plotW - countLabel.length() * 5 - 2;
+    _GGL.gray.writeLine((short)countX, (short)(plotY + plotH - 10), countLabel, 10, 1, GRAY::DARK_GRAY);
+}
+
 /* eKeyboard */
 void eKeyboard::show()
 {

@@ -728,6 +728,108 @@ private:
     void (*showFunc)(int, int, int, int);
 };
 
+/* Plotter */
+/* Plotter - с фреймом и временем обновления */
+class ePlotter : public eElement
+{
+public:
+    struct DataPoint
+    {
+        float value;
+        unsigned long timestamp;
+    };
+
+    ePlotter(int x, int y, int width, int height, unsigned long updateInterval = 50)
+        : m_x(x), m_y(y), m_width(width), m_height(height), m_updateInterval(updateInterval)
+    {
+        m_zOrder = 10;
+        m_data.reserve(100);
+        m_minValue = 0;
+        m_maxValue = 4095;
+        m_lastUpdateTime = 0;
+    }
+
+    void show() override;
+    void setPosition(int x, int y, int w, int h) override
+    {
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
+    }
+
+    void addDataPoint(float value)
+    {
+        // --> update data
+        unsigned long currentTime = millis();
+        if (currentTime - m_lastUpdateTime < m_updateInterval)
+            return;
+        m_lastUpdateTime = currentTime;
+        // <-- update data
+
+        m_data.push_back({value, millis()});
+        if ((int)m_data.size() > m_maxPoints)
+        {
+            m_data.erase(m_data.begin());
+        }
+
+        // Обновляем диапазон
+        float minVal = value;
+        float maxVal = value;
+        for (const auto &p : m_data)
+        {
+            if (p.value < minVal)
+                minVal = p.value;
+            if (p.value > maxVal)
+                maxVal = p.value;
+        }
+
+        float range = maxVal - minVal;
+        if (range < 0.001f)
+        {
+            m_minValue = minVal - 1.0f;
+            m_maxValue = maxVal + 1.0f;
+        }
+        else
+        {
+            m_minValue = minVal - range * 0.1f;
+            m_maxValue = maxVal + range * 0.1f;
+        }
+    }
+
+    void clearData()
+    {
+        m_data.clear();
+        m_minValue = 0;
+        m_maxValue = 4095;
+    }
+
+    void setYRange(float min, float max)
+    {
+        m_minValue = min;
+        m_maxValue = max;
+    }
+
+    void setMaxPoints(int points) { m_maxPoints = points; }
+    void setColor(GRAY::Color color) { m_lineColor = color; }
+
+private:
+    int xForm, yForm, wForm, hForm;
+    int m_x, m_y, m_width, m_height;
+    std::vector<DataPoint> m_data;
+    float m_minValue;
+    float m_maxValue;
+    int m_maxPoints = 100;
+    unsigned long m_updateInterval;
+    unsigned long m_lastUpdateTime;
+    GRAY::Color m_lineColor = GRAY::BLACK;
+
+    void drawFrame();
+    void drawGrid();
+    void drawData();
+    void drawAxisLabels();
+};
+
 /* Abstract base class eForm */
 class eForm
 {
