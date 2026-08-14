@@ -23,18 +23,18 @@ void _graphicsTest1(int xG, int yG, int wG, int hG)
 {   
     for (int x = 0; x < 256; x += 2)
     {
-        int y = random(12, 160);
-        int h = random(160 - y);
+        int y = random(12, 150);
+        int h = random(150 - y);
         _GGL.gray.drawVLine(x, y, h, _GGL.gray.BLACK, 1); 
     }
 }
 void _myGraphicsTest1()
 {
     exForm *formGraphicsTest1 = new exForm;                   // [0] создали форму
-    eGraphics *graphicsTest1 = new eGraphics(_graphicsTest1, 0, 0, 256, 147); // [1] создали элемент формы
+    eGraphics *graphicsTest1 = new eGraphics(_graphicsTest1, 0, 0, 256, 137); // [1] создали элемент формы
 
     formGraphicsTest1->title = "Graphics test";    // [2] назвали форму
-    formGraphicsTest1->eFormShowMode = FULLSCREEN; // [3] определили режим формы
+    formGraphicsTest1->eFormShowMode = MAXIMIZED;  // [3] определили режим формы
     formGraphicsTest1->addElement(graphicsTest1);  // [4] добавили эелемент в контейнер
 
     formsStack.push(formGraphicsTest1); // [5] добавили элемент в стэк форм
@@ -45,7 +45,7 @@ void _graphicsTest2(int xG, int yG, int wG, int hG)
 { 
     int w{4}, h{4};
 
-    for (int y = yG; y < 160; y += h)
+    for (int y = yG; y < 150; y += h)
     {
         for (int x = xG; x < wG; x += w)
         {
@@ -60,10 +60,10 @@ void _graphicsTest2(int xG, int yG, int wG, int hG)
 void _myGraphicsTest2()
 {
     exForm *formGraphicsTest2 = new exForm;                   // [0] создали форму
-    eGraphics *graphicsTest2 = new eGraphics(_graphicsTest2, 0, 0, 256, 147); // [1] создали элемент формы
+    eGraphics *graphicsTest2 = new eGraphics(_graphicsTest2, 0, 0, 256, 137); // [1] создали элемент формы
 
     formGraphicsTest2->title = "Graphics test 2";  // [2] назвали форму
-    formGraphicsTest2->eFormShowMode = FULLSCREEN; // [3] определили режим формы
+    formGraphicsTest2->eFormShowMode = MAXIMIZED; // [3] определили режим формы
     formGraphicsTest2->addElement(graphicsTest2);  // [4] добавили эелемент в контейнер
 
     formsStack.push(formGraphicsTest2); // [5] добавили элемент в стэк форм
@@ -103,10 +103,10 @@ void _graphicsTest3(int xG, int yG, int wG, int hG)
 void _myGraphicsTest3()
 {
     exForm *formGraphicsTest3 = new exForm;
-    eGraphics *graphicsTest3 = new eGraphics(_graphicsTest3, 0, 0, 256, 147);
+    eGraphics *graphicsTest3 = new eGraphics(_graphicsTest3, 0, 0, 256, 137);
 
     formGraphicsTest3->title = "Graphics test 3";
-    formGraphicsTest3->eFormShowMode = FULLSCREEN;
+    formGraphicsTest3->eFormShowMode = MAXIMIZED;
     formGraphicsTest3->eFormBackground = TRANSPARENT;
     formGraphicsTest3->addElement(graphicsTest3);
 
@@ -164,7 +164,7 @@ void _info()
     // });
 
     formInfoSystems->title = "Information";
-    formInfoSystems->eFormShowMode = FULLSCREEN;
+    formInfoSystems->eFormShowMode = MAXIMIZED;
     formInfoSystems->addElement(textBoxInfo);
     formInfoSystems->addElement(pic1);
     // formInfoSystems->addElement(func1);
@@ -290,7 +290,7 @@ void _myForm2()
     form2->addElement(label1);
     form2->addElement(Line2);
 
-    form2->eFormShowMode = FULLSCREEN;
+    form2->eFormShowMode = MAXIMIZED;
 
     formsStack.push(form2);
 }
@@ -515,11 +515,11 @@ void _minimizedWindowsForm()
             }
         },
         5,
-        130
+        120
     );
     
     formMinimized->title = "Minimized Windows";
-    formMinimized->eFormShowMode = FULLSCREEN;
+    formMinimized->eFormShowMode = MAXIMIZED;
 
     
     formMinimized->addElement(closeAllBtn);
@@ -528,6 +528,108 @@ void _minimizedWindowsForm()
     formsStack.push(formMinimized);
 }
 
+/* Event update */
+void eventTask()
+{
+    Events.update();
+}
+
+/* Test */
+void eventTest()
+{
+    static unsigned long lastPressTime = 0;
+    static int clickCount = 0;
+    static bool waitingForSecond = false;
+    static bool isLongPress = false;
+    static unsigned long pressStartTime = 0;
+    static bool buttonPressed = false;  // Добавляем флаг состояния кнопки
+    
+    // Проверка нажатия кнопки ENTER
+    bool isPressed = _JOY.pressKeyENTER();
+    
+    // Обработка нажатия (переход из отпущена в нажата)
+    if (isPressed && !buttonPressed)
+    {
+        buttonPressed = true;
+        pressStartTime = millis();
+        
+        // Проверяем, не было ли это вторым кликом в двойном клике
+        if (waitingForSecond && (millis() - lastPressTime) <= 300)
+        {
+            clickCount++;
+            if (clickCount >= 2)
+            {
+                Serial.println("DOUBLE CLICK!");
+                // Действие при двойном клике
+                clickCount = 0;
+                waitingForSecond = false;
+                pressStartTime = 0;
+            }
+        }
+        else
+        {
+            // Первый клик или таймаут
+            clickCount = 1;
+            waitingForSecond = true;
+            lastPressTime = millis();
+            Serial.println("First click");
+        }
+    }
+    // Обработка отпускания (переход из нажата в отпущена)
+    else if (!isPressed && buttonPressed)
+    {
+        buttonPressed = false;
+        unsigned long pressDuration = millis() - pressStartTime;
+        
+        // Проверка долгого нажатия
+        if (pressDuration >= 500)
+        {
+            if (!isLongPress)
+            {
+                isLongPress = true;
+                Serial.println("LONG PRESS!");
+                // Действие при долгом нажатии
+                clickCount = 0;
+                waitingForSecond = false;
+            }
+        }
+        
+        pressStartTime = 0;
+    }
+    // Обработка удержания (кнопка нажата)
+    else if (isPressed && buttonPressed)
+    {
+        unsigned long pressDuration = millis() - pressStartTime;
+        
+        // Проверка долгого нажатия во время удержания
+        if (pressDuration >= 500 && !isLongPress)
+        {
+            isLongPress = true;
+            Serial.println("LONG PRESS!");
+            // Действие при долгом нажатии
+            clickCount = 0;
+            waitingForSecond = false;
+        }
+    }
+    
+    // Таймаут для одиночного клика
+    if (waitingForSecond && clickCount == 1 && (millis() - lastPressTime) > 300)
+    {
+        Serial.println("Single click");
+        // Действие при одиночном клике
+        waitingForSecond = false;
+        clickCount = 0;
+        isLongPress = false;
+    }
+    
+    // Сброс состояния после долгого нажатия
+    if (isLongPress && !isPressed)
+    {
+        isLongPress = false;
+        clickCount = 0;
+        waitingForSecond = false;
+    }
+}
 
 /**/
 // Вспомогательная функция для создания задач с параметрами по умолчанию
@@ -562,7 +664,7 @@ TaskArguments system0[]
     /* Энергосбережение */
     createTask("energySave", &energySave, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, 0, 100), // было 10
     /* Обновление состояния кнопок (высокий приоритет, часто) */
-    // createTask("eventUpdate", &eventTask, NULL, SYSTEM, 0, true, PRIORITY_HIGH, false, 10),
+    createTask("eventUpdate", &eventTask, NULL, SYSTEM, 0, true, PRIORITY_HIGH, false, 10),
     /* Диспетчер свернутых форм */
     createTask("Minimized Windows", &_minimizedWindowsForm, _ICON.program_manager, DESKTOP, 0, false, PRIORITY_NORMAL),
     // createTask("oshello", &_osHello, NULL, SYSTEM, 101, true, PRIORITY_NORMAL),

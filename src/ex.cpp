@@ -24,11 +24,17 @@ void initializationSystem()
    */
    esp_sleep_enable_ext0_wakeup(GPIO_NUM_32, 1); // Stick 0
 
-   /* Инициализация системы событий */
-
+   /* Добавляем кнопки в систему событий */
+   Events.addButton(PIN_BUTTON_ENTER);
+   Events.addButton(PIN_BUTTON_EX);
+   Events.addButton(PIN_BUTTON_A);
+   Events.addButton(PIN_BUTTON_B);
+   /* Определяем режимы кнопок (pullup или pulldown) */
+   Events.detectAllModes();
    
-   /* setting the operating system state */
+   /* Устанавливаем скорость последовательного порта */
    Serial.begin(9600);
+   /* Инициализируем дисплей */
    _GGL.gray.begin();
 
    /* setting the resolution of the analog-to-digital converter */

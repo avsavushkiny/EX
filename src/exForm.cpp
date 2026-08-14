@@ -879,49 +879,55 @@ int exForm::showForm()
 
     if (eFormShowMode == FULLSCREEN)
     {
-        if (closeFormBtn.button(_SICON.close_13x13, _SICON.close_13x13_w, _SICON.close_13x13_h, 243, 0, _JOY.posX0, _JOY.posY0))
-        {
-            return 1;
-        }
+        // if (closeFormBtn.button(_SICON.close_13x13, _SICON.close_13x13_w, _SICON.close_13x13_h, 243, 0, _JOY.posX0, _JOY.posY0))
+        // {
+        //     return 1;
+        // }
 
-        if (minimizeFormBtn.button(_SICON.mini_13x13, _SICON.mini_13x13_w, _SICON.mini_13x13_h, 230, 0, _JOY.posX0, _JOY.posY0))
-        {
-            // Сворачиваем форму
-            ::minimizeForm(this);
-            return 0; // Не закрываем, просто сворачиваем
-        }
+        // if (minimizeFormBtn.button(_SICON.mini_13x13, _SICON.mini_13x13_w, _SICON.mini_13x13_h, 230, 0, _JOY.posX0, _JOY.posY0))
+        // {
+        //     // Сворачиваем форму
+        //     ::minimizeForm(this);
+        //     return 0; // Не закрываем, просто сворачиваем
+        // }
 
         switch (eFormBackground)
         {
         case TRANSPARENT:
-            _GGL.gray.drawFrame(0, 12, 256, 148, _GGL.gray.BLACK);
+            // _GGL.gray.drawFrame(0, 12, 256, 148, _GGL.gray.BLACK);
+            _GGL.gray.drawFrame(0, 0, 256, 160, _GGL.gray.BLACK);
             break;
         case WHITE:
-            _GGL.gray.drawFillFrame(0, 12, 256, 148, _GGL.gray.BLACK, _GGL.gray.WHITE);
+            // _GGL.gray.drawFillFrame(0, 12, 256, 148, _GGL.gray.BLACK, _GGL.gray.WHITE);
+            _GGL.gray.drawFillFrame(0, 0, 256, 160, _GGL.gray.BLACK, _GGL.gray.WHITE);
             break;
         case LIGHT_GRAY:
-            _GGL.gray.drawFillFrame(0, 12, 256, 148, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
+            // _GGL.gray.drawFillFrame(0, 12, 256, 148, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
+            _GGL.gray.drawFillFrame(0, 0, 256, 160, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
             break;
         case DARK_GRAY:
-            _GGL.gray.drawFillFrame(0, 12, 256, 148, _GGL.gray.BLACK, _GGL.gray.DARK_GRAY);
+            // _GGL.gray.drawFillFrame(0, 12, 256, 148, _GGL.gray.BLACK, _GGL.gray.DARK_GRAY);
+            _GGL.gray.drawFillFrame(0, 0, 256, 160, _GGL.gray.BLACK, _GGL.gray.DARK_GRAY);
             break;
         case BLACK:
-            _GGL.gray.drawFillFrame(0, 12, 256, 148, _GGL.gray.BLACK, _GGL.gray.BLACK);
+            // _GGL.gray.drawFillFrame(0, 12, 256, 148, _GGL.gray.BLACK, _GGL.gray.BLACK);
+            _GGL.gray.drawFillFrame(0, 0, 256, 160, _GGL.gray.BLACK, _GGL.gray.BLACK);
             break;
         default:
-            _GGL.gray.drawFrame(0, 12, 256, 148, _GGL.gray.BLACK);
+            // _GGL.gray.drawFrame(0, 12, 256, 148, _GGL.gray.BLACK);
+            _GGL.gray.drawFrame(0, 0, 256, 160, _GGL.gray.BLACK);
             break;
         }
 
-        _GGL.gray.drawFillFrame(0, 0, 231, 13, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
-        _GRF.print(title, 5, 2, 10, 5);
+        // _GGL.gray.drawFillFrame(0, 0, 231, 13, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
+        // _GRF.print(title, 5, 2, 10, 5);
 
-        uint8_t xSizeStack{};
-        if (sizeStack <= 9)
-            xSizeStack = 205;
-        if ((sizeStack >= 10) && (sizeStack <= 99))
-            xSizeStack = 200;
-        _GRF.print("[" + (String)sizeStack + "]", xSizeStack, 2, 10, 5);
+        // uint8_t xSizeStack{};
+        // if (sizeStack <= 9)
+        //     xSizeStack = 205;
+        // if ((sizeStack >= 10) && (sizeStack <= 99))
+        //     xSizeStack = 200;
+        // _GRF.print((String)sizeStack, xSizeStack, 2, 10, 5);
     }
 
     if (eFormShowMode == MAXIMIZED)

@@ -1,11 +1,12 @@
 #include "ui.h"
+#include "simpleEvents.h"
 
 bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
 {
     if (stateCursor == true)
     {
         _GGL.gray.bitmap(xCursor, yCursor, _SICON.cursor0, _SICON.cursor0_w, _SICON.cursor0_h, _GGL.gray.TRANSPARENT);
-        
+
         return true;
     }
     else
@@ -15,64 +16,75 @@ bool Cursor::cursor(bool stateCursor, int xCursor, int yCursor)
 /* displaying a shortcut to a task-function */
 bool Shortcut::shortcut(String name, const uint8_t *bitMap, uint8_t x, uint8_t y, void (*f)(void), int xCursor, int yCursor)
 {
-  _GGL.gray.bitmap(x, y, bitMap, 32, 32, _GGL.gray.NOT_TRANSPARENT);
+    _GGL.gray.bitmap(x, y, bitMap, 32, 32, _GGL.gray.NOT_TRANSPARENT);
 
-  _GGL.gray.bitmap(x, y + 21, _SICON.shortcut0, 11, 11, _GGL.gray.NOT_TRANSPARENT);
+    _GGL.gray.bitmap(x, y + 21, _SICON.shortcut0, 11, 11, _GGL.gray.NOT_TRANSPARENT);
 
-  TextBox textBoxNameTask; // name task
-  textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 24); // name task
+    TextBox textBoxNameTask;                                // name task
+    textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 24); // name task
 
-  if ((xCursor >= x && xCursor <= (x + 32)) && (yCursor >= y && yCursor <= (y + 32)))
-  {
-    _GGL.gray.drawFrame(x, y, 32, 32, _GGL.gray.BLACK);
-    
-    bool result = false;
-    if (Joystick::pressKeyENTER() == true)
+    if ((xCursor >= x && xCursor <= (x + 32)) && (yCursor >= y && yCursor <= (y + 32)))
     {
-      if (_GRF.waitDisplay())
-      {
-        f();
-        return true;
-      }    
+        _GGL.gray.drawFrame(x, y, 32, 32, _GGL.gray.BLACK);
+
+        bool result = false;
+        // if (Joystick::pressKeyENTER() == true)
+        // {
+        //     if (_GRF.waitDisplay())
+        //     {
+        //         f();
+        //         return true;
+        //     }
+        // }
+        if (Events.getEvent(PIN_BUTTON_ENTER) == SimpleEventType::DOUBLE_CLICK)
+        {
+            // Действие при клике
+            f();
+        }
     }
-  }
-  else
-  {
-    // textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 24);
-  }
+    else
+    {
+        // textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 24);
+    }
 
-  return false;
+    return false;
 }
-
 
 /* [for Desktop name tasks] no Frame */
 void TextBox::textBox(String str, int sizeH, int sizeW, short charH, short charW, int x, int y)
 {
-    short border{0}; short border2{0}; // size border
-    int count{0}; int countChars{0}; int maxChar{0}; // for counting characters
-    int line{1}; // there will always be at least one line of text in the text
+    short border{0};
+    short border2{0}; // size border
+    int count{0};
+    int countChars{0};
+    int maxChar{0};            // for counting characters
+    int line{1};               // there will always be at least one line of text in the text
     int numberOfCharacters{0}; // количество символов
-    int ch{0}, ln{0}; int xx{x}, yy{y};  
-    
+    int ch{0}, ln{0};
+    int xx{x}, yy{y};
+
     for (char c : str)
     {
         numberOfCharacters++;
     }
 
-    int numberOfCharactersLineFrame = (sizeW - border - border) / charW; // количество символов в строчке Фрейма
+    int numberOfCharactersLineFrame = (sizeW - border - border) / charW;  // количество символов в строчке Фрейма
     int numberOfLines = numberOfCharacters / numberOfCharactersLineFrame; // количество строк
-    int numberOfLinesFrame = (sizeH - border - border) / charH; // количество строчек в Фрейме
-    
+    int numberOfLinesFrame = (sizeH - border - border) / charH;           // количество строчек в Фрейме
+
     for (char c : str)
     {
         _GGL.gray.writeChar(xx + border, yy + charH + border, c, 10, 1, _GGL.gray.BLACK);
-        
+
         xx += charW;
         ch++;
 
         if (ch >= numberOfCharactersLineFrame)
         {
-            yy += charH; ch = 0; xx = x; ln++;
+            yy += charH;
+            ch = 0;
+            xx = x;
+            ln++;
         }
 
         if (ln >= numberOfLinesFrame)
@@ -85,56 +97,68 @@ void TextBox::textBox(String str, int sizeH, int sizeW, short charH, short charW
 /* button return boolean state (h 13px)*/
 bool Button::button(String text, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor)
 {
-  uint8_t sizeText = text.length(); short border{3}; short charW{5};
+    uint8_t sizeText = text.length();
+    short border{3};
+    short charW{5};
 
-  if ((xCursor >= x && xCursor <= (x + (sizeText * charW) + border + border)) && (yCursor >= y && yCursor <= y + 13))
-  {
-    _GGL.gray.drawFillFrame(x, y, (sizeText * charW) + border + border, 13, _GGL.gray.BLACK, _GGL.gray.BLACK);
-    _GGL.gray.writeLine(x + border, y - 1/* font H */ + border, text, 10, 1, _GGL.gray.WHITE);
-
-    bool result = false;
-    if (Joystick::pressKeyENTER() == true)
+    if ((xCursor >= x && xCursor <= (x + (sizeText * charW) + border + border)) && (yCursor >= y && yCursor <= y + 13))
     {
-      if (_GRF.waitDisplay())
-      {
-        return true;
-      }    
+        _GGL.gray.drawFillFrame(x, y, (sizeText * charW) + border + border, 13, _GGL.gray.BLACK, _GGL.gray.BLACK);
+        _GGL.gray.writeLine(x + border, y - 1 /* font H */ + border, text, 10, 1, _GGL.gray.WHITE);
+
+        bool result = false;
+        // if (Joystick::pressKeyENTER() == true)
+        // {
+        //   if (_GRF.waitDisplay())
+        //   {
+        //     return true;
+        //   }
+        // }
+        if (Events.getEvent(PIN_BUTTON_ENTER) == SimpleEventType::DOUBLE_CLICK)
+        {
+            // Действие при клике
+            return true;
+        }
     }
-  }
-  else
-  {
-    _GGL.gray.drawFillFrame(x, y, (sizeText * charW) + border + border, 13, _GGL.gray.BLACK, _GGL.gray.WHITE);
-    _GGL.gray.writeLine(x + border, y - 1/* font H */ + border, text, 10, 1, _GGL.gray.BLACK);
-  }
-  
-  return false;
+    else
+    {
+        _GGL.gray.drawFillFrame(x, y, (sizeText * charW) + border + border, 13, _GGL.gray.BLACK, _GGL.gray.WHITE);
+        _GGL.gray.writeLine(x + border, y - 1 /* font H */ + border, text, 10, 1, _GGL.gray.BLACK);
+    }
+
+    return false;
 }
 
 /* button-image return boolean state */
 bool Button::button(const uint8_t *bitMap, uint8_t w, uint8_t h, uint8_t x, uint8_t y, uint8_t xCursor, uint8_t yCursor)
 {
-  _GGL.gray.bitmap(x, y, bitMap, w, h, _GGL.gray.TRANSPARENT);
-
-  if ((xCursor >= x && xCursor <= (x + w)) && (yCursor >= y && yCursor <= (y + h)))
-  {
-    _GGL.gray.drawFillFrame(x, y, w, h, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
     _GGL.gray.bitmap(x, y, bitMap, w, h, _GGL.gray.TRANSPARENT);
-    
-    bool result = false;
-    if (Joystick::pressKeyENTER() == true)
-    {
-      if (_GRF.waitDisplay())
-      {
-        return true;
-      }    
-    }
-  }
-  else
-  {
-    // textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 24);
-  }
 
-  return false;
+    if ((xCursor >= x && xCursor <= (x + w)) && (yCursor >= y && yCursor <= (y + h)))
+    {
+        _GGL.gray.drawFillFrame(x, y, w, h, _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
+        _GGL.gray.bitmap(x, y, bitMap, w, h, _GGL.gray.TRANSPARENT);
+
+        bool result = false;
+        // if (Joystick::pressKeyENTER() == true)
+        // {
+        //   if (_GRF.waitDisplay())
+        //   {
+        //     return true;
+        //   }
+        // }
+        if (Events.getEvent(PIN_BUTTON_ENTER) == SimpleEventType::DOUBLE_CLICK)
+        {
+            // Действие при клике
+            return true;
+        }
+    }
+    else
+    {
+        // textBoxNameTask.textBox(name, 16, 32, 8, 5, x, y + 24);
+    }
+
+    return false;
 }
 
 /* Draw show function */
@@ -164,12 +188,13 @@ void InstantMessage::show()
         maxChar = count;
     }
 
-    if (maxChar == 0 || line == 0) {
+    if (maxChar == 0 || line == 0)
+    {
         return; // Не отображаем ничего, если нет символов или строк
     }
 
     int lineYoffset = (line / 2) * 8;
-      
+
     //--> выводим границы текста
     int numberOfPixels = maxChar * charWidth;               // Максимальное количество пикселей на основе количества символов в строке
     int numberOfPixelsToOffset = (maxChar / 2) * charWidth; // Смещение для центрирования текста
@@ -183,41 +208,38 @@ void InstantMessage::show()
 
     // Рисуем заполненную рамку
     _GGL.gray.drawFillFrame(x - numberOfPixelsToOffset - border2,
-        y - border2 - lineYoffset, border2 + border2 + numberOfPixels, 
-        border2 + border2 + (line * charHeight), 
-        _GGL.gray.WHITE, 
-        _GGL.gray.WHITE
-    );
-    
+                            y - border2 - lineYoffset, border2 + border2 + numberOfPixels,
+                            border2 + border2 + (line * charHeight),
+                            _GGL.gray.WHITE,
+                            _GGL.gray.WHITE);
+
     // Выводим текст
     _GRF.print(m_text, x - numberOfPixelsToOffset, y - lineYoffset, charHeight, charWidth);
 
     // Рисуем внешнюю рамку
-    _GGL.gray.drawFrame(x - numberOfPixelsToOffset - border, 
-        y - border - lineYoffset, 
-        border + border + numberOfPixels, 
-        border + border + (line * charHeight), 
-        _GGL.gray.BLACK
-    );
+    _GGL.gray.drawFrame(x - numberOfPixelsToOffset - border,
+                        y - border - lineYoffset,
+                        border + border + numberOfPixels,
+                        border + border + (line * charHeight),
+                        _GGL.gray.BLACK);
 
     // Тень
     _GGL.gray.drawHLine(
-        x - numberOfPixelsToOffset - border + 3, // X: начало рамки
+        x - numberOfPixelsToOffset - border + 3,        // X: начало рамки
         y - lineYoffset + border + (line * charHeight), // Y: нижняя граница рамки
-        border + numberOfPixels + border, // Длина: ширина рамки
-        _GGL.gray.DARK_GRAY, 3
-    );
+        border + numberOfPixels + border,               // Длина: ширина рамки
+        _GGL.gray.DARK_GRAY, 3);
 
     _GGL.gray.drawVLine(
         x - numberOfPixelsToOffset - border + (border + border + numberOfPixels), // X: начало рамки + ширина рамки + смещение
-        y - border - lineYoffset + 3, // Y: начало рамки
-        (line * charHeight) + border + border, // Высота: высота рамки
-        _GGL.gray.DARK_GRAY, 3
-    );
+        y - border - lineYoffset + 3,                                             // Y: начало рамки
+        (line * charHeight) + border + border,                                    // Высота: высота рамки
+        _GGL.gray.DARK_GRAY, 3);
 
-    _GGL.gray.sendBuffer();  // <--
+    _GGL.gray.sendBuffer(); // <--
 
-    if (m_delay > 0) {
+    if (m_delay > 0)
+    {
         delay(m_delay);
     }
 }
@@ -243,7 +265,7 @@ void Timer::timer(int (*f)(void), int interval)
         f();
     }
 }
- 
+
 /* return value */
 bool Timer::timer(int interval)
 {

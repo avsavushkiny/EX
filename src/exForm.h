@@ -668,7 +668,8 @@ public:
     {
         uint8_t border{4};
         uint8_t xx{border};
-        uint8_t yy{16};
+        // uint8_t yy{16};
+        uint8_t yy{border};
         Shortcut _shortcutDesktop;
         uint8_t countTask{1};
 
