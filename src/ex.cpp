@@ -9,6 +9,7 @@ SystemIcon _SICON;
 Joystick _JOY;
 Cursor _CRS;
 OTAWebUpdater _OTA_UPDATER;
+WiFiManager wifiManager;
 
 /* Global function */
 /* Initialization systems */
@@ -60,6 +61,8 @@ void initializationSystem()
    //  При завершении работы
    //  _TD.stopHardwareTimer();
 
+   wifiManager.begin();
+   wifiManager.setDebug(false);
 
    // Создание задачи для второго ядра
    // #ifndef WATCHDOG

@@ -14,6 +14,7 @@ extern Cursor _CRS;
 extern void runExFormStack();
 extern FPS _FPS;
 extern OTAWebUpdater _OTA_UPDATER;
+extern WiFiManager wifiManager;
 
 short _LOAD_CPU{};
 
@@ -318,9 +319,7 @@ void _myForm3()
 
     formsStack.push(form3);
 }
-/* Form. Test 4 */
 /* Form. ADC Monitor with Plotter */
-/* Form. ADC Monitor - Compact */
 void _adcMonitorForm()
 {
     exForm* formADC = new exForm();
@@ -348,6 +347,95 @@ void _adcMonitorForm()
     formADC->eFormShowMode = MAXIMIZED;
     
     formsStack.push(formADC);
+}
+/* Form. WIFI connect */
+void _wifiConnect()
+{
+    exForm *form = new exForm();
+    form->title = "WiFi Connect";
+    form->eFormShowMode = MAXIMIZED;
+
+    
+    eTextInput *ssidInput = new eTextInput("SSID", 5, 15, 200, 13);
+    form->addElement(ssidInput);
+
+    
+    eTextInput *passInput = new eTextInput("PASS", 5, 40, 200, 13);
+    form->addElement(passInput);
+    
+    // Статус
+    eLabel *statusLabel = new eLabel("Status: Disconnected", 5, 63);
+    form->addElement(statusLabel);
+
+    // IP
+    eLabel *ipLabel = new eLabel("IP: 0.0.0.0", 5, 73);
+    form->addElement(ipLabel);
+
+    
+    // Кнопка Connect
+    form->addElement(new eButton(
+        "Connect",
+        [=]() {
+            String ssid = ssidInput->getText();
+            String pass = passInput->getText();
+            
+            if (ssid.isEmpty()) {
+                statusLabel->setText("Status: Enter SSID!");
+                return;
+            }
+            
+            statusLabel->setText("Status: Connecting...");
+            
+            if (wifiManager.connect(ssid, pass)) {
+                statusLabel->setText("Status: Connected!");
+                ipLabel->setText("IP: " + wifiManager.getIP().toString());
+                wifiManager.saveCredentials(ssid, pass);
+            } else {
+                statusLabel->setText("Status: Failed!");
+            }
+        },
+        5, 90
+    ));
+
+    // Кнопка Disconnect
+    form->addElement(new eButton(
+        "Disconnect",
+        [=]() {
+            wifiManager.disconnect();
+            statusLabel->setText("Status: Disconnected");
+            ipLabel->setText("IP: 0.0.0.0");
+        },
+        50, 90
+    ));
+
+    // Функция обновления статуса
+    form->addElement(new eFunction([=]() {
+        if (wifiManager.getStatus() == WiFiStatus::CONNECTED) {
+            statusLabel->setText("Status: Connected!");
+            ipLabel->setText("IP: " + wifiManager.getIP().toString());
+        } else if (wifiManager.getStatus() == WiFiStatus::CONNECTING) {
+            statusLabel->setText("Status: Connecting...");
+        } else if (wifiManager.getStatus() == WiFiStatus::FAILED) {
+            statusLabel->setText("Status: Failed!");
+        } else {
+            statusLabel->setText("Status: Disconnected");
+            ipLabel->setText("IP: 0.0.0.0");
+        }
+    }));
+
+    // Загружаем сохраненные данные
+    String savedSSID, savedPass;
+    if (wifiManager.loadCredentials(savedSSID, savedPass)) {
+        ssidInput->setText(savedSSID);
+        passInput->setText(savedPass);
+    }
+
+    formsStack.push(form);
+}
+
+void wifiAutoReconnect()
+{
+    wifiManager.autoReconnect();
 }
 
 
@@ -412,7 +500,7 @@ void _formOTAUpdate()
 /* Cursor */
 void _systemCursor()
 {
-    _JOY.updatePositionXY(20);
+    _JOY.updatePositionXY(10);
     _CRS.cursor(true, _JOY.posX0, _JOY.posY0);
 
     if (_JOY.posY0 > 132)
@@ -686,8 +774,7 @@ TaskArguments createTask(String name, void (*f)(void), const uint8_t *bitMap,
 }
 
 /* Tasklist */
-TaskArguments system0[] 
-{
+TaskArguments system0[]{
     //        (название, функция, bitmap, тип, индекс, статус, ПРИОРИТЕТ, oneshot, тик)
     /* Рабочий стол */
     createTask("desktop", &_myDesktop, NULL, SYSTEM, 100, true, PRIORITY_NORMAL, true, 1),
@@ -707,6 +794,12 @@ TaskArguments system0[]
     createTask("Graphics 2", &_myGraphicsTest2, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
     createTask("graphics 3", &_myGraphicsTest3, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
 
+    // 
+    createTask("WiFi", &_wifiConnect, _ICON.window_shell_1, DESKTOP, 0, false, PRIORITY_NORMAL),
+    //
+    // createTask("wifiAuto", &wifiAutoReconnect, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 100),
+
+    
     createTask("ADC Monitor", &_adcMonitorForm, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
     // User
     createTask("User", &_userDesktop, _ICON.computer, DESKTOP, 0, false, PRIORITY_NORMAL),
