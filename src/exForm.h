@@ -10,10 +10,12 @@
 #include "graphics.h"
 #include "taskDispatcher.h"
 #include "ui.h"
+#include "simpleEvents.h"
 
 extern GGL _GGL;
 extern Joystick _JOY;
 extern Graphics _GRF;
+extern SimpleEventSystem Events;
 
 enum BorderStyle
 {
@@ -193,6 +195,57 @@ private:
     short outerBoundaryForm{20};
     int m_x{0}, m_y{0};
     int m_sizeW, m_sizeH;
+};
+
+/* eTextScrollBox */
+/* Text Scroll Box - для вывода длинного текста с прокруткой */
+class eTextScrollBox : public eActiveElement
+{
+public:
+    eTextScrollBox(const String &text, BorderStyle borderStyle, int sizeW, int sizeH, int x, int y)
+        : m_text(text), m_borderStyle(borderStyle), m_sizeW(sizeW), m_sizeH(sizeH), m_x(x), m_y(y),
+          m_scrollOffset(0), m_maxScrollOffset(0), m_isScrollingUp(false), m_isScrollingDown(false)
+    {
+        m_zOrder = 10;
+        calculateMaxScroll();
+    }
+
+    void setText(const String &new_text) 
+    { 
+        m_text = new_text; 
+        calculateMaxScroll();
+        m_scrollOffset = 0;
+    }
+    
+    String getText() const { return m_text; }
+    void show() override;
+    void setPosition(int x, int y, int w, int h) override
+    {
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
+    }
+
+private:
+    void calculateMaxScroll();
+    void drawScrollBar(int scrollX, int scrollY, int scrollH);
+    void drawTextWithScroll();
+    bool isPointInRect(int px, int py, int rx, int ry, int rw, int rh) const;
+
+    BorderStyle m_borderStyle;
+    String m_text;
+    int xForm{0}, yForm{0}, wForm{0}, hForm{0};
+    int m_x{0}, m_y{0};
+    int m_sizeW, m_sizeH;
+    
+    int m_scrollOffset{0};        // Текущее смещение прокрутки в строках
+    int m_maxScrollOffset{0};     // Максимальное смещение
+    static const int SCROLL_BAR_WIDTH = 8;
+    bool m_isScrollingUp{false};
+    bool m_isScrollingDown{false};
+    unsigned long m_lastScrollTime{0};
+    static const unsigned long SCROLL_DELAY = 150; // Задержка между шагами прокрутки
 };
 
 /* Label */
