@@ -432,9 +432,9 @@ void _myForm4()
     eTextScrollBox *scrollBox = new eTextScrollBox(
         testText,
         BorderStyle::oneLine,
-        236, // ширина
+        256, // ширина
         100, // высота
-        10,  // x
+        0,  // x
         10   // y
     );
 

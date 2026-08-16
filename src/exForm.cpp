@@ -242,16 +242,16 @@ void eTextScrollBox::show()
     // }
 
     // Рисуем тонкую рамку в активном состоянии
-    _GGL.gray.drawFrame(xForm, yForm, m_sizeW, m_sizeH, _GGL.gray.BLACK);
+    // _GGL.gray.drawFrame(xForm, yForm, m_sizeW, m_sizeH, _GGL.gray.BLACK);
 
     // Рисуем текст с прокруткой
     drawTextWithScroll();
 
     // Рисуем скролл-бар (вплотную к правому краю)
-    scrollBarX = xForm + m_sizeW - SCROLL_BAR_WIDTH - 2;
+    scrollBarX = xForm + m_sizeW - SCROLL_BAR_WIDTH - 1; // 0 + 256 - 8 = 248
     scrollBarY = yForm + border;
     scrollBarH = m_sizeH - border * 2;
-    drawScrollBar(scrollBarX, scrollBarY, scrollBarH);
+    drawScrollBar(scrollBarX + 1, scrollBarY, scrollBarH);
 
     // Обработка нажатий для прокрутки
     unsigned long currentTime = millis();
@@ -273,56 +273,60 @@ void eTextScrollBox::show()
         // Подсветка стрелок при наведении
         if (isOverUp && m_scrollOffset > 0)
         {
-            _GGL.gray.drawFillFrame(scrollBarX + 1, upArrowY1 + 1, SCROLL_BAR_WIDTH - 2, SCROLL_BAR_WIDTH, 
-                                    _GGL.gray.BLACK, _GGL.gray.DARK_GRAY);
+            // _GGL.gray.drawFillFrame(scrollBarX + 1, upArrowY1 + 1, SCROLL_BAR_WIDTH - 1, SCROLL_BAR_WIDTH, 
+            //                         _GGL.gray.BLACK, _GGL.gray.DARK_GRAY);
+            _GGL.gray.drawFrame(scrollBarX + 1, downArrowY1 + 1, SCROLL_BAR_WIDTH, SCROLL_BAR_WIDTH, 
+                                    _GGL.gray.BLACK);
             // Рисуем стрелку вверх (треугольник)
-            int cx = scrollBarX + SCROLL_BAR_WIDTH / 2;
-            int cy = upArrowY1 + SCROLL_BAR_WIDTH / 2;
-            for (int i = 0; i < SCROLL_BAR_WIDTH / 2 - 1; i++)
-            {
-                int x1 = cx - i;
-                int x2 = cx + i;
-                if (i > 0)
-                {
-                    _GGL.gray.drawPixel(x1, cy - i, _GGL.gray.WHITE);
-                    _GGL.gray.drawPixel(x2, cy - i, _GGL.gray.WHITE);
-                }
-                _GGL.gray.drawPixel(cx, cy - SCROLL_BAR_WIDTH / 2 + 1, _GGL.gray.WHITE);
-            }
+            // int cx = scrollBarX + SCROLL_BAR_WIDTH / 2;
+            // int cy = upArrowY1 + SCROLL_BAR_WIDTH / 2;
+            // for (int i = 0; i < SCROLL_BAR_WIDTH / 2 - 1; i++)
+            // {
+            //     int x1 = cx - i;
+            //     int x2 = cx + i;
+            //     if (i > 0)
+            //     {
+            //         _GGL.gray.drawPixel(x1, cy - i, _GGL.gray.WHITE);
+            //         _GGL.gray.drawPixel(x2, cy - i, _GGL.gray.WHITE);
+            //     }
+            //     _GGL.gray.drawPixel(cx, cy - SCROLL_BAR_WIDTH / 2 + 1, _GGL.gray.WHITE);
+            // }
         }
         else if (isOverUp)
         {
-            _GGL.gray.drawFillFrame(scrollBarX + 1, upArrowY1 + 1, SCROLL_BAR_WIDTH - 2, SCROLL_BAR_WIDTH, 
+            _GGL.gray.drawFillFrame(scrollBarX + 1, upArrowY1 + 1, SCROLL_BAR_WIDTH, SCROLL_BAR_WIDTH, 
                                     _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
         }
 
         if (isOverDown && m_scrollOffset < m_maxScrollOffset)
         {
-            _GGL.gray.drawFillFrame(scrollBarX + 1, downArrowY1 + 1, SCROLL_BAR_WIDTH - 2, SCROLL_BAR_WIDTH, 
-                                    _GGL.gray.BLACK, _GGL.gray.DARK_GRAY);
+            // _GGL.gray.drawFillFrame(scrollBarX + 1, downArrowY1 + 1, SCROLL_BAR_WIDTH - 1, SCROLL_BAR_WIDTH, 
+            //                         _GGL.gray.BLACK, _GGL.gray.DARK_GRAY);
+            _GGL.gray.drawFrame(scrollBarX + 1, downArrowY1 + 1, SCROLL_BAR_WIDTH, SCROLL_BAR_WIDTH, 
+                                    _GGL.gray.BLACK);
             // Рисуем стрелку вниз (треугольник)
-            int cx = scrollBarX + SCROLL_BAR_WIDTH / 2;
-            int cy = downArrowY1 + SCROLL_BAR_WIDTH / 2;
-            for (int i = SCROLL_BAR_WIDTH / 2 - 2; i >= 0; i--)
-            {
-                int x1 = cx - i;
-                int x2 = cx + i;
-                if (i > 0)
-                {
-                    _GGL.gray.drawPixel(x1, cy + i, _GGL.gray.WHITE);
-                    _GGL.gray.drawPixel(x2, cy + i, _GGL.gray.WHITE);
-                }
-                _GGL.gray.drawPixel(cx, cy + SCROLL_BAR_WIDTH / 2 - 1, _GGL.gray.WHITE);
-            }
+            // int cx = scrollBarX + SCROLL_BAR_WIDTH / 2;
+            // int cy = downArrowY1 + SCROLL_BAR_WIDTH / 2;
+            // for (int i = SCROLL_BAR_WIDTH / 2 - 2; i >= 0; i--)
+            // {
+            //     int x1 = cx - i;
+            //     int x2 = cx + i;
+            //     if (i > 0)
+            //     {
+            //         _GGL.gray.drawPixel(x1, cy + i, _GGL.gray.WHITE);
+            //         _GGL.gray.drawPixel(x2, cy + i, _GGL.gray.WHITE);
+            //     }
+            //     _GGL.gray.drawPixel(cx, cy + SCROLL_BAR_WIDTH / 2 - 1, _GGL.gray.WHITE);
+            // }
         }
         else if (isOverDown)
         {
-            _GGL.gray.drawFillFrame(scrollBarX + 1, downArrowY1 + 1, SCROLL_BAR_WIDTH - 2, SCROLL_BAR_WIDTH, 
+            _GGL.gray.drawFillFrame(scrollBarX + 1, downArrowY1 + 1, SCROLL_BAR_WIDTH, SCROLL_BAR_WIDTH, 
                                     _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
         }
 
         // Обработка нажатия ENTER для прокрутки
-        if (_JOY.pressKeyENTER() && canScroll)
+        if ((Events.getEvent(PIN_BUTTON_ENTER) == SimpleEventType::SINGLE_CLICK) && canScroll)
         {
             if (isOverUp && m_scrollOffset > 0)
             {
@@ -330,7 +334,7 @@ void eTextScrollBox::show()
                 m_lastScrollTime = currentTime;
                 // Перерисовываем
                 drawTextWithScroll();
-                drawScrollBar(scrollBarX, scrollBarY, scrollBarH);
+                drawScrollBar(scrollBarX + 1, scrollBarY, scrollBarH);
             }
             else if (isOverDown && m_scrollOffset < m_maxScrollOffset)
             {
@@ -338,47 +342,47 @@ void eTextScrollBox::show()
                 m_lastScrollTime = currentTime;
                 // Перерисовываем
                 drawTextWithScroll();
-                drawScrollBar(scrollBarX, scrollBarY, scrollBarH);
+                drawScrollBar(scrollBarX + 1, scrollBarY, scrollBarH);
             }
         }
 
-        // Удержание для непрерывной прокрутки
-        if ((Events.getEvent(PIN_BUTTON_ENTER) == SimpleEventType::LONG_PRESS) && canScroll)
-        {
-            // Если кнопка не нажата, но курсор всё ещё на стрелке - продолжаем прокрутку
-            if (isOverUp && m_scrollOffset > 0 && _JOY.posX0 > 0)
-            {
-                // Используем флаг для непрерывной прокрутки
-                if (m_isScrollingUp)
-                {
-                    m_scrollOffset--;
-                    m_lastScrollTime = currentTime;
-                    drawTextWithScroll();
-                    drawScrollBar(scrollBarX, scrollBarY, scrollBarH);
-                }
-                m_isScrollingUp = true;
-            }
-            else
-            {
-                m_isScrollingUp = false;
-            }
+        // Удержание ENTER для непрерывной прокрутки
+    //     if ((Events.getEvent(PIN_BUTTON_ENTER) == SimpleEventType::LONG_PRESS) && canScroll)
+    //     {
+    //         // Если кнопка не нажата, но курсор всё ещё на стрелке - продолжаем прокрутку
+    //         if (isOverUp && m_scrollOffset > 0 && _JOY.posX0 > 0)
+    //         {
+    //             // Используем флаг для непрерывной прокрутки
+    //             if (m_isScrollingUp)
+    //             {
+    //                 m_scrollOffset--;
+    //                 m_lastScrollTime = currentTime;
+    //                 drawTextWithScroll();
+    //                 // drawScrollBar(scrollBarX, scrollBarY, scrollBarH);
+    //             }
+    //             m_isScrollingUp = true;
+    //         }
+    //         else
+    //         {
+    //             m_isScrollingUp = false;
+    //         }
 
-            if (isOverDown && m_scrollOffset < m_maxScrollOffset && _JOY.posX0 > 0)
-            {
-                if (m_isScrollingDown)
-                {
-                    m_scrollOffset++;
-                    m_lastScrollTime = currentTime;
-                    drawTextWithScroll();
-                    drawScrollBar(scrollBarX, scrollBarY, scrollBarH);
-                }
-                m_isScrollingDown = true;
-            }
-            else
-            {
-                m_isScrollingDown = false;
-            }
-        }
+    //         if (isOverDown && m_scrollOffset < m_maxScrollOffset && _JOY.posX0 > 0)
+    //         {
+    //             if (m_isScrollingDown)
+    //             {
+    //                 m_scrollOffset++;
+    //                 m_lastScrollTime = currentTime;
+    //                 drawTextWithScroll();
+    //                 // drawScrollBar(scrollBarX, scrollBarY, scrollBarH);
+    //             }
+    //             m_isScrollingDown = true;
+    //         }
+    //         else
+    //         {
+    //             m_isScrollingDown = false;
+    //         }
+    //     }
     }
     else
     {
@@ -435,7 +439,7 @@ void eTextScrollBox::calculateMaxScroll()
 
 void eTextScrollBox::drawTextWithScroll()
 {
-    short border{0};  // Уменьшенный отступ
+    short border{0};  // Отступ
     short charH{10}, charW{5};
     int contentW = m_sizeW - SCROLL_BAR_WIDTH - border - border;
     int contentH = m_sizeH - border - border;
@@ -446,7 +450,7 @@ void eTextScrollBox::drawTextWithScroll()
     if (linesVisible <= 0) linesVisible = 1;
     
     // Заливаем область для текста белым
-    _GGL.gray.drawFillFrame(xForm + border, yForm + border, contentW, contentH, 
+    _GGL.gray.drawFillFrame(xForm + border, yForm + border, contentW + 1, contentH, 
                             _GGL.gray.BLACK, _GGL.gray.WHITE);
     
     // Разбиваем текст на строки
@@ -492,7 +496,7 @@ void eTextScrollBox::drawTextWithScroll()
 void eTextScrollBox::drawScrollBar(int scrollX, int scrollY, int scrollH)
 {
     // Рисуем фон скролл-бара (светло-серый)
-    _GGL.gray.drawFillFrame(scrollX + 1, scrollY, SCROLL_BAR_WIDTH + 1, scrollH, 
+    _GGL.gray.drawFillFrame(scrollX, scrollY, SCROLL_BAR_WIDTH, scrollH, 
                             _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
     
     if (m_maxScrollOffset <= 0)
@@ -511,8 +515,8 @@ void eTextScrollBox::drawScrollBar(int scrollX, int scrollY, int scrollH)
     if (thumbY + thumbHeight > scrollY + scrollH) thumbY = scrollY + scrollH - thumbHeight;
     
     // Рисуем ползунок
-    // _GGL.gray.drawFillFrame(scrollX + 1, thumbY, SCROLL_BAR_WIDTH, thumbHeight, 
-    //                         _GGL.gray.BLACK, _GGL.gray.LIGHT_GRAY);
+    // _GGL.gray.drawFillFrame(scrollX, thumbY, SCROLL_BAR_WIDTH, thumbHeight, 
+    //                         _GGL.gray.BLACK, _GGL.gray.DARK_GRAY);
     _GGL.gray.drawFrame(scrollX, thumbY, SCROLL_BAR_WIDTH, thumbHeight, 
                         _GGL.gray.BLACK);
     
@@ -1135,7 +1139,8 @@ void eKeyboard::show()
                     // Переключение между режимами
                     toggleNumberMode();
                 }
-                else if (!key.isEmpty() && key != " " && key != "BS" && key != "CL" && key != "12" && key != "AB")
+                // else if (!key.isEmpty() && key != " " && key != "BS" && key != "CL" && key != "12" && key != "AB")
+                else if (!key.isEmpty() && key != "BS" && key != "CL" && key != "12" && key != "AB")
                 {
                     if (m_onCharInput)
                     {

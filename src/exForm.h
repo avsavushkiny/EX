@@ -241,7 +241,7 @@ private:
     
     int m_scrollOffset{0};        // Текущее смещение прокрутки в строках
     int m_maxScrollOffset{0};     // Максимальное смещение
-    static const int SCROLL_BAR_WIDTH = 8;
+    static const int SCROLL_BAR_WIDTH = 9;
     bool m_isScrollingUp{false};
     bool m_isScrollingDown{false};
     unsigned long m_lastScrollTime{0};
