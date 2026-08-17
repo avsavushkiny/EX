@@ -446,6 +446,193 @@ void _myForm4()
     formsStack.push(form1);
 }
 
+// In your form setup function
+void _myHtmlBrowser_info_cern_ch()
+{
+    exForm *form = new exForm();
+    form->title = "HTML Browser - info.cern.ch";
+    form->eFormShowMode = MAXIMIZED;
+
+    // Create HTML browser
+    eHtmlBrowser *browser = new eHtmlBrowser(
+        "http://info.cern.ch", // URL to load
+        0,                    // X position
+        0,                   // Y position (leave room for title bar)
+        256,                  // Width
+        137                   // Height
+    );
+
+    // Add to form
+    form->addElement(browser);
+
+    // Push to stack
+    formsStack.push(form);
+}
+
+/* Form. HTML Browser with navigation */
+void _myHtmlBrowser()
+{
+    exForm *form = new exForm();
+    form->title = "HTML Browser";
+    form->eFormShowMode = MAXIMIZED;
+
+    // Создаем поле для ввода URL
+    eTextInput *urlInput = new eTextInput(
+        "",     // метка
+        5,          // x
+        5,          // y
+        180,        // ширина
+        13,         // высота
+        [](const String &text) 
+        {
+            // Callback при изменении текста
+        }
+    );
+    urlInput->setText("http://info.cern.ch");
+    form->addElement(urlInput);
+
+    // Храним указатель на браузер
+    eHtmlBrowser *browserPtr = nullptr;
+
+    // Создаем HTML браузер
+    eHtmlBrowser *browser = new eHtmlBrowser(
+        "http://info.cern.ch",
+        0,
+        38,
+        256,
+        100
+    );
+    browserPtr = browser;
+    form->addElement(browser);
+
+    // Кнопка Go
+    eButton *goBtn = new eButton(
+        "Go",
+        [=]()
+        {
+            String url = urlInput->getText();
+            if (url.isEmpty())
+            {
+                url = "http://info.cern.ch";
+            }
+            if (browserPtr != nullptr)
+            {
+                browserPtr->setUrl(url);
+            }
+        },
+        190,
+        5
+    );
+    form->addElement(goBtn);
+
+    // Кнопка Back
+    eButton *backBtn = new eButton(
+        "Back",
+        [=]()
+        {
+            if (browserPtr != nullptr)
+            {
+                browserPtr->setUrl("http://info.cern.ch");
+            }
+        },
+        5,
+        22
+    );
+    form->addElement(backBtn);
+
+    // Кнопка Reload
+    eButton *reloadBtn = new eButton(
+        "Reload",
+        [=]()
+        {
+            if (browserPtr != nullptr)
+            {
+                String currentUrl = browserPtr->getUrl();
+                if (!currentUrl.isEmpty())
+                {
+                    browserPtr->setUrl(currentUrl);
+                }
+            }
+        },
+        50,
+        22
+    );
+    form->addElement(reloadBtn);
+
+    // Кнопка Clear
+    eButton *clearBtn = new eButton(
+        "Clear",
+        [=]()
+        {
+            if (browserPtr != nullptr)
+            {
+                browserPtr->setText("");
+            }
+        },
+        95,
+        22
+    );
+    form->addElement(clearBtn);
+
+    // Кнопка Info
+    eButton *infoBtn = new eButton(
+        "Info",
+        [=]()
+        {
+            if (browserPtr != nullptr)
+            {
+                String info = "URL: " + browserPtr->getUrl() + "\n";
+                info += "Loading: " + String(browserPtr->isLoading() ? "Yes" : "No") + "\n";
+                info += "Error: " + String(browserPtr->hasError() ? "Yes" : "No") + "\n";
+                info += "Content: " + String(browserPtr->getText().length()) + " chars";
+                Serial.println(info);
+            }
+        },
+        140,
+        22
+    );
+    form->addElement(infoBtn);
+
+    // Статусная строка
+    eLabel *statusLabel = new eLabel("Status: Ready", 5, 140);
+    form->addElement(statusLabel);
+
+    // Функция обновления статуса
+    eFunction *statusUpdate = new eFunction([=]()
+    {
+        static unsigned long lastUpdate = 0;
+        unsigned long currentTime = millis();
+        
+        if (currentTime - lastUpdate >= 500)
+        {
+            lastUpdate = currentTime;
+            
+            if (browserPtr != nullptr)
+            {
+                if (browserPtr->isLoading())
+                {
+                    statusLabel->setText("Status: Loading...");
+                }
+                else if (browserPtr->hasError())
+                {
+                    statusLabel->setText("Status: Error loading page");
+                }
+                else
+                {
+                    String text = browserPtr->getText();
+                    int len = text.length();
+                    if (len > 50) len = 50;
+                    statusLabel->setText("Status: Ready (" + String(text.length()) + " chars)");
+                }
+            }
+        }
+    });
+    form->addElement(statusUpdate);
+
+    formsStack.push(form);
+}
+
+
 /* Form. WIFI connect */
 void _wifiConnect()
 {
@@ -894,6 +1081,8 @@ TaskArguments system0[]{
     //
     createTask("WiFi", &_wifiConnect, _ICON.connect, DESKTOP, 0, false, PRIORITY_NORMAL),
     // createTask("wifiAuto", &wifiAutoReconnect, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 100),
+    createTask("Html browser", &_myHtmlBrowser_info_cern_ch, _ICON.html_doc, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("EXIE browser", &_myHtmlBrowser, _ICON.exie, DESKTOP, 0, false, PRIORITY_NORMAL),
 
     createTask("ADC Monitor", &_adcMonitorForm, _ICON.bar_graph, DESKTOP, 0, false, PRIORITY_NORMAL),
     // User

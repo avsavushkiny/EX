@@ -11,6 +11,8 @@
 #include "taskDispatcher.h"
 #include "ui.h"
 #include "simpleEvents.h"
+#include <WiFi.h>
+#include <HTTPClient.h>
 
 extern GGL _GGL;
 extern Joystick _JOY;
@@ -707,6 +709,397 @@ private:
     static const unsigned long TOGGLE_COOLDOWN = 250;
 };
 
+/* Simple HTML Browser for text-only pages */
+class eHtmlBrowser : public eActiveElement
+{
+public:
+    eHtmlBrowser(const String &url, int x, int y, int width, int height)
+        : m_url(url), m_x(x), m_y(y), m_width(width), m_height(height),
+          m_isLoading(false), m_loadError(false)
+    {
+        m_zOrder = 20;
+        m_textScrollBox = new eTextScrollBox("Loading...", oneLine, width, height, x, y);
+        m_textScrollBox->setActive(true);
+        m_isActive = true;
+        loadUrl(url);
+    }
+
+    ~eHtmlBrowser()
+    {
+        delete m_textScrollBox;
+    }
+
+    void show() override
+    {
+        if (m_textScrollBox)
+        {
+            m_textScrollBox->show();
+        }
+    }
+
+    void setPosition(int x, int y, int w, int h) override
+    {
+        this->xForm = x + m_x;
+        this->yForm = y + m_y;
+        this->wForm = w;
+        this->hForm = h;
+        if (m_textScrollBox)
+        {
+            m_textScrollBox->setPosition(x, y, w, h);
+        }
+    }
+
+    void setUrl(const String &url)
+    {
+        m_url = url;
+        loadUrl(url);
+    }
+
+    String getUrl() const { return m_url; }
+
+    void setText(const String &text)
+    {
+        if (m_textScrollBox)
+        {
+            m_textScrollBox->setText(text);
+        }
+    }
+
+    String getText() const
+    {
+        return m_textScrollBox ? m_textScrollBox->getText() : "";
+    }
+
+    void setActive(bool active) override
+    {
+        m_isActive = active;
+        if (m_textScrollBox)
+        {
+            m_textScrollBox->setActive(active);
+        }
+    }
+
+    // // To update the browser with new content
+    // void updateBrowserUrl(eHtmlBrowser *browser, const String &newUrl)
+    // {
+    //     if (browser)
+    //     {
+    //         browser->setUrl(newUrl);
+    //     }
+    // }
+
+    // // To manually set text content (for local HTML files)
+    // void setBrowserContent(eHtmlBrowser *browser, const String &htmlContent)
+    // {
+    //     if (browser)
+    //     {
+    //         browser->setText(htmlContent);
+    //     }
+    // }
+
+    bool isActiveElement() const override { return true; }
+    bool isLoading() const { return m_isLoading; }
+    bool hasError() const { return m_loadError; }
+
+private:
+    void loadUrl(const String &url)
+    {
+        m_isLoading = true;
+        m_loadError = false;
+        
+        if (m_textScrollBox)
+        {
+            m_textScrollBox->setText("Loading: " + url + "...");
+        }
+        
+        String content = fetchPageContent(url);
+        
+        if (content.isEmpty())
+        {
+            m_loadError = true;
+            if (m_textScrollBox)
+            {
+                m_textScrollBox->setText("Error: Failed to load page\n\n" + url);
+            }
+            m_isLoading = false;
+            return;
+        }
+        
+        String plainText = extractTextFromHtml(content);
+        String transliterated = transliterateRussian(plainText);
+        
+        if (transliterated.isEmpty())
+        {
+            if (m_textScrollBox)
+            {
+                m_textScrollBox->setText("Error: Empty page content\n\n" + url);
+            }
+        }
+        else
+        {
+            if (m_textScrollBox)
+            {
+                m_textScrollBox->setText(transliterated);
+            }
+        }
+        
+        m_isLoading = false;
+    }
+
+    String fetchPageContent(const String &url)
+    {
+        if (url.isEmpty())
+            return "";
+
+        // Проверяем наличие WiFi подключения
+        if (WiFi.status() != WL_CONNECTED)
+        {
+            return "ERROR: WiFi not connected";
+        }
+
+        HTTPClient http;
+        http.setTimeout(10000); // 10 секунд таймаут
+        
+        String fullUrl = url;
+        if (!url.startsWith("http://") && !url.startsWith("https://"))
+        {
+            fullUrl = "http://" + url;
+        }
+
+        _log("Fetching: " + fullUrl);
+        
+        http.begin(fullUrl);
+        http.addHeader("User-Agent", "ESP32-HTML-Browser/1.0");
+        
+        int httpCode = http.GET();
+        
+        if (httpCode <= 0)
+        {
+            _log("HTTP GET failed: " + String(http.errorToString(httpCode).c_str()));
+            http.end();
+            return "ERROR: HTTP request failed - " + String(http.errorToString(httpCode).c_str());
+        }
+
+        if (httpCode != HTTP_CODE_OK)
+        {
+            _log("HTTP error: " + String(httpCode));
+            String errorMsg = "HTTP Error: " + String(httpCode);
+            http.end();
+            return errorMsg;
+        }
+
+        String payload = http.getString();
+        http.end();
+        
+        _log("Received " + String(payload.length()) + " bytes");
+        return payload;
+    }
+
+    String extractTextFromHtml(const String &html)
+    {
+        String result = "";
+        bool inTag = false;
+        bool inScript = false;
+        bool inStyle = false;
+        
+        for (int i = 0; i < html.length(); i++)
+        {
+            char c = html[i];
+            
+            // Пропускаем script и style теги
+            if (i < html.length() - 6)
+            {
+                String tag = html.substring(i, i + 6);
+                tag.toLowerCase();
+                if (tag == "<scrip" || tag == "<style")
+                {
+                    inScript = true;
+                    inTag = true;
+                    continue;
+                }
+                if (tag == "</scri" || tag == "</styl")
+                {
+                    inScript = false;
+                    while (i < html.length() && html[i] != '>') i++;
+                    if (i < html.length()) i++;
+                    inTag = false;
+                    continue;
+                }
+            }
+            
+            if (inScript || inStyle)
+                continue;
+            
+            if (c == '<')
+            {
+                inTag = true;
+                continue;
+            }
+            
+            if (c == '>')
+            {
+                inTag = false;
+                continue;
+            }
+            
+            if (!inTag && c != '\r')
+            {
+                if (c == '&')
+                {
+                    String entity = "";
+                    while (i < html.length() && html[i] != ';')
+                    {
+                        entity += html[i];
+                        i++;
+                    }
+                    if (i < html.length() && html[i] == ';')
+                    {
+                        i++;
+                        if (entity == "&lt") result += '<';
+                        else if (entity == "&gt") result += '>';
+                        else if (entity == "&amp") result += '&';
+                        else if (entity == "&quot") result += '"';
+                        else if (entity == "&nbsp") result += ' ';
+                        else if (entity == "&copy") result += "(c)";
+                        else if (entity == "&reg") result += "(R)";
+                        else result += entity + ';';
+                    }
+                }
+                else
+                {
+                    // Обработка пробелов
+                    if (c == ' ')
+                    {
+                        if (result.length() > 0 && result[result.length() - 1] != ' ')
+                            result += c;
+                    }
+                    // Обработка переносов строк
+                    else if (c == '\n')
+                    {
+                        if (result.length() > 0 && result[result.length() - 1] != '\n')
+                            result += c;
+                    }
+                    else if (c == '\t')
+                    {
+                        result += ' ';
+                    }
+                    else
+                    {
+                        result += c;
+                    }
+                }
+            }
+        }
+        
+        // Удаляем множественные переносы строк
+        String cleaned = "";
+        int newlineCount = 0;
+        for (int i = 0; i < result.length(); i++)
+        {
+            if (result[i] == '\n')
+            {
+                newlineCount++;
+                if (newlineCount <= 2)
+                    cleaned += result[i];
+            }
+            else
+            {
+                newlineCount = 0;
+                cleaned += result[i];
+            }
+        }
+        
+        // Обрезаем пробелы в начале и конце
+        cleaned.trim();
+        
+        return cleaned;
+    }
+
+    // Транслитерация русского текста в латиницу
+    String transliterateRussian(const String &text)
+    {
+        static const struct { String ru; String en; } translitMap[] = {
+            {"А", "A"}, {"а", "a"},
+            {"Б", "B"}, {"б", "b"},
+            {"В", "V"}, {"в", "v"},
+            {"Г", "G"}, {"г", "g"},
+            {"Д", "D"}, {"д", "d"},
+            {"Е", "E"}, {"е", "e"},
+            {"Ё", "Yo"}, {"ё", "yo"},
+            {"Ж", "Zh"}, {"ж", "zh"},
+            {"З", "Z"}, {"з", "z"},
+            {"И", "I"}, {"и", "i"},
+            {"Й", "Y"}, {"й", "y"},
+            {"К", "K"}, {"к", "k"},
+            {"Л", "L"}, {"л", "l"},
+            {"М", "M"}, {"м", "m"},
+            {"Н", "N"}, {"н", "n"},
+            {"О", "O"}, {"о", "o"},
+            {"П", "P"}, {"п", "p"},
+            {"Р", "R"}, {"р", "r"},
+            {"С", "S"}, {"с", "s"},
+            {"Т", "T"}, {"т", "t"},
+            {"У", "U"}, {"у", "u"},
+            {"Ф", "F"}, {"ф", "f"},
+            {"Х", "Kh"}, {"х", "kh"},
+            {"Ц", "Ts"}, {"ц", "ts"},
+            {"Ч", "Ch"}, {"ч", "ch"},
+            {"Ш", "Sh"}, {"ш", "sh"},
+            {"Щ", "Shch"}, {"щ", "shch"},
+            {"Ы", "Y"}, {"ы", "y"},
+            {"Э", "E"}, {"э", "e"},
+            {"Ю", "Yu"}, {"ю", "yu"},
+            {"Я", "Ya"}, {"я", "ya"},
+            {"Ь", ""}, {"ь", ""},
+            {"Ъ", ""}, {"ъ", ""}
+        };
+
+        String result = "";
+        int i = 0;
+        while (i < text.length())
+        {
+            bool found = false;
+            
+            // Пытаемся сопоставить двухбайтовые UTF-8 символы
+            if (i + 1 < text.length())
+            {
+                String twoBytes = text.substring(i, i + 2);
+                for (const auto &map : translitMap)
+                {
+                    if (twoBytes == map.ru)
+                    {
+                        result += map.en;
+                        i += 2;
+                        found = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (!found)
+            {
+                result += text[i];
+                i++;
+            }
+        }
+        
+        return result;
+    }
+
+    void _log(const String &message)
+    {
+        Serial.println("[eHtmlBrowser] " + message);
+    }
+
+    String m_url;
+    int m_x, m_y, m_width, m_height;
+    int xForm, yForm, wForm, hForm;
+    eTextScrollBox *m_textScrollBox;
+    bool m_isActive{true};
+    bool m_isLoading{false};
+    bool m_loadError{false};
+};
+
 /* Desktop */
 template <typename T>
 class eDesktop : public eElement
@@ -724,7 +1117,7 @@ public:
         // uint8_t yy{16};
         uint8_t yy{border};
         Shortcut _shortcutDesktop;
-        uint8_t countTask{1};
+        uint8_t countTask{0}; //1
 
         for (TaskArguments &t : data_)
         {
@@ -733,11 +1126,12 @@ public:
                 _shortcutDesktop.shortcut(t.name, t.bitMap, xx, yy, t.f, _JOY.posX0, _JOY.posY0);
                 countTask++;
                 xx += (32 + border);
-                if (countTask > 7)
+
+                if (countTask >= 7)
                 {
-                    xx = 4;
+                    xx = border;
                     yy += (32 + border + 16);
-                    countTask = 0;
+                    countTask = 0; // Сбрасываем в 0
                 }
             }
         }

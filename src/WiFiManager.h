@@ -7,6 +7,7 @@
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <functional>
+#include <HTTPClient.h>
 
 // Типы подключения
 enum class WiFiMode

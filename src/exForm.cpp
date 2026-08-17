@@ -1329,6 +1329,8 @@ void eTextInput::show()
     }
 }
 
+/* eHtmlBrowser */
+
 /* exForm show */
 int exForm::showForm()
 {
