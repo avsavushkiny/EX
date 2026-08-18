@@ -57,7 +57,7 @@ public:
 class InstantMessage
 {
 public:
-    InstantMessage(String text, unsigned int tDelay) : m_text(text), m_delay(tDelay) {}
+    InstantMessage(String text = "Instant message", unsigned int tDelay = 2500) : m_text(text), m_delay(tDelay) {}
 
     void show();
     // void drawDotGrid(int interval);
