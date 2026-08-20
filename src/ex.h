@@ -14,6 +14,7 @@
 #include "OTAWebUpdater.h"
 #include "simpleEvents.h"
 #include "WiFiManager.h"
+#include "consoleManager.h"
 
 /* [!] Объекты в объявлении через extern 
        не должны содержать инициализацию! */

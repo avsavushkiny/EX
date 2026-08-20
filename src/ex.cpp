@@ -61,6 +61,8 @@ void initializationSystem()
    //  При завершении работы
    //  _TD.stopHardwareTimer();
 
+   ConsoleManager* console = ConsoleManager::getInstance();
+
    wifiManager.begin();
    wifiManager.setDebug(false);
 
