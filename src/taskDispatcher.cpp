@@ -19,6 +19,8 @@ static esp_timer_handle_t system_timer = nullptr;
 static volatile unsigned long hardwareTicks = 0;
 static const unsigned long TIMER_INTERVAL_US = 1000; // 1ms в микросекундах
 
+static const unsigned long TASK_TIME_SLICE_LIMIT_US = 900; // Лимит выполнения одной задачи в микросекундах
+
 // Callback для аппаратного таймера
 void system_timer_callback(void *arg)
 {
@@ -142,110 +144,143 @@ void TaskDispatcher::addTasksForSystems()
     }
 }
 
-// Модифицированная версия tick() с использованием аппаратного таймера
+// Версия tick() с использованием аппаратного таймера 
+// Глобальный флаг
+volatile bool needsResort = true;
 void TaskDispatcher::tick()
 {
     unsigned long currentRealTime = millis();
-
-    // Используем аппаратные тики вместо systemTicks++
-    unsigned long currentHardwareTicks = getHardwareTicks();
-
-    // Рассчитываем реальное время с последнего тика (для интервалов)
+    unsigned long currentHardwareTicksVal = getHardwareTicks();
+    
+    // Рассчитываем дельту реального времени для статистики
     unsigned long realTimeDelta = currentRealTime - lastTickRealTime;
     lastTickRealTime = currentRealTime;
 
-    // Сортируем и выполняем задачи...
-    std::vector<TaskArguments *> sortedTasks;
-    for (auto &task : tasks)
-    {
-        if (task.activ && task.f)
-        {
-            sortedTasks.push_back(&task);
-        }
+    // --- ПЕРЕСОРТИРОВКА (вынесена отдельно от основного цикла) ---
+    if (needsResort) {
+        std::sort(tasks.begin(), tasks.end(), 
+                  [](const TaskArguments &a, const TaskArguments &b) {
+                      return a.priority > b.priority;
+                  });
+        needsResort = false;
     }
 
-    std::sort(sortedTasks.begin(), sortedTasks.end(),
-              [](const TaskArguments *a, const TaskArguments *b)
-              {
-                  return a->priority > b->priority;
-              });
+    // Бюджет времени на текущий вызов tick().
+    unsigned long sliceStartTime = micros(); 
+    unsigned long totalSliceUsed = 0;
 
-    // Выполняем задачи
-    for (auto taskPtr : sortedTasks)
+    // Основной цикл диспетчеризации
+    for (auto &task : tasks) 
     {
-        auto &task = *taskPtr;
+        // Пропускаем неактивные задачи
+        if (!task.activ || !task.f) continue;
 
-        // Используем аппаратные тики для планирования
+        // КРИТИЧЕСКОЕ ИЗМЕНЕНИЕ: 
+        // Сначала проверяем бюджет, и только потом решаем, запускать ли задачу.
+        // Это предотвращает "захват" процессора низкоприоритетными задачами.
+        if (totalSliceUsed >= TASK_TIME_SLICE_LIMIT_US) 
+        {
+            break; // Отдаем управление циклу loop()
+        }
+
         bool shouldRun = false;
-        if (task.interval > 0)
+
+        // --- ВЫБОР РЕЖИМА ПЛАНИРОВАНИЯ ---
+        if (task.useHardwareTicks) 
         {
-            // Для периодических задач используем реальное время
-            shouldRun = (currentRealTime >= task.nextRunTime);
-        }
-        else
+            // Режим аппаратных тиков (для курсора, опроса кнопок)
+            if (currentHardwareTicksVal >= task.nextRunTime) 
+            {
+                shouldRun = true;
+            }
+        } 
+        else 
         {
-            // Для задач без интервала используем аппаратные тики
-            shouldRun = (currentHardwareTicks >= task.nextRunTime);
+            // Режим реального времени (millis())
+            if (task.interval > 0) 
+            {
+                if (currentRealTime >= task.nextRunTime) 
+                {
+                    shouldRun = true;
+                }
+            } 
+            else 
+            {
+                // Задачи без интервала по умолчанию живут на тиках
+                if (currentHardwareTicksVal >= task.nextRunTime) 
+                {
+                    shouldRun = true;
+                }
+            }
         }
 
-        if (shouldRun)
+        if (shouldRun) 
         {
-            unsigned long startTime = micros();
-            currentTaskName = task.name;
+            unsigned long startExec = micros();
 
-// Код для диспетчера задач, реализация tick
-// Фиксируем начало выполнения задачи
-// #ifndef WATCHDOG
-// #else
+#ifndef WATCHDOG
+#else
             noInterrupts();
             runningTaskInfo.name = task.name;
             runningTaskInfo.startTime = millis();
             runningTaskInfo.isActive = true;
             interrupts();
-// #endif
+#endif
 
-            // Выполняем задачу
-            if (task.f)
-            {
-                task.f();
-            }
+            task.isRunning = true;
+            
+            // Выполнение пользовательского кода
+            task.f(); 
+            
+            task.isRunning = false;
 
-// #ifndef WATCHDOG
-// #else
-            // Задача завершилась — сбрасываем флаг
+#ifndef WATCHDOG
+#else
             noInterrupts();
             runningTaskInfo.isActive = false;
             interrupts();
-// #endif
-            //--
+#endif
 
-            unsigned long endTime = micros();
-            unsigned long executionTime = endTime - startTime;
+            unsigned long endExec = micros();
+            unsigned long executionTime = endExec - startExec;
+            task.lastRunDuration = executionTime;
 
-            // Обновляем статистику
             updateTaskStatistics(task.name, executionTime);
+            task.lastRunTime = currentHardwareTicksVal;
 
-            task.lastRunTime = currentHardwareTicks;
-
-            // Планируем следующее выполнение
-            if (task.interval > 0)
+            // --- ОБНОВЛЕНИЕ СЛЕДУЮЩЕГО ЗАПУСКА ---
+            if (task.useHardwareTicks) 
             {
-                task.nextRunTime = currentRealTime + task.interval;
-            }
-            else
+                task.nextRunTime = currentHardwareTicksVal + task.interval; 
+            } 
+            else 
             {
-                task.nextRunTime = currentHardwareTicks + 1;
+                if (task.interval > 0) 
+                {
+                    task.nextRunTime = currentRealTime + task.interval; 
+                } 
+                else 
+                {
+                    task.nextRunTime = currentHardwareTicksVal + 1; 
+                }
             }
 
-            if (task.oneShot)
+            // Обработка одноразовых задач
+            if (task.oneShot) 
             {
                 task.activ = false;
+                // ФЛАГ БЕЗОПАСНОСТИ: если задача удалила себя сама, 
+                // вектор изменился, нужно пересортировать его в следующем тике.
+                needsResort = true; 
             }
+
+            // Накапливаем затраченное время для контроля лимита
+            totalSliceUsed += executionTime;
         }
     }
 
-    // Сброс статистики каждую секунду
-    if (currentRealTime - measurementStartTime >= MEASUREMENT_WINDOW)
+    // Сброс окна измерения загрузки CPU
+    if (currentRealTime - measurementStartTime >= MEASUREMENT_WINDOW) 
     {
         measurementStartTime = currentRealTime;
         totalExecutionTime = 0;

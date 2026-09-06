@@ -38,9 +38,13 @@ struct TaskArguments
     bool activ;
     TaskPriority priority;      // Приоритет задачи
     bool oneShot;               // Одноразовая задача
+    bool useHardwareTicks;      // false = использовать millis() (реальное время), true = использовать hardwareTicks (системные тики)
     unsigned long lastRunTime;  // Время последнего выполнения
     unsigned long interval;     // Интервал выполнения (в тиках)
     unsigned long nextRunTime;  // Время следующего выполнения
+
+    volatile bool isRunning = false;       // Флаг: сейчас ли выполняется эта задача? 
+    volatile uint32_t lastRunDuration = 0; // Длительность последнего запуска в мкс
 };
 
 class TaskDispatcher

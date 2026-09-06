@@ -2,12 +2,13 @@
 #include "taskDispatcher.h"
 #include "ui.h"
 
+// extern void runExFormStack();
 
 // Определение глобальных переменных
 esp_timer_handle_t sleep_timer = nullptr;
 volatile bool sleep_timeout = false;
-// const uint64_t SLEEP_TIMEOUT_US = 60000000; // 60 секунд в микросекундах
-const uint64_t SLEEP_TIMEOUT_US = 180000000; // 60 секунд в микросекундах
+const uint64_t SLEEP_TIMEOUT_US = 10000000; // 60 секунд в микросекундах
+// const uint64_t SLEEP_TIMEOUT_US = 180000000; // 60 секунд в микросекундах
 
 // Callback функция таймера
 void sleep_timer_callback(void *arg)
@@ -106,12 +107,15 @@ bool isTouched()
     return touched;
 }
 
+
+
 void energySave()
 {
-    static bool sleepMessageShown = false;
+    Serial.println("ok - energySave");
 
-    // Инициализация таймера при первом вызове
-    static bool timerInitialized = false;
+    static bool sleepMessageShown = false;
+    static bool timerInitialized = false;  // Инициализация таймера при первом вызове
+    
     if (!timerInitialized)
     {
         initSleepTimer();
@@ -173,12 +177,90 @@ void energySave()
         resetSleepTimer();
 
         // Обновляем состояние джойстика после пробуждения
-        _JOY.updatePositionXY(20);
-
-        // Принудительно обновляем дисплей
-        // _GGL.gray.update();
+        _JOY.updatePositionXY();
     }
 }
+
+//2
+// void energySave()
+// {
+//     static bool sleepMessageShown = false;
+//     static bool timerInitialized = false;
+    
+//     if (!timerInitialized)
+//     {
+//         initSleepTimer();
+//         resetSleepTimer();
+//         setupWakeupGPIO();
+//         timerInitialized = true;
+//     }
+
+//     // Проверяем ввод ПЕРЕД проверкой таймаута, чтобы сбросить его
+//     bool touched = isTouched();
+//     if (touched)
+//     {
+//         sleepMessageShown = false;
+//         return;
+//     }
+
+//     if (sleep_timeout)
+//     {
+//         if (!sleepMessageShown)
+//         {
+//             String text = "Entering sleep mode...\nMove joystick to wake up";
+//             InstantMessage message(text, 2000);
+//             message.show();
+//             sleepMessageShown = true;
+            
+//             // ВАЖНО: Даем цикл диспетчеру, чтобы сообщение успело физически отрисоваться 
+//             // на экране ДО того, как мы выключим питание.
+//             delay(2200); 
+//         }
+
+//         // --- ПОДГОТОВКА КО СНУ ---
+        
+//         // Отключаем Wi-Fi для экономии энергии
+//         // wifiManager.disconnect();
+//         // WiFi.mode(WIFI_OFF);
+
+//         // Останавливаем системные часы
+//         _TD.stopHardwareTimer();
+//         stopSleepTimer();
+
+//         // ВЫКЛЮЧАЕМ дисплей программно (если требуется экономия) 
+//         // Или оставляем OPERATING_MODE, если это просто фиктивный вызов
+//         _GGL.gray.setPowerMode(_GGL.gray.OPERATING_MODE); 
+
+//         // Входим в сон
+//         esp_light_sleep_start(); 
+
+//         // --- КОД ПОСЛЕ ПРОБУЖДЕНИЯ ---
+
+//         // 1. СРАЗУ восстанавливаем тактирование железа
+//         _TD.initHardwareTimer(); 
+
+//         // 2. СБРАСЫВАЕМ ФЛАГИ
+//         sleep_timeout = false;
+//         sleepMessageShown = false;
+//         resetSleepTimer();
+
+//         // 3. ОБНОВЛЯЕМ СОСТОЯНИЕ ЖЕЛЕЗА
+//         _JOY.updatePositionXY();
+
+//         // 4. КРИТИЧНО: Включаем питание/драйвер дисплея обратно
+//         _GGL.gray.setPowerMode(_GGL.gray.OPERATING_MODE); 
+
+//         // 5. КРИТИЧНО: Заставляем библиотеку очистить физический экран 
+//         // (залить черным/белым), чтобы убрать артефакты сна
+//         _GGL.gray.clearBuffer(); 
+
+//         // 6. КРИТИЧНО: Перерисовываем текущую форму
+//         runExFormStack(); 
+
+//         // 7. Обновляем статус сети, если нужно
+//         // wifiAutoReconnect(); 
+//     }
+// }
 
 void forceSleep()
 {
@@ -209,4 +291,6 @@ void initSleepTimerTask()
     initSleepTimer();
     resetSleepTimer();
     setupWakeupGPIO();
+
+    Serial.println("ok -- initial timer");
 }

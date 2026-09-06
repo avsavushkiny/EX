@@ -7,6 +7,6 @@
    что программист собирает программу из маленьких кусочков кода. */
 
 const String _NAME_OS = "MOSAIC";
-const String _VERSION_CORE = "0.2.2";
+const String _VERSION_CORE = "0.2.3";
 const String _AUTOR = "Savushkin Alexander";
-const String _DESCRIPTION = "Event only, ePlotter";
+const String _DESCRIPTION = "Preemptible cooperative kernel";

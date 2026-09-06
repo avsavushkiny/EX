@@ -1,0 +1,71 @@
+askArguments createTask(String name, void (*f)(void), const uint8_t *bitMap,
+                         TaskType type, int index, bool activ,
+                         TaskPriority priority = PRIORITY_NORMAL,
+                         bool oneShot = false, unsigned long interval = 1)
+{
+    TaskArguments task;
+    task.name = name;
+    task.f = f;
+    task.bitMap = bitMap;
+    task.type = type;
+    task.index = index;
+    task.activ = activ;
+    task.priority = priority;
+    task.oneShot = oneShot;
+    task.interval = interval;
+    task.lastRunTime = 0;
+    task.nextRunTime = 0;
+    // Инициализация времени планирования
+    task.lastRunTime = 0;
+    task.nextRunTime = 0;
+
+    return task;
+}
+
+/* Tasklist */
+TaskArguments system0[]{
+    //        (название,             функция,               bitmap,         тип,      индекс, статус, ПРИОРИТЕТ, oneshot, тик/интервал)
+    
+    /* --- Системные одноразовые задачи (выполнятся только при старте или активации) --- */
+    createTask("desktop",            &_myDesktop,           NULL,           SYSTEM,   100,    true,   PRIORITY_NORMAL, true,  10),
+    createTask("initSleepTimerTask", &initSleepTimerTask,   NULL,           SYSTEM,   0,      true,   PRIORITY_NORMAL, true,  10),
+    
+    /* --- Критичные периодические задачи (высокая частота / высокий приоритет) --- */
+    // Энергосбережение: снижена нагрузка (было 10 мс -> стало 100 мс)
+    createTask("energySave",         &energySave,           NULL,           SYSTEM,   0,      true,   PRIORITY_NORMAL, false, 10), 
+    // Ввод пользователя: повышена отзывчивость интерфейса
+    createTask("eventUpdate",        &eventTask,            NULL,           SYSTEM,   0,      true,   PRIORITY_HIGH,   false, 10),     
+    
+    /* --- Фоновые графические формы (редкое обновление) --- */
+    createTask("Minimized Windows",  &_minimizedWindowsForm,_ICON.program_manager,  DESKTOP, 0, false, PRIORITY_LOW,    false, 10),
+    createTask("My form 1",          &_myForm1,             _ICON.window_abc,       DESKTOP, 0, false, PRIORITY_LOW,    false, 10),
+    createTask("My form 2",          &_myForm2,             _ICON.window_shell_1,   DESKTOP, 0, false, PRIORITY_LOW,    false, 10),
+    createTask("Form 3",             &_myForm3,             _ICON.window_shell_2,   DESKTOP, 0, false, PRIORITY_LOW,    false, 10),
+    createTask("Scroll text",        &_myForm4,             _ICON.window_shell_2,   DESKTOP, 0, false, PRIORITY_LOW,    false, 10),
+    createTask("Graphics 1",         &_myGraphicsTest1,     _ICON.window_graphics,  DESKTOP, 0, false, PRIORITY_LOW,    false, 10),
+    createTask("Graphics 2",         &_myGraphicsTest2,     _ICON.window_graphics,  DESKTOP, 0, false, PRIORITY_LOW,    false, 10),
+    createTask("graphics 3",         &_myGraphicsTest3,     _ICON.window_graphics,  DESKTOP, 0, false, PRIORITY_LOW,    false, 10),
+
+    /* --- Сервисные задачи --- */
+    createTask("WiFi",               &_wifiConnect,         _ICON.connect,          DESKTOP, 0, false, PRIORITY_NORMAL, false, 10),
+    createTask("Html browser",       &_myHtmlBrowser_info_cern_ch, _ICON.html_doc,  DESKTOP, 0, false, PRIORITY_NORMAL, false, 10),
+    createTask("EXIE browser",       &_myHtmlBrowser,       _ICON.exie,             DESKTOP, 0, false, PRIORITY_NORMAL, false, 10),
+    createTask("ADC Monitor",        &_adcMonitorForm,      _ICON.bar_graph,        DESKTOP, 0, false, PRIORITY_NORMAL, false, 10),
+    
+    // User
+    createTask("User",               &_userDesktop,         _ICON.computer,         DESKTOP, 0, false, PRIORITY_NORMAL, false, 10),
+    
+    // Error task
+    // createTask("Error",              &testErrorTask,        _ICON.chip_ram,         DESKTOP, 0, false, PRIORITY_NORMAL, false, 50),
+    
+    // OTA update
+    createTask("Update centre",      &_formOTAUpdate,       _ICON.technical_group,  DESKTOP, 0, false, PRIORITY_NORMAL, false, 10),
+    
+    // Stack forms (диспетчер модальных окон)
+    createTask("stackform",          &runExFormStack,       NULL,                   SYSTEM,  0,      true,   PRIORITY_NORMAL, false, 10), 
+    
+    // Добавление задачи мониторинга системы
+    createTask("monitor",            &monitorTask,          NULL,                   SYSTEM,  0,      true,   PRIORITY_LOW,    false, 10),
+    // Курсор: важнее фоновой графики, но реже опроса кнопок
+    createTask("cursor",             &_systemCursor,        NULL,                   SYSTEM,   0,      true,   PRIORITY_HIGH, false, 10)
+};

@@ -186,7 +186,7 @@ private:
                 state.pressStartTime = currentTime;
                 state.isPressed = true;
                 
-                if (state.waitingForSecond && (currentTime - state.lastPressTime) <= 300)
+                if (state.waitingForSecond && (currentTime - state.lastPressTime) <= 400)
                 {
                     state.clickCount++;
                     if (state.clickCount >= 2)

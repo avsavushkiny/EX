@@ -17,7 +17,54 @@ extern WiFiManager wifiManager;
 
 short _LOAD_CPU{};
 
-/* Form's */
+/* Системные задачи */
+/* Инициализация Дисплея */
+void _systemTask_InitDisplay()
+{
+   _GGL.gray.begin();          // 1 инициализация дисплея
+   _GGL.gray.setContrast(240); // 2 установка контрастности
+}
+/* Инициализация портов ввода и вывода */
+void _systemTask_InitPortsIO()
+{
+   analogReadResolution(RESOLUTION_ADC);
+
+   pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
+   pinMode(PIN_BUTTON_ENTER, INPUT);
+   pinMode(PIN_BUTTON_EX, INPUT);
+   pinMode(PIN_BUTTON_A, INPUT);
+   pinMode(PIN_BUTTON_B, INPUT);
+   pinMode(PIN_BATTERY, INPUT);
+
+   /*
+      GPIO release from sleep
+
+      esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, 1);
+      esp_sleep_enable_ext0_wakeup(GPIO_NUM_39, 1);
+      esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, 1); // Stick 0
+      esp_sleep_enable_ext0_wakeup(GPIO_NUM_14, 1); // EX button
+   */
+   esp_sleep_enable_ext0_wakeup(GPIO_NUM_32, 1); // Stick 0
+}
+/* Инициализация Событий */
+void _systemTask_InitEventsIO()
+{ 
+   /* Добавляем кнопки в систему событий */
+   Events.addButton(PIN_BUTTON_ENTER);
+   Events.addButton(PIN_BUTTON_EX);
+   Events.addButton(PIN_BUTTON_A);
+   Events.addButton(PIN_BUTTON_B);
+   /* Определяем режимы кнопок (pullup или pulldown) */
+   Events.detectAllModes();
+}
+/* Инициализация Последовательного порта */
+void _systemTask_InitSerial() 
+{ 
+    Serial.begin(9600); 
+}
+
+
+/* Формы */
 /* Form. Graphics test #1 */
 void _graphicsTest1(int xG, int yG, int wG, int hG)
 {
@@ -198,6 +245,8 @@ void _myOSstartupForm()
 
     formsStack.push(formMyOSstartup);
 }
+
+
 /* Form. OS hello */
 void _osHello()
 {
@@ -784,37 +833,37 @@ void _formOTAUpdate()
 /* Cursor */
 void _systemCursor()
 {
-    _JOY.updatePositionXY(10);
+    _JOY.updatePositionXY();
     _CRS.cursor(true, _JOY.posX0, _JOY.posY0);
 
-    if (_JOY.posY0 > 132)
-    {
-        if ((_JOY.pressKeyEX() == true) && (_JOY.pressKeyENTER() == true))
-        {
-            _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0, (String)_VERSION_CORE, 10, 1, _GGL.gray.BLACK);
-            // _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0, (String)_DESCRIPTION, 10, 1, _GGL.gray.BLACK);
-        }
-        else
-        {
-            // Выводим загрузку CPU
-            _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0, (String)_LOAD_CPU, 10, 1, _GGL.gray.BLACK);
-            _FPS.drawGrayFPS(_JOY.posX0 + 23, _JOY.posY0, _GGL.gray.DARK_GRAY);
-        }
-    }
-    else
-    {
-        if ((_JOY.pressKeyEX() == true) && (_JOY.pressKeyENTER() == true))
-        {
-            _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0 + 10, (String)_VERSION_CORE, 10, 1, _GGL.gray.BLACK);
-            _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0 + 20, (String)_DESCRIPTION, 10, 1, _GGL.gray.BLACK);
-        }
-        else
-        {
-            // Выводим загрузку CPU
-            _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0 + 10, (String)_LOAD_CPU, 10, 1, _GGL.gray.BLACK);
-            _FPS.drawGrayFPS(_JOY.posX0 + 10, _JOY.posY0 + 20, _GGL.gray.DARK_GRAY);
-        }
-    }
+    // if (_JOY.posY0 > 132)
+    // {
+    //     if ((_JOY.pressKeyEX() == true) && (_JOY.pressKeyENTER() == true))
+    //     {
+    //         _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0, (String)_VERSION_CORE, 10, 1, _GGL.gray.BLACK);
+    //         // _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0, (String)_DESCRIPTION, 10, 1, _GGL.gray.BLACK);
+    //     }
+    //     else
+    //     {
+    //         // Выводим загрузку CPU
+    //         _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0, (String)_LOAD_CPU, 10, 1, _GGL.gray.BLACK);
+    //         _FPS.drawGrayFPS(_JOY.posX0 + 23, _JOY.posY0, _GGL.gray.DARK_GRAY);
+    //     }
+    // }
+    // else
+    // {
+    //     if ((_JOY.pressKeyEX() == true) && (_JOY.pressKeyENTER() == true))
+    //     {
+    //         _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0 + 10, (String)_VERSION_CORE, 10, 1, _GGL.gray.BLACK);
+    //         _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0 + 20, (String)_DESCRIPTION, 10, 1, _GGL.gray.BLACK);
+    //     }
+    //     else
+    //     {
+    //         // Выводим загрузку CPU
+    //         _GGL.gray.writeLine(_JOY.posX0 + 10, _JOY.posY0 + 10, (String)_LOAD_CPU, 10, 1, _GGL.gray.BLACK);
+    //         _FPS.drawGrayFPS(_JOY.posX0 + 10, _JOY.posY0 + 20, _GGL.gray.DARK_GRAY);
+    //     }
+    // }
 }
 
 /* CPU load */
@@ -1039,7 +1088,7 @@ void eventTest()
 TaskArguments createTask(String name, void (*f)(void), const uint8_t *bitMap,
                          TaskType type, int index, bool activ,
                          TaskPriority priority = PRIORITY_NORMAL,
-                         bool oneShot = false, unsigned long interval = 1)
+                         bool oneShot = false, bool useHardwareTicks = false, unsigned long interval = 1)
 {
     TaskArguments task;
     task.name = name;
@@ -1050,62 +1099,56 @@ TaskArguments createTask(String name, void (*f)(void), const uint8_t *bitMap,
     task.activ = activ;
     task.priority = priority;
     task.oneShot = oneShot;
+    task.useHardwareTicks = useHardwareTicks; // Сохраняем выбор пользователя
     task.interval = interval;
     task.lastRunTime = 0;
     task.nextRunTime = 0;
+
     return task;
 }
 
 /* Tasklist */
 TaskArguments system0[]{
-    //        (название, функция, bitmap, тип, индекс, статус, ПРИОРИТЕТ, oneshot, тик)
-    /* Рабочий стол */
-    createTask("desktop", &_myDesktop, NULL, SYSTEM, 100, true, PRIORITY_NORMAL, true, 1),
-    /* Инициализация таймера */
-    createTask("initSleepTimerTask", &initSleepTimerTask, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, true, 1),
-    /* Энергосбережение */
-    createTask("energySave", &energySave, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, 0, 100), // было 10
-    /* Обновление состояния кнопок (высокий приоритет, часто) */
-    createTask("eventUpdate", &eventTask, NULL, SYSTEM, 0, true, PRIORITY_HIGH, false, 10),
-    /* Диспетчер свернутых форм */
-    createTask("Minimized Windows", &_minimizedWindowsForm, _ICON.program_manager, DESKTOP, 0, false, PRIORITY_NORMAL),
-    // createTask("oshello", &_osHello, NULL, SYSTEM, 101, true, PRIORITY_NORMAL),
-    createTask("My form 1", &_myForm1, _ICON.window_abc, DESKTOP, 0, false, PRIORITY_NORMAL),
-    createTask("My form 2", &_myForm2, _ICON.window_shell_1, DESKTOP, 0, false, PRIORITY_NORMAL),
-    createTask("Form 3", &_myForm3, _ICON.window_shell_2, DESKTOP, 0, false, PRIORITY_NORMAL),
-    createTask("Scroll text", &_myForm4, _ICON.window_shell_2, DESKTOP, 0, false, PRIORITY_NORMAL),
-    createTask("Graphics 1", &_myGraphicsTest1, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
-    createTask("Graphics 2", &_myGraphicsTest2, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
-    createTask("graphics 3", &_myGraphicsTest3, _ICON.window_graphics, DESKTOP, 0, false, PRIORITY_NORMAL),
+    //        (название,             функция,               bitmap,         тип,      индекс, статус, ПРИОРИТЕТ, oneshot, тик/интервал)
+    
+    /* --- Системные одноразовые задачи (выполнятся только при старте) --- */
+    createTask("0",                  &_systemTask_InitDisplay, NULL,        SYSTEM,   0,      true,    PRIORITY_CRITICAL, true, 1),
+    createTask("1",                  &_systemTask_InitPortsIO, NULL,        SYSTEM,   0,      true,    PRIORITY_CRITICAL, true, 1),
+    createTask("2",                  &_systemTask_InitEventsIO, NULL,       SYSTEM,   0,      true,    PRIORITY_CRITICAL, true, 1),
+    createTask("3",                  &_systemTask_InitSerial,   NULL,       SYSTEM,   0,      true,    PRIORITY_CRITICAL, true, 1),
 
-    //
-    createTask("WiFi", &_wifiConnect, _ICON.connect, DESKTOP, 0, false, PRIORITY_NORMAL),
-    // createTask("wifiAuto", &wifiAutoReconnect, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 100),
-    createTask("Html browser", &_myHtmlBrowser_info_cern_ch, _ICON.html_doc, DESKTOP, 0, false, PRIORITY_NORMAL),
-    createTask("EXIE browser", &_myHtmlBrowser, _ICON.exie, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("desktop",            &_myDesktop,           NULL,           SYSTEM,   100,    false,   PRIORITY_HIGH, true, 0),
+     
+    // Ввод пользователя: повышена отзывчивость интерфейса
+    createTask("eventUpdate",        &eventTask,            NULL,           SYSTEM,   0,      true,   PRIORITY_CRITICAL,   false, true, 10), 
+    
+    /* --- Фоновые графические формы (редкое обновление) --- */
+    createTask("Minimized Windows",  &_minimizedWindowsForm,_ICON.program_manager,  DESKTOP, 0, false, PRIORITY_LOW,    false, 10),
+    createTask("My form 1",          &_myForm1,             _ICON.window_abc,       DESKTOP, 0, false, PRIORITY_LOW,    false, 10),
+    createTask("My form 2",          &_myForm2,             _ICON.window_shell_1,   DESKTOP, 0, false, PRIORITY_LOW,    false, 10),
+    createTask("Form 3",             &_myForm3,             _ICON.window_shell_2,   DESKTOP, 0, false, PRIORITY_LOW,    false, 10),
+    createTask("Scroll text",        &_myForm4,             _ICON.window_shell_2,   DESKTOP, 0, false, PRIORITY_LOW,    false, 10),
+    createTask("Graphics 1",         &_myGraphicsTest1,     _ICON.window_graphics,  DESKTOP, 0, false, PRIORITY_LOW,    false, 10),
+    createTask("Graphics 2",         &_myGraphicsTest2,     _ICON.window_graphics,  DESKTOP, 0, false, PRIORITY_LOW,    false, 10),
+    createTask("graphics 3",         &_myGraphicsTest3,     _ICON.window_graphics,  DESKTOP, 0, false, PRIORITY_LOW,    false, 10),
 
-    createTask("ADC Monitor", &_adcMonitorForm, _ICON.bar_graph, DESKTOP, 0, false, PRIORITY_NORMAL),
+    /* --- Сервисные задачи --- */
+    createTask("WiFi",               &_wifiConnect,         _ICON.connect,          DESKTOP, 0, false, PRIORITY_NORMAL, false, 10),
+    createTask("Html browser",       &_myHtmlBrowser_info_cern_ch, _ICON.html_doc,  DESKTOP, 0, false, PRIORITY_NORMAL, false, 10),
+    createTask("EXIE browser",       &_myHtmlBrowser,       _ICON.exie,             DESKTOP, 0, false, PRIORITY_NORMAL, false, 10),
+    createTask("ADC Monitor",        &_adcMonitorForm,      _ICON.bar_graph,        DESKTOP, 0, false, PRIORITY_NORMAL, false, 10),
+    
     // User
-    createTask("User", &_userDesktop, _ICON.computer, DESKTOP, 0, false, PRIORITY_NORMAL),
-    // Error task
-    createTask("Error", &testErrorTask, _ICON.chip_ram, DESKTOP, 0, false, PRIORITY_NORMAL),
+    createTask("User",               &_userDesktop,         _ICON.computer,         DESKTOP, 0, false, PRIORITY_NORMAL, false, 10),
+
     // OTA update
-    createTask("Update centre", &_formOTAUpdate, _ICON.technical_group, DESKTOP, 0, false, PRIORITY_NORMAL),
-    // Stack forms
-    createTask("stackform", &runExFormStack, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 1),
-    // Добавление задачи мониторинга
-    createTask("monitor", &monitorTask, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 100),
-    // Cursor
-    createTask("cursor", &_systemCursor, NULL, SYSTEM, 0, true, PRIORITY_LOW, false, 10) // было 1
+    createTask("Update centre",      &_formOTAUpdate,       _ICON.technical_group,  DESKTOP, 0, false, PRIORITY_LOW, false, 10),
+    
+    // Stack forms (диспетчер модальных окон)
+    createTask("stackform",          &runExFormStack,       NULL,                   SYSTEM,  0,      true,   PRIORITY_HIGH, false, 10), 
+    
+    // Добавление задачи мониторинга системы
+    // createTask("monitor",            &monitorTask,          NULL,                   SYSTEM,  0,      true,   PRIORITY_LOW,   false, 10),
+    // Курсор: важнее фоновой графики, но реже опроса кнопок
+    createTask("cursor",             &_systemCursor,        NULL,                   SYSTEM,   0,     true,  PRIORITY_HIGH,   false, 10)
 };
-
-/*
-Одноразовая задача:
-createTask("init", &initFunction, NULL, SYSTEM, 0, true, PRIORITY_HIGH, true)
-
-Периодическая задача с интервалом:
-createTask("sensor", &readSensor, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, false, 10) // выполняется каждые 10 тиков
-
-Критическая задача:
-createTask("emergency", &emergencyHandler, NULL, SYSTEM, 0, true, PRIORITY_CRITICAL, false, 1)
-*/

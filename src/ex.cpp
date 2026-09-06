@@ -15,54 +15,11 @@ WiFiManager wifiManager;
 /* Initialization systems */
 void initializationSystem()
 {
-   /*
-      GPIO release from sleep
-
-      esp_sleep_enable_ext0_wakeup(GPIO_NUM_36, 1);
-      esp_sleep_enable_ext0_wakeup(GPIO_NUM_39, 1);
-      esp_sleep_enable_ext0_wakeup(GPIO_NUM_33, 1); // Stick 0
-      esp_sleep_enable_ext0_wakeup(GPIO_NUM_14, 1); // EX button
-   */
-   esp_sleep_enable_ext0_wakeup(GPIO_NUM_32, 1); // Stick 0
-
-   /* Добавляем кнопки в систему событий */
-   Events.addButton(PIN_BUTTON_ENTER);
-   Events.addButton(PIN_BUTTON_EX);
-   Events.addButton(PIN_BUTTON_A);
-   Events.addButton(PIN_BUTTON_B);
-   /* Определяем режимы кнопок (pullup или pulldown) */
-   Events.detectAllModes();
-   
-   /* Устанавливаем скорость последовательного порта */
-   Serial.begin(9600);
-   /* Инициализируем дисплей */
-   _GGL.gray.begin();
-
-   /* setting the resolution of the analog-to-digital converter */
-   analogReadResolution(RESOLUTION_ADC);
-
-   /* determine the backlight-port mode */
-   pinMode(PIN_BACKLIGHT_LCD, OUTPUT);
-
-   /* determine the operating modes of digital ports */
-   pinMode(PIN_BUTTON_ENTER, INPUT);
-   pinMode(PIN_BUTTON_EX, INPUT);
-   pinMode(PIN_BUTTON_A, INPUT);
-   pinMode(PIN_BUTTON_B, INPUT);
-   pinMode(PIN_BATTERY, INPUT);
-
-   /* Contrast & run system element */
-   _GGL.gray.setContrast(240);
-   // systems.setDisplayContrast(240);
-   // systems.executeAllSystemElements();
-
    /* Инициализация аппоратного таймера */
    _TD.initHardwareTimer();
-   //  При завершении работы
-   //  _TD.stopHardwareTimer();
 
-   wifiManager.begin();
-   wifiManager.setDebug(false);
+   // wifiManager.begin();
+   // wifiManager.setDebug(false);
 
    // Создание задачи для второго ядра
    // #ifndef WATCHDOG
@@ -84,21 +41,4 @@ void initializationSystem()
       determine the number of tasks in the vector
    */
    _TD.addTasksForSystems();
-
-   // Clear buffer LCD display
-   _GGL.gray.clearBuffer(); // -->
-
-   // output text
-   _GGL.gray.writeLine(5, 10, _DESCRIPTION, 10, 1, _GGL.gray.DARK_GRAY);
-   _GGL.gray.writeLine(5, 123, _NAME_OS + " " + _VERSION_CORE, 10, 1, _GGL.gray.BLACK);
-
-   // draw gray-line
-   _GGL.gray.drawHLine(0, 135, 256, _GGL.gray.LIGHT_GRAY, 5);
-   _GGL.gray.drawHLine(0, 140, 256, _GGL.gray.DARK_GRAY, 5);
-   _GGL.gray.drawHLine(0, 145, 256, _GGL.gray.BLACK, 5);
-
-   // send data to display
-   _GGL.gray.sendBuffer(); // <--
-
-   delay(2500);
 }
