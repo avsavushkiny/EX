@@ -136,6 +136,26 @@ bool TaskDispatcher::runTask(const String &taskName)
     return false;
 }
 
+void TaskDispatcher::resetSystemClock()
+{
+    // Устанавливаем точку отсчета реального времени на текущий момент millis()
+    lastTickRealTime = millis();                     // Аппаратные тики тоже сбрасываем к текущему значению
+    unsigned long currentTicks = getHardwareTicks(); // Проходимся по всем задачам и корректируем их следующее время выполнения
+    for (auto &t : tasks)
+    {
+        if (t.useHardwareTicks)
+        {
+            t.nextRunTime = currentTicks + t.interval;
+        }
+        else
+        {
+            t.nextRunTime = lastTickRealTime + t.interval;
+        }
+        // Снимаем статус "выполняется", если сон прервал задачу посередине
+        t.isRunning = false;
+    }
+}
+
 void TaskDispatcher::addTasksForSystems()
 {
     for (TaskArguments &t : system0)

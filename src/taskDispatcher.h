@@ -56,6 +56,7 @@ public:
     bool removeTask(const String &taskName);
     bool removeTaskIndex(const int index);
     bool runTask(const String &taskName);
+    void resetSystemClock();
     void clearExFormsStack();
     void addTasksForSystems();
     bool terminal();

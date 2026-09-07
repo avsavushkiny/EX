@@ -62,6 +62,34 @@ void _systemTask_InitSerial()
 { 
     Serial.begin(9600); 
 }
+/* Системная задача энергосбережения */
+void _systemTask_EnergySave()
+{
+    energySave(); 
+}
+/* Включить/выключить энергосбережение */
+void _toggleEnergySave()
+{
+    // if (isEnergySaveEnabled())
+    // {
+    //     disableEnergySave();
+    //     String msg = "Energy save: OFF";
+    //     InstantMessage message(msg, 1000);
+    //     message.show();
+    // }
+    // else
+    // {
+    //     enableEnergySave();
+    //     String msg = "Energy save: ON";
+    //     InstantMessage message(msg, 1000);
+    //     message.show();
+    // }
+    forceSleep();
+}
+
+
+
+
 
 
 /* Формы */
@@ -1116,6 +1144,8 @@ TaskArguments system0[]{
     createTask("1",                  &_systemTask_InitPortsIO, NULL,        SYSTEM,   0,      true,    PRIORITY_CRITICAL, true, 1),
     createTask("2",                  &_systemTask_InitEventsIO, NULL,       SYSTEM,   0,      true,    PRIORITY_CRITICAL, true, 1),
     createTask("3",                  &_systemTask_InitSerial,   NULL,       SYSTEM,   0,      true,    PRIORITY_CRITICAL, true, 1),
+    createTask("energySave",         &_systemTask_EnergySave,   NULL,       SYSTEM,   0,      true,    PRIORITY_NORMAL,      false, 100),
+    createTask("energySave",         &_toggleEnergySave,       _ICON.press_key,     DESKTOP,   0,      false,    PRIORITY_NORMAL,      false, 10),
 
     createTask("desktop",            &_myDesktop,           NULL,           SYSTEM,   100,    false,   PRIORITY_HIGH, true, 0),
      
