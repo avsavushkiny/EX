@@ -31,4 +31,3 @@ extern SimpleEventSystem Events;
 
 // Глобальные функции
 extern void initializationSystem();
-extern void nullFunction();

@@ -5,11 +5,12 @@
 #include <string>
 #include <Arduino.h>
 #include <map>
+#include "esp_timer.h"
 
-// Предварительное объявление
+// Предварительное объявление структуры задачи (важно!)
 struct TaskArguments;
 
-// Глобальный вектор задач
+// Глобальные векторы задач
 extern std::vector<TaskArguments> tasks;
 extern std::vector<TaskArguments> userTasks;
 
@@ -20,12 +21,21 @@ enum TaskType
     USER
 };
 
-enum TaskPriority
+enum TaskPriority : int8_t
 {
-    PRIORITY_LOW = 0,
-    PRIORITY_NORMAL = 1,
-    PRIORITY_HIGH = 2,
-    PRIORITY_CRITICAL = 3
+    PRIORITY_IDLE = 0,
+    PRIORITY_LOW = 1,
+    PRIORITY_NORMAL = 5,
+    PRIORITY_HIGH = 10,
+    PRIORITY_CRITICAL = 15
+};
+
+struct TaskStatistics
+{
+    uint64_t totalExecutionTime = 0;
+    uint32_t callCount = 0;
+    uint32_t lastExecutionTime = 0;
+    uint32_t deadlineMisses = 0;
 };
 
 struct TaskArguments
@@ -36,16 +46,24 @@ struct TaskArguments
     TaskType type;
     int index;
     bool activ;
-    TaskPriority priority;      // Приоритет задачи
-    bool oneShot;               // Одноразовая задача
-    unsigned long lastRunTime;  // Время последнего выполнения
-    unsigned long interval;     // Интервал выполнения (в тиках)
-    unsigned long nextRunTime;  // Время следующего выполнения
+    TaskPriority priority;
+    bool oneShot;
+
+    volatile uint32_t lastRunTime;
+    volatile uint32_t nextRunTime;
+
+    uint32_t interval;
+    uint32_t timeBudgetUs;
+
+    TaskStatistics stats;
 };
 
 class TaskDispatcher
 {
 public:
+    TaskDispatcher();
+
+    // --- Совместимость со старым кодом ---
     int sizeTasks();
     void addTask(const TaskArguments &task);
     bool removeTaskVector(const String &taskName);
@@ -55,34 +73,37 @@ public:
     void clearExFormsStack();
     void addTasksForSystems();
     bool terminal();
-    void tick();  // Основной тик диспетчера задач
 
-    // Метод для расчета загрузки процессора
+    void tick();
     int getCPULoad();
-    // Метод для сбора статистики выполнения задач
-    void updateTaskStatistics(const String& taskName, unsigned long executionTime);
 
-    // Методы аппаратного таймера таймера
     static void initHardwareTimer();
     static void stopHardwareTimer();
-    static unsigned long getHardwareTicks();
-    
-private:
-    unsigned long systemTicks = 0;
-    unsigned long lastTickRealTime = 0;    // Реальное время последнего тика
-    unsigned long totalExecutionTime = 0;  // Время выполнения задач за период (мкс)
-    unsigned long measurementStartTime = 0;// Начало периода измерения (мс)
-    
-    // Константы для расчета
-    static const unsigned long MEASUREMENT_WINDOW = 1000; // Окно измерения 1 секунда
+    static uint64_t getHardwareTicks();
 
-    // Структура для статистики по задачам
-    struct TaskStats
+private:
+    std::vector<TaskArguments *> sortedTasks;
+
+    struct RunningTaskInfo
     {
-        unsigned long totalExecutionTime;
-        unsigned long callCount;
-        unsigned long lastExecutionTime;
-    };
-    
-    std::map<String, TaskStats> taskStatistics;
+        String name;
+        uint32_t startTime = 0;
+        bool isActive = false;
+    } runningTaskInfo;
+
+    const uint32_t MAX_EXECUTION_TIME_US = 4500;
+
+    uint64_t totalExecutionTime = 0;
+    uint32_t measurementStartTime = 0;
+    static const uint32_t MEASUREMENT_WINDOW = 1000;
+
+    std::map<String, TaskStatistics> taskStatistics;
+
+    void updateTaskStatistics(TaskArguments &task, uint32_t executionTime);
 };
+
+// Прототип функции ядра (нужен для метода terminal())
+void runTasksCore();
+
+// Глобальный экземпляр
+extern TaskDispatcher _TD;
