@@ -7,7 +7,7 @@ extern int runExFormStack();
 // Глобальные переменные
 esp_timer_handle_t sleep_timer = nullptr;
 volatile bool sleep_timeout = false;
-const uint64_t SLEEP_TIMEOUT_US = 60000000; // 60 секунд
+const uint64_t SLEEP_TIMEOUT_US = 20000000; // 60 секунд
 static bool energy_save_enabled = true;
 static bool is_sleeping = false;
 
@@ -71,51 +71,7 @@ void deleteSleepTimer()
 // Настройка GPIO для пробуждения
 void setupWakeupGPIO()
 {
-    // // Настройка пинов джойстика для пробуждения
-    // const gpio_num_t wakeup_pins[] = {
-    //     GPIO_NUM_32, // Джойстик X
-    //     GPIO_NUM_33, // Джойстик Y (если используется)
-    // };
-
-    // for (gpio_num_t pin : wakeup_pins)
-    // {
-    //     gpio_set_direction(pin, GPIO_MODE_INPUT);
-    //     gpio_set_pull_mode(pin, GPIO_PULLUP_ONLY);
-    //     gpio_wakeup_enable(pin, GPIO_INTR_ANYEDGE);
-    // }
-
-    // // Также добавляем кнопки для пробуждения
-    // const gpio_num_t button_pins[] = {
-    //     GPIO_NUM_14, // EX button
-    //     GPIO_NUM_27, // ENTER button (если используется)
-    // };
-
-    // for (gpio_num_t pin : button_pins)
-    // {
-    //     gpio_set_direction(pin, GPIO_MODE_INPUT);
-    //     gpio_set_pull_mode(pin, GPIO_PULLUP_ONLY);
-    //     gpio_wakeup_enable(pin, GPIO_INTR_ANYEDGE);
-    // }
-
-    // esp_sleep_enable_gpio_wakeup();
-    
-    // Настройка пинов джойстика/кнопок для пробуждения
-    const gpio_num_t wakeup_pins[] = {
-        GPIO_NUM_32, // Джойстик
-    };
-
-    for (gpio_num_t pin : wakeup_pins)
-    {
-        // Настройка GPIO как вход с подтяжкой к питанию
-        gpio_set_direction(pin, GPIO_MODE_INPUT);
-        gpio_set_pull_mode(pin, GPIO_PULLUP_ONLY);
-
-        // Включение пробуждения по изменению уровня
-        gpio_wakeup_enable(pin, GPIO_INTR_ANYEDGE);
-    }
-
-    // Включение пробуждения по GPIO
-    esp_sleep_enable_gpio_wakeup();
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_32, 1); // Stick 0
 }
 
 // Проверка активности пользователя
@@ -176,176 +132,115 @@ bool canEnterSleep()
 // Основная функция энергосбережения
 void energySave()
 {
+    static bool timerInitialized = false; 
     static bool sleepMessageShown = false;
-    static bool timerInitialized = false;
     
-    // Инициализация при первом вызове
     if (!timerInitialized)
     {
         initSleepTimer();
         resetSleepTimer();
         setupWakeupGPIO();
         timerInitialized = true;
-        Serial.println("Energy save system initialized");
     }
 
-    // Проверяем активность
+    // Проверяем активность ПЕРЕД проверкой таймаута
     bool touched = isTouched();
-    
-    if (touched)
+    if (touched) 
     {
         sleepMessageShown = false;
         return;
     }
 
-    // Проверяем таймаут и возможность сна
+    // Защита от мгновенного повторного сна (Dead-time 1 секунда)
+    static unsigned long lastWakeUpTime = 0;
+    if (millis() - lastWakeUpTime < 1000) return; 
+
     if (sleep_timeout && canEnterSleep())
     {
         if (!sleepMessageShown)
         {
             String text = "Entering sleep mode...\nMove joystick to wake up";
-            InstantMessage message(text, 2000);
+            InstantMessage message(text, 1);
             message.show();
             sleepMessageShown = true;
         }
 
         is_sleeping = true;
         
-        // Сохраняем состояние дисплея
-        _GGL.gray.setPowerMode(_GGL.gray.OPERATING_MODE);
+        // Сохраняем количество тиков ДО ухода в сон для расчета дельты при пробуждении
+        _TD.preSleepHardwareTicks = _TD.getHardwareTicks(); 
         
-        // Останавливаем таймеры
-        stopSleepTimer();
+        // Останавливаем таймеры ESP-IDF, чтобы они не будили чип зря
+        stopSleepTimer(); 
         _TD.stopHardwareTimer();
         
-        // Выключаем подсветку если есть
-        // digitalWrite(PIN_BACKLIGHT_LCD, LOW);
-        
-        // Входим в сон
+        // ВАЖНО: Выключаем питание периферии ДО сна, если драйвер поддерживает это без deinit
+        // _GGL.gray.setPowerMode(_GGL.gray.SLEEP_MODE); 
+
         esp_light_sleep_start();
-        
+
         // --- ПРОБУЖДЕНИЕ ---
+
+        // Фиксируем время выхода из сна для dead-time
+        lastWakeUpTime = millis(); 
+        
         is_sleeping = false;
         
-        // Восстанавливаем таймеры
-        _TD.initHardwareTimer();
+        // КРИТИЧЕСКИ ВАЖНО: Перезапускаем аппаратный тикер диспетчеризатора.
+        _TD.initHardwareTimer(); 
         
-        // Включаем подсветку
-        // digitalWrite(PIN_BACKLIGHT_LCD, HIGH);
+        // Синхронизируем внутренние часы с реальностью. 
+        // Эта функция увидит огромную дельту hardwareTicks и сбросит nextRunTime всех задач на +1 тик.
         
-        // Восстанавливаем дисплей
+        // Альтернатива handleTimeSync (если она отсутствует), жестко задающая следующее выполнение:
+        // _TD.resetSystemClock(); 
+
+        // Включаем периферию обратно
         _GGL.gray.setPowerMode(_GGL.gray.OPERATING_MODE);
-        _GGL.gray.clearBuffer();
+        _GGL.gray.begin(); 
         
-        // Перерисовываем интерфейс
-        runExFormStack();
-        
-        // Сбрасываем флаги
+        // Очищаем артефакты старого кадра и перерисовываем актуальный интерфейс
+        _GGL.gray.clearBuffer(); 
+        runExFormStack(); 
+
+        // Сбрасываем триггеры энергосбережения
         sleep_timeout = false;
         sleepMessageShown = false;
-        resetSleepTimer();
         
-        // Обновляем состояние джойстика
-        // _JOY.updatePositionXY();
+        // Возобновляем отсчет времени до следующего засыпания
+        resetSleepTimer(); 
     }
 }
 
 // Принудительный сон
 void forceSleep()
 {
-    if (!canEnterSleep())
-    {
-        Serial.println("Cannot enter sleep mode now");
-        return;
-    }
-    
+    if (!canEnterSleep()) return;
+
+    _GGL.gray.clearBuffer();
     String text = "Entering sleep mode...";
-    InstantMessage message(text, 2000);
+    InstantMessage message(text, 1000);
     message.show();
-    delay(2100);
 
     is_sleeping = true;
-    
     setupWakeupGPIO();
     _TD.stopHardwareTimer();
-    _GGL.gray.setPowerMode(_GGL.gray.OPERATING_MODE);
-    // digitalWrite(PIN_BACKLIGHT_LCD, LOW);
-    
+    _GGL.gray.setPowerMode(_GGL.gray.SLEEP_MODE);
+
     esp_light_sleep_start();
 
-    // Пробуждение
+    // --- ПРОБУЖДЕНИЕ ---
     is_sleeping = false;
     _TD.initHardwareTimer();
     _TD.resetSystemClock();
 
-    // digitalWrite(PIN_BACKLIGHT_LCD, HIGH);
     _GGL.gray.setPowerMode(_GGL.gray.OPERATING_MODE);
-    // _GGL.gray.clearBuffer();
-    // runExFormStack();
+    _GGL.gray.begin(); _GGL.gray.setContrast(240);
+    _GGL.gray.clearBuffer();
+    runExFormStack(); // Обязательно выводим рабочий стол
+    
     resetSleepTimer();
-    // _JOY.updatePositionXY();
 }
-
-// void forceSleep()
-// {
-//     if (!canEnterSleep())
-//     {
-//         Serial.println("Cannot enter sleep mode now");
-//         return;
-//     }
-    
-//     // Показываем сообщение пользователю
-//     String text = "Entering sleep mode...\nMove joystick to wake up";
-//     InstantMessage message(text, 2000);
-//     message.show(); delay(2000);
-
-//     is_sleeping = true;
-    
-//     // ВАЖНО: Настройка GPIO должна быть ДО вызова esp_light_sleep_start
-//     setupWakeupGPIO(); 
-
-//     // Останавливаем только высокочастотные фоновые процессы
-//     _TD.stopHardwareTimer(); 
-    
-//     // Отключаем Wi-Fi/BT для экономии энергии (если они активны)
-//     // if (WiFi.getMode() != WIFI_MODE_NULL) {
-//     //     WiFi.mode(WIFI_OFF);
-//     // }
-
-//     // Входим в легкую спячку. 
-//     // Эта функция блокирует поток до момента пробуждения по GPIO.
-//     esp_light_sleep_start();
-
-//     // --- КОД ПОСЛЕ ПРОБУЖДЕНИЯ ---
-//     // ESP.restart();
-
-//     is_sleeping = false;
-
-//     // Проверяем причину выхода (защита от ложных срабатываний)
-//     if (esp_sleep_get_wakeup_cause() == ESP_SLEEP_WAKEUP_UNDEFINED) {
-//         Serial.println("Spurious wakeup detected.");
-//     }
-
-//     // КРИТИЧЕСКИ ВАЖНО: Восстанавливаем аппаратный таймер ПЕРЕД перерисовкой UI
-//     _TD.initHardwareTimer(); _TD.resetSystemClock();
-
-//     // Включаем беспроводные интерфейсы обратно, если они были нужны
-//     // wifiManager.autoReconnect(); 
-
-//     // Сбрасываем состояние энергосбережения
-//     resetSleepTimer();
-    
-//     // Принудительно опрашиваем состояние джойстика один раз,
-//     // чтобы обновить координаты курсора актуальными данными АЦП
-//     _JOY.updatePositionXY(10); 
-
-//     // Очищаем буфер экрана от артефактов сна
-//     _GGL.gray.setPowerMode(_GGL.gray.OPERATING_MODE);
-//     _GGL.gray.clearBuffer();
-    
-//     // Перерисовываем интерфейс поверх чистого холста
-//     runExFormStack();
-// }
 
 // Инициализация
 void initSleepTimerTask()

@@ -1,4 +1,6 @@
 #pragma once
+#define DEBUG_TASK_DISPATCHER
+
 
 #include <algorithm>
 #include "taskDispatcher.h"
@@ -13,6 +15,9 @@ std::vector<TaskArguments> userTasks;
 
 static unsigned long taskStartTime = 0;
 static String currentTaskName = "";
+
+// Глобальный флаг
+volatile bool needsResort = true;
 
 // Добавляем переменные для аппаратного таймера
 static esp_timer_handle_t system_timer = nullptr;
@@ -138,7 +143,6 @@ bool TaskDispatcher::runTask(const String &taskName)
 
 void TaskDispatcher::resetSystemClock()
 {
-    // Устанавливаем точку отсчета реального времени на текущий момент millis()
     lastTickRealTime = millis();                     // Аппаратные тики тоже сбрасываем к текущему значению
     unsigned long currentTicks = getHardwareTicks(); // Проходимся по всем задачам и корректируем их следующее время выполнения
     for (auto &t : tasks)
@@ -156,6 +160,72 @@ void TaskDispatcher::resetSystemClock()
     }
 }
 
+void TaskDispatcher::handleTimeSync(unsigned long currentRealTime, unsigned long currentHardwareTicks)
+{
+    // Вычисляем разницу в аппаратных тиках
+    long tickDelta = (long)currentHardwareTicks - (long)lastHardwareTickSeen;
+
+    // Защита от переполнения или первого запуска
+    if (lastHardwareTickSeen == 0 || tickDelta < 0) 
+    {
+        lastHardwareTickSeen = currentHardwareTicks;
+        
+        // При самом первом запуске принудительно выравниваем расписание всех задач
+        for (auto &task : tasks) 
+        {
+            if (task.useHardwareTicks) 
+            {
+                task.nextRunTime = currentHardwareTicks + task.interval;
+            } 
+            else 
+            {
+                task.nextRunTime = currentRealTime + task.interval;
+            }
+        }
+        return;
+    }
+
+    // Порог "скачка". 
+    // Если за один цикл loop/tick прошло больше 500 мс (500 тиков по 1000 мкс),
+    // значит процессор находился в глубоком сне или был заблокирован критической секцией.
+    const unsigned long SLEEP_THRESHOLD_TICKS = 500; 
+
+    if ((unsigned long)tickDelta > SLEEP_THRESHOLD_TICKS) 
+    {
+        // --- ОБНАРУЖЕНО ПРОБУЖДЕНИЕ ---
+        
+        // Сбрасываем статистику CPU, так как она неактуальна после долгого простоя
+        measurementStartTime = currentRealTime;
+        totalExecutionTime = 0;
+
+        // Корректируем планировщик: переносим все задачи в "настоящее"
+        for (auto &task : tasks) 
+        {
+            if (task.activ) 
+            {
+                if (task.useHardwareTicks) 
+                {
+                    // Устанавливаем следующее выполнение на ближайшее будущее
+                    task.nextRunTime = currentHardwareTicks + 1; 
+                } 
+                else 
+                {
+                    task.nextRunTime = currentRealTime + 1;
+                }
+                
+                // Сбрасываем длительность выполнения, чтобы getCPULoad() не показал 100%
+                task.lastRunDuration = 0; 
+            }
+        }
+        
+        // Флаг пересортировки нужен, если какие-то задачи могли изменить свой статус во время сна
+        needsResort = true; 
+    }
+
+    // Обновляем счетчик для следующей проверки
+    lastHardwareTickSeen = currentHardwareTicks;
+}
+
 void TaskDispatcher::addTasksForSystems()
 {
     for (TaskArguments &t : system0)
@@ -165,19 +235,22 @@ void TaskDispatcher::addTasksForSystems()
 }
 
 // Версия tick() с использованием аппаратного таймера 
-// Глобальный флаг
-volatile bool needsResort = true;
 void TaskDispatcher::tick()
 {
     unsigned long currentRealTime = millis();
     unsigned long currentHardwareTicksVal = getHardwareTicks();
-    
-    // Рассчитываем дельту реального времени для статистики
+
+    // 1. АВТОМАТИЧЕСКАЯ СИНХРОНИЗАЦИЯ ВРЕМЕНИ
+    // Вызываем функцию до начала планирования. Она сама обнаружит сон.
+    handleTimeSync(currentRealTime, currentHardwareTicksVal);
+
+    // Рассчитываем реальное время с последнего тика (для статистики окна измерения)
     unsigned long realTimeDelta = currentRealTime - lastTickRealTime;
     lastTickRealTime = currentRealTime;
 
-    // --- ПЕРЕСОРТИРОВКА (вынесена отдельно от основного цикла) ---
-    if (needsResort) {
+    // 2. ПЕРЕСОРТИРОВКА ПО ПРИОРИТЕТАМ
+    if (needsResort) 
+    {
         std::sort(tasks.begin(), tasks.end(), 
                   [](const TaskArguments &a, const TaskArguments &b) {
                       return a.priority > b.priority;
@@ -185,122 +258,103 @@ void TaskDispatcher::tick()
         needsResort = false;
     }
 
+    // 3. ЦИКЛ ВЫПОЛНЕНИЯ
     // Бюджет времени на текущий вызов tick().
     unsigned long sliceStartTime = micros(); 
     unsigned long totalSliceUsed = 0;
+    bool backgroundBudgetExhausted = false;
 
-    // Основной цикл диспетчеризации
     for (auto &task : tasks) 
     {
-        // Пропускаем неактивные задачи
         if (!task.activ || !task.f) continue;
 
-        // КРИТИЧЕСКОЕ ИЗМЕНЕНИЕ: 
-        // Сначала проверяем бюджет, и только потом решаем, запускать ли задачу.
-        // Это предотвращает "захват" процессора низкоприоритетными задачами.
-        if (totalSliceUsed >= TASK_TIME_SLICE_LIMIT_US) 
+        // Проверка лимита среза только для фоновых задач
+        if (backgroundBudgetExhausted && task.priority < PRIORITY_HIGH) 
         {
-            break; // Отдаем управление циклу loop()
+            continue;
         }
 
         bool shouldRun = false;
-
-        // --- ВЫБОР РЕЖИМА ПЛАНИРОВАНИЯ ---
         if (task.useHardwareTicks) 
         {
-            // Режим аппаратных тиков (для курсора, опроса кнопок)
-            if (currentHardwareTicksVal >= task.nextRunTime) 
-            {
-                shouldRun = true;
-            }
+            shouldRun = (currentHardwareTicksVal >= task.nextRunTime);
         } 
         else 
         {
-            // Режим реального времени (millis())
             if (task.interval > 0) 
             {
-                if (currentRealTime >= task.nextRunTime) 
-                {
-                    shouldRun = true;
-                }
+                shouldRun = (currentRealTime >= task.nextRunTime);
             } 
             else 
             {
-                // Задачи без интервала по умолчанию живут на тиках
-                if (currentHardwareTicksVal >= task.nextRunTime) 
-                {
-                    shouldRun = true;
-                }
+                shouldRun = (currentHardwareTicksVal >= task.nextRunTime);
             }
         }
 
         if (shouldRun) 
         {
-            unsigned long startExec = micros();
+            unsigned long allowedSlice = (task.priority < PRIORITY_HIGH) ? 1500 : 0;
+            
+            if (allowedSlice != 0 && totalSliceUsed >= 1500) 
+            {
+                backgroundBudgetExhausted = true;
+                continue;
+            }
 
-#ifndef WATCHDOG
-#else
             noInterrupts();
             runningTaskInfo.name = task.name;
             runningTaskInfo.startTime = millis();
             runningTaskInfo.isActive = true;
             interrupts();
-#endif
 
             task.isRunning = true;
+            unsigned long execStart = micros();
             
-            // Выполнение пользовательского кода
-            task.f(); 
+            task.f(); Serial.println("tick");
             
             task.isRunning = false;
+            unsigned long execEnd = micros();
+            unsigned long executionTime = execEnd - execStart;
 
-#ifndef WATCHDOG
-#else
             noInterrupts();
             runningTaskInfo.isActive = false;
             interrupts();
-#endif
-
-            unsigned long endExec = micros();
-            unsigned long executionTime = endExec - startExec;
-            task.lastRunDuration = executionTime;
 
             updateTaskStatistics(task.name, executionTime);
+            task.lastRunDuration = executionTime;
             task.lastRunTime = currentHardwareTicksVal;
 
-            // --- ОБНОВЛЕНИЕ СЛЕДУЮЩЕГО ЗАПУСКА ---
             if (task.useHardwareTicks) 
             {
-                task.nextRunTime = currentHardwareTicksVal + task.interval; 
+                task.nextRunTime = currentHardwareTicksVal + task.interval;
             } 
             else 
             {
                 if (task.interval > 0) 
                 {
-                    task.nextRunTime = currentRealTime + task.interval; 
+                    task.nextRunTime = currentRealTime + task.interval;
                 } 
                 else 
                 {
-                    task.nextRunTime = currentHardwareTicksVal + 1; 
+                    task.nextRunTime = currentHardwareTicksVal + 1;
                 }
             }
 
-            // Обработка одноразовых задач
             if (task.oneShot) 
             {
                 task.activ = false;
-                // ФЛАГ БЕЗОПАСНОСТИ: если задача удалила себя сама, 
-                // вектор изменился, нужно пересортировать его в следующем тике.
-                needsResort = true; 
+                needsResort = true;
             }
 
-            // Накапливаем затраченное время для контроля лимита
-            totalSliceUsed += executionTime;
+            if (allowedSlice != 0) 
+            {
+                totalSliceUsed += executionTime;
+            }
         }
     }
 
-    // Сброс окна измерения загрузки CPU
-    if (currentRealTime - measurementStartTime >= MEASUREMENT_WINDOW) 
+    // Статистика загрузки CPU
+    if (currentRealTime - measurementStartTime >= MEASUREMENT_WINDOW)
     {
         measurementStartTime = currentRealTime;
         totalExecutionTime = 0;

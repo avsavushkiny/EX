@@ -71,12 +71,16 @@ public:
     static void initHardwareTimer();
     static void stopHardwareTimer();
     static unsigned long getHardwareTicks();
+    static volatile unsigned long preSleepHardwareTicks;
     
 private:
     unsigned long systemTicks = 0;
     unsigned long lastTickRealTime = 0;    // Реальное время последнего тика
     unsigned long totalExecutionTime = 0;  // Время выполнения задач за период (мкс)
     unsigned long measurementStartTime = 0;// Начало периода измерения (мс)
+
+    volatile unsigned long lastHardwareTickSeen = 0; // Храним последнее известное значение аппаратных тиков
+    void handleTimeSync(unsigned long currentRealTime, unsigned long currentHardwareTicks); // Новая функция для внутренней обработки таймингов
     
     // Константы для расчета
     static const unsigned long MEASUREMENT_WINDOW = 1000; // Окно измерения 1 секунда
