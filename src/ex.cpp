@@ -15,6 +15,13 @@ WiFiManager wifiManager;
 /* Initialization systems */
 void initializationSystem()
 {
+   /* Инициализация аппоратного таймера */
+   _TD.initHardwareTimer();
+   
+   // Настройка параметров вытеснения
+   _TD.setTaskBudget(5000);    // 5 мс на задачу
+   _TD.setSchedulerQuantum(1000); // 1 мс квант времени
+   
    /*
       GPIO release from sleep
 
@@ -56,8 +63,7 @@ void initializationSystem()
    // systems.setDisplayContrast(240);
    // systems.executeAllSystemElements();
 
-   /* Инициализация аппоратного таймера */
-   _TD.initHardwareTimer();
+
    //  При завершении работы
    //  _TD.stopHardwareTimer();
 

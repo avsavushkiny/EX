@@ -213,7 +213,7 @@ void _osHello()
     oshello->addElement(textbox1);
 
     formsStack.push(oshello);
-    _TD.removeTaskByIndex(101);
+    _TD.removeTaskIndex(101);
 }
 
 /* Form. Test 1 */
@@ -957,7 +957,7 @@ void eventTest()
         pressStartTime = millis();
 
         // Проверяем, не было ли это вторым кликом в двойном клике
-        if (waitingForSecond && (millis() - lastPressTime) <= 500)
+        if (waitingForSecond && (millis() - lastPressTime) <= 300)
         {
             clickCount++;
             if (clickCount >= 2)
@@ -985,7 +985,7 @@ void eventTest()
         unsigned long pressDuration = millis() - pressStartTime;
 
         // Проверка долгого нажатия
-        if (pressDuration >= 2000)
+        if (pressDuration >= 500)
         {
             if (!isLongPress)
             {
@@ -1005,7 +1005,7 @@ void eventTest()
         unsigned long pressDuration = millis() - pressStartTime;
 
         // Проверка долгого нажатия во время удержания
-        if (pressDuration >= 2000 && !isLongPress)
+        if (pressDuration >= 500 && !isLongPress)
         {
             isLongPress = true;
             Serial.println("LONG PRESS!");
@@ -1016,14 +1016,14 @@ void eventTest()
     }
 
     // Таймаут для одиночного клика
-    // if (waitingForSecond && clickCount == 1 && (millis() - lastPressTime) > 300)
-    // {
-    //     Serial.println("Single click");
-    //     // Действие при одиночном клике
-    //     waitingForSecond = false;
-    //     clickCount = 0;
-    //     isLongPress = false;
-    // }
+    if (waitingForSecond && clickCount == 1 && (millis() - lastPressTime) > 300)
+    {
+        Serial.println("Single click");
+        // Действие при одиночном клике
+        waitingForSecond = false;
+        clickCount = 0;
+        isLongPress = false;
+    }
 
     // Сброс состояния после долгого нажатия
     if (isLongPress && !isPressed)
@@ -1060,13 +1060,13 @@ TaskArguments createTask(String name, void (*f)(void), const uint8_t *bitMap,
 TaskArguments system0[]{
     //        (название, функция, bitmap, тип, индекс, статус, ПРИОРИТЕТ, oneshot, тик)
     /* Рабочий стол */
-    createTask("desktop", &_myDesktop, NULL, SYSTEM, 100, false, PRIORITY_NORMAL, true, 1),
+    createTask("desktop", &_myDesktop, NULL, SYSTEM, 100, true, PRIORITY_NORMAL, true, 1),
     /* Инициализация таймера */
     createTask("initSleepTimerTask", &initSleepTimerTask, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, true, 1),
     /* Энергосбережение */
     createTask("energySave", &energySave, NULL, SYSTEM, 0, true, PRIORITY_NORMAL, 0, 100), // было 10
     /* Обновление состояния кнопок (высокий приоритет, часто) */
-    createTask("eventUpdate", &eventTest, NULL, SYSTEM, 0, true, PRIORITY_CRITICAL, false, 100),
+    createTask("eventUpdate", &eventTask, NULL, SYSTEM, 0, true, PRIORITY_HIGH, false, 10),
     /* Диспетчер свернутых форм */
     createTask("Minimized Windows", &_minimizedWindowsForm, _ICON.program_manager, DESKTOP, 0, false, PRIORITY_NORMAL),
     // createTask("oshello", &_osHello, NULL, SYSTEM, 101, true, PRIORITY_NORMAL),
