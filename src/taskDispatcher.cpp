@@ -1,37 +1,36 @@
 #pragma once
 
 #include <algorithm>
+#include <Arduino.h>
 #include "taskDispatcher.h"
 #include "ex.h"
 #include "task.h"
 #include "systems.h"
 #include "esp_timer.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/semphr.h"
 
-// Определение глобального вектора
+// --- Глобальные векторы ---
 std::vector<TaskArguments> tasks;
 std::vector<TaskArguments> userTasks;
 
 static unsigned long taskStartTime = 0;
 static String currentTaskName = "";
 
-// Добавляем переменные для аппаратного таймера
+// --- Аппаратный таймер (1 мс) ---
 static esp_timer_handle_t system_timer = nullptr;
 static volatile unsigned long hardwareTicks = 0;
-static const unsigned long TIMER_INTERVAL_US = 1000; // 1ms в микросекундах
+static const unsigned long TIMER_INTERVAL_US = 1000;
 
-// Callback для аппаратного таймера
 void system_timer_callback(void *arg)
 {
     hardwareTicks++;
 }
 
-// Инициализация аппаратного таймера
 void TaskDispatcher::initHardwareTimer()
 {
-    if (system_timer != nullptr)
-    {
-        return; // Таймер уже инициализирован
-    }
+    if (system_timer != nullptr) return;
 
     esp_timer_create_args_t timer_args = {
         .callback = &system_timer_callback,
@@ -39,38 +38,26 @@ void TaskDispatcher::initHardwareTimer()
         .dispatch_method = ESP_TIMER_TASK,
         .name = "system_tick"};
 
-    esp_err_t ret = esp_timer_create(&timer_args, &system_timer);
-    if (ret != ESP_OK)
+    if (esp_timer_create(&timer_args, &system_timer) != ESP_OK) return;
+    if (esp_timer_start_periodic(system_timer, TIMER_INTERVAL_US) != ESP_OK)
     {
-        // Обработка ошибки создания таймера
-        return;
-    }
-
-    ret = esp_timer_start_periodic(system_timer, TIMER_INTERVAL_US);
-    if (ret != ESP_OK)
-    {
-        // Обработка ошибки запуска таймера
         esp_timer_delete(system_timer);
         system_timer = nullptr;
     }
 }
 
-// Остановка аппаратного таймера
 void TaskDispatcher::stopHardwareTimer()
 {
     if (system_timer != nullptr)
-    {
         esp_timer_stop(system_timer);
-        // esp_timer_delete(system_timer); // Не удаляем таймер (231125)
-        // system_timer = nullptr;
-    }
 }
 
-// Получение тиков из аппаратного таймера
 unsigned long TaskDispatcher::getHardwareTicks()
 {
     return hardwareTicks;
 }
+
+// --- Управление списком задач ---
 
 int TaskDispatcher::sizeTasks()
 {
@@ -79,20 +66,33 @@ int TaskDispatcher::sizeTasks()
 
 void TaskDispatcher::addTask(const TaskArguments &task)
 {
-    tasks.push_back(task);
+    if (tasksMutex && xSemaphoreTake(tasksMutex, portMAX_DELAY) == pdTRUE)
+    {
+        tasks.push_back(task);
+        xSemaphoreGive(tasksMutex);
+    }
+    else
+    {
+        tasks.push_back(task);
+    }
 }
 
 bool TaskDispatcher::removeTaskVector(const String &taskName)
 {
-    auto it = std::find_if(tasks.begin(), tasks.end(),
-                           [&taskName](const TaskArguments &t)
-                           { return t.name == taskName; });
-    if (it != tasks.end())
+    bool ok = false;
+    if (tasksMutex && xSemaphoreTake(tasksMutex, portMAX_DELAY) == pdTRUE)
     {
-        tasks.erase(it);
-        return true;
+        auto it = std::find_if(tasks.begin(), tasks.end(),
+                               [&taskName](const TaskArguments &t)
+                               { return t.name == taskName; });
+        if (it != tasks.end())
+        {
+            tasks.erase(it);
+            ok = true;
+        }
+        xSemaphoreGive(tasksMutex);
     }
-    return false;
+    return ok;
 }
 
 bool TaskDispatcher::removeTask(const String &taskName)
@@ -137,31 +137,73 @@ bool TaskDispatcher::runTask(const String &taskName)
 void TaskDispatcher::addTasksForSystems()
 {
     for (TaskArguments &t : system0)
-    {
         tasks.push_back(t);
+}
+
+// --- Основной цикл воркера ---
+
+void TaskDispatcher::workerCore0(void *arg)
+{
+    static_cast<TaskDispatcher *>(arg)->workerLoop(0);
+}
+
+void TaskDispatcher::workerCore1(void *arg)
+{
+    static_cast<TaskDispatcher *>(arg)->workerLoop(1);
+}
+
+void TaskDispatcher::workerLoop(int coreId)
+{
+    // Небольшая задержка, чтобы дать системе инициализироваться
+    vTaskDelay(pdMS_TO_TICKS(50));
+
+    for (;;)
+    {
+        if (!workersRunning)
+        {
+            vTaskDelay(pdMS_TO_TICKS(10));
+            continue;
+        }
+
+        unsigned long currentRealTime   = millis();
+        unsigned long currentHardwareTicks = getHardwareTicks();
+
+        runTasksForCore(coreId, currentRealTime, currentHardwareTicks);
+
+        // Отдаём управление FreeRTOS, чтобы не блокировать idle-таски
+        // (в т.ч. watchdog). 1 тик ~1 мс.
+        vTaskDelay(1);
     }
 }
 
-// Модифицированная версия tick() с использованием аппаратного таймера
-void TaskDispatcher::tick()
+// --- Выполнение задач, привязанных к ядру ---
+
+void TaskDispatcher::runTasksForCore(int coreId, unsigned long currentRealTime,
+                                     unsigned long currentHardwareTicks)
 {
-    unsigned long currentRealTime = millis();
-
-    // Используем аппаратные тики вместо systemTicks++
-    unsigned long currentHardwareTicks = getHardwareTicks();
-
-    // Рассчитываем реальное время с последнего тика (для интервалов)
-    unsigned long realTimeDelta = currentRealTime - lastTickRealTime;
-    lastTickRealTime = currentRealTime;
-
-    // Сортируем и выполняем задачи...
+    // Собираем ссылки на активные задачи, привязанные к этому ядру,
+    // и сортируем по приоритету.
     std::vector<TaskArguments *> sortedTasks;
+    sortedTasks.reserve(tasks.size());
+
     for (auto &task : tasks)
     {
-        if (task.activ && task.f)
+        if (!task.activ || !task.f) continue;
+
+        // Привязка к ядру
+        bool belongsHere = false;
+        if (task.core == CORE_ANY)
         {
-            sortedTasks.push_back(&task);
+            // По умолчанию все "any" — на CORE_1
+            belongsHere = (coreId == 1);
         }
+        else
+        {
+            belongsHere = (static_cast<int>(task.core) == coreId);
+        }
+        if (!belongsHere) continue;
+
+        sortedTasks.push_back(&task);
     }
 
     std::sort(sortedTasks.begin(), sortedTasks.end(),
@@ -170,95 +212,119 @@ void TaskDispatcher::tick()
                   return a->priority > b->priority;
               });
 
-    // Выполняем задачи
     for (auto taskPtr : sortedTasks)
     {
         auto &task = *taskPtr;
 
-        // Используем аппаратные тики для планирования
+        // Проверка расписания
         bool shouldRun = false;
         if (task.interval > 0)
         {
-            // Для периодических задач используем реальное время
+            // Периодическая задача — реальное время (мс)
             shouldRun = (currentRealTime >= task.nextRunTime);
         }
         else
         {
-            // Для задач без интервала используем аппаратные тики
+            // Задача «каждый тик» — аппаратные тики
             shouldRun = (currentHardwareTicks >= task.nextRunTime);
         }
 
-        if (shouldRun)
-        {
-            unsigned long startTime = micros();
-            currentTaskName = task.name;
+        if (!shouldRun) continue;
 
-// Код для диспетчера задач, реализация tick
-// Фиксируем начало выполнения задачи
-// #ifndef WATCHDOG
-// #else
-            noInterrupts();
-            runningTaskInfo.name = task.name;
-            runningTaskInfo.startTime = millis();
-            runningTaskInfo.isActive = true;
-            interrupts();
-// #endif
+        unsigned long startTime = micros();
 
-            // Выполняем задачу
-            if (task.f)
-            {
-                task.f();
-            }
+        // Отмечаем, что задача выполняется
+        task.running = true;
+        runningTaskInfo.name      = task.name;
+        runningTaskInfo.startTime = millis();
+        runningTaskInfo.isActive  = true;
 
-// #ifndef WATCHDOG
-// #else
-            // Задача завершилась — сбрасываем флаг
-            noInterrupts();
-            runningTaskInfo.isActive = false;
-            interrupts();
-// #endif
-            //--
+        // Выполнение
+        if (task.f) task.f();
 
-            unsigned long endTime = micros();
-            unsigned long executionTime = endTime - startTime;
+        // Снимаем отметку
+        task.running = false;
+        runningTaskInfo.isActive = false;
 
-            // Обновляем статистику
-            updateTaskStatistics(task.name, executionTime);
+        unsigned long endTime = micros();
+        unsigned long executionTime = endTime - startTime;
 
-            task.lastRunTime = currentHardwareTicks;
+        updateTaskStatistics(task.name, executionTime);
 
-            // Планируем следующее выполнение
-            if (task.interval > 0)
-            {
-                task.nextRunTime = currentRealTime + task.interval;
-            }
-            else
-            {
-                task.nextRunTime = currentHardwareTicks + 1;
-            }
+        task.lastRunTime = currentHardwareTicks;
 
-            if (task.oneShot)
-            {
-                task.activ = false;
-            }
-        }
-    }
+        // Планирование следующего запуска
+        if (task.interval > 0)
+            task.nextRunTime = currentRealTime + task.interval;
+        else
+            task.nextRunTime = currentHardwareTicks + 1;
 
-    // Сброс статистики каждую секунду
-    if (currentRealTime - measurementStartTime >= MEASUREMENT_WINDOW)
-    {
-        measurementStartTime = currentRealTime;
-        totalExecutionTime = 0;
+        if (task.oneShot)
+            task.activ = false;
     }
 }
+
+// --- Запуск/остановка воркеров ---
+
+void TaskDispatcher::start()
+{
+    if (workersRunning) return;
+
+    if (tasksMutex == nullptr)
+        tasksMutex = xSemaphoreCreateMutex();
+
+    measurementStartTime = millis();
+    lastTickRealTime     = millis();
+
+    workersRunning = true;
+
+    // Core 0 — обычно занят WiFi/BT, поэтому даём ему PRIORITY_LOW
+    // Core 1 — основной пользовательский, PRIORITY_NORMAL
+    xTaskCreatePinnedToCore(
+        &TaskDispatcher::workerCore0,
+        "TD_Worker_C0",
+        8192,
+        this,
+        1,                  // низкий приоритет (idle и WiFi важнее)
+        &workerCore0Handle,
+        0);                 // CORE 0
+
+    xTaskCreatePinnedToCore(
+        &TaskDispatcher::workerCore1,
+        "TD_Worker_C1",
+        8192,
+        this,
+        2,                  // выше, чем у Core 0
+        &workerCore1Handle,
+        1);                 // CORE 1
+}
+
+void TaskDispatcher::stop()
+{
+    workersRunning = false;
+    vTaskDelay(pdMS_TO_TICKS(50)); // дать воркерам выйти из цикла
+
+    if (workerCore0Handle) { vTaskDelete(workerCore0Handle); workerCore0Handle = nullptr; }
+    if (workerCore1Handle) { vTaskDelete(workerCore1Handle); workerCore1Handle = nullptr; }
+}
+
+// --- Совместимость: старый tick() теперь просто ничего не делает ---
+
+void TaskDispatcher::tick()
+{
+    // Оставлено для совместимости.
+    // Реальная работа выполняется в воркерах (workerCore0/workerCore1).
+}
+
+// --- Очистка стека форм (без изменений) ---
 
 void TaskDispatcher::clearExFormsStack()
 {
     while (!formsStack.empty())
     {
         exForm* form = formsStack.top();
-        delete form;           // Освобождаем память
-        formsStack.pop();      // Удаляем указатель из стека
+        delete form;
+        formsStack.pop();
     }
 }
 
@@ -284,87 +350,77 @@ void runExFormStack()
     }
 }
 
-/* Core tasks with debug */
+// --- Точка входа, вызываемая из loop() ---
+
 void runTasksCore()
 {
 #ifndef DEBUG_TASK_DISPATCHER
-    _TD.tick(); // Используем новый тиковый диспетчер с аппаратным таймером
-    // runExFormStack();
+    // Диспетчер теперь работает на двух ядрах — здесь делать нечего.
+    // (Опционально: можно оставить пустой yield.)
+    vTaskDelay(1);
 #else
     Serial.printf("Total tasks: %d\n", tasks.size());
     Serial.printf("Hardware ticks: %lu\n", _TD.getHardwareTicks());
     for (size_t i = 0; i < tasks.size(); ++i)
     {
-        Serial.printf("Task %d: %s, active: %d, priority: %d, oneShot: %d, interval: %lu\n",
+        Serial.printf("Task %d: %s, active: %d, core: %d, priority: %d, oneShot: %d, interval: %lu\n",
                       i, tasks[i].name.c_str(), tasks[i].activ,
+                      (int)tasks[i].core,
                       tasks[i].priority, tasks[i].oneShot, tasks[i].interval);
     }
-
-    _TD.tick(); // Используем новый тиковый диспетчер с аппаратным таймером
+    vTaskDelay(1);
 #endif
 }
 
-/* Terminal with debug */
 bool TaskDispatcher::terminal()
 {
-#ifndef DEBUG_TASK_DISPATCHER
     _GRF.render(runTasksCore);
     return true;
-#else
-    Serial.printf("Total tasks: %d\n", tasks.size());
-    Serial.printf("Hardware ticks: %lu\n", getHardwareTicks());
-    for (size_t i = 0; i < tasks.size(); ++i)
-    {
-        Serial.printf("Task %d: %s, active: %d, func: %p\n",
-                      i, tasks[i].name.c_str(), tasks[i].activ, tasks[i].f);
-    }
-
-    _GRF.render(runTasksCore);
-    return true;
-#endif
 }
 
 void nullFunction() {};
 
-// Статистика
+// --- Статистика ---
+
 void TaskDispatcher::updateTaskStatistics(const String &taskName, unsigned long executionTime)
 {
-    if (taskStatistics.find(taskName) == taskStatistics.end())
+    // Защищаем статистику мьютексом, т.к. пишут два ядра
+    static SemaphoreHandle_t statsMutex = xSemaphoreCreateMutex();
+    if (statsMutex && xSemaphoreTake(statsMutex, portMAX_DELAY) == pdTRUE)
     {
-        taskStatistics[taskName] = {0, 0, 0};
+        if (taskStatistics.find(taskName) == taskStatistics.end())
+            taskStatistics[taskName] = {0, 0, 0};
+
+        taskStatistics[taskName].totalExecutionTime += executionTime;
+        taskStatistics[taskName].callCount++;
+        taskStatistics[taskName].lastExecutionTime = executionTime;
+
+        totalExecutionTime += executionTime;
+        xSemaphoreGive(statsMutex);
     }
-
-    taskStatistics[taskName].totalExecutionTime += executionTime;
-    taskStatistics[taskName].callCount++;
-    taskStatistics[taskName].lastExecutionTime = executionTime;
-
-    totalExecutionTime += executionTime;
 }
 
-// Статистика
 int TaskDispatcher::getCPULoad()
 {
-    unsigned long currentTime = millis();
-    unsigned long windowSize = currentTime - measurementStartTime;
-
-    if (windowSize < 100)
-    {
-        // Слишком маленькое окно измерения
-        static int lastLoad = 0;
-        return lastLoad;
-    }
-
-    // Рассчитываем загрузку CPU
-    // totalExecutionTime в микросекундах, windowSize в миллисекундах
-    unsigned long maxPossibleTime = windowSize * 1000; // Максимальное время в мкс
+    static SemaphoreHandle_t loadMutex = xSemaphoreCreateMutex();
     int cpuLoad = 0;
 
-    if (maxPossibleTime > 0)
+    if (loadMutex && xSemaphoreTake(loadMutex, portMAX_DELAY) == pdTRUE)
     {
-        cpuLoad = (totalExecutionTime * 100) / maxPossibleTime;
-        cpuLoad = (cpuLoad > 100) ? 100 : cpuLoad;
-        cpuLoad = (cpuLoad < 0) ? 0 : cpuLoad;
-    }
+        unsigned long currentTime = millis();
+        unsigned long windowSize  = currentTime - measurementStartTime;
 
+        if (windowSize >= 100)
+        {
+            unsigned long maxPossibleTime = windowSize * 1000ULL;
+            if (maxPossibleTime > 0)
+            {
+                cpuLoad = (totalExecutionTime * 100) / maxPossibleTime;
+                if (cpuLoad > 100) cpuLoad = 100;
+                if (cpuLoad < 0)   cpuLoad = 0;
+            }
+        }
+        xSemaphoreGive(loadMutex);
+    }
     return cpuLoad;
 }
